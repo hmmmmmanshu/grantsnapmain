@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "supabase-startup911": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--project-ref",
+        "uurdubbsamdawncqkaoy"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_ac4e6aa76627989ac79f56111a036486138167a5"
+      },
+      "description": "Official Supabase MCP server for startup911 database access"
+    },
+    "postgres-direct": {
+      "command": "npx",
+      "args": [
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
+      ],
+      "description": "Direct PostgreSQL connection to Supabase"
+    }
+  }
+} 
