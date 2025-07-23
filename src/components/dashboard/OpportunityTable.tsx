@@ -14,6 +14,8 @@ import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
 interface OpportunityTableProps {
   opportunities: Opportunity[];
   onOpportunityClick: (opportunity: Opportunity) => void;
+  onStatusUpdate?: (id: string, status: Opportunity['status']) => void;
+  onDelete?: (id: string) => void;
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -37,7 +39,12 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-const OpportunityTable = ({ opportunities, onOpportunityClick }: OpportunityTableProps) => {
+const OpportunityTable = ({ 
+  opportunities, 
+  onOpportunityClick, 
+  onStatusUpdate, 
+  onDelete 
+}: OpportunityTableProps) => {
   const formatDeadline = (deadline: string) => {
     const deadlineDate = new Date(deadline);
     const now = new Date();
@@ -98,7 +105,43 @@ const OpportunityTable = ({ opportunities, onOpportunityClick }: OpportunityTabl
                   onClick={() => onOpportunityClick(opportunity)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <StatusBadge status={opportunity.status} />
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="p-0 h-auto"
+                        >
+                          <StatusBadge status={opportunity.status} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start">
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusUpdate?.(opportunity.id, 'To Review');
+                          }}
+                        >
+                          To Review
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusUpdate?.(opportunity.id, 'In Progress');
+                          }}
+                        >
+                          In Progress
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onStatusUpdate?.(opportunity.id, 'Applied');
+                          }}
+                        >
+                          Applied
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex flex-col">
@@ -131,7 +174,15 @@ const OpportunityTable = ({ opportunities, onOpportunityClick }: OpportunityTabl
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem className="text-red-600">
+                        <DropdownMenuItem 
+                          className="text-red-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Are you sure you want to delete this opportunity?')) {
+                              onDelete?.(opportunity.id);
+                            }
+                          }}
+                        >
                           Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>

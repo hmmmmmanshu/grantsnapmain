@@ -11,52 +11,26 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Navigate } from 'react-router-dom';
 
-// Mock data for demonstration
-const mockOpportunities: Opportunity[] = [
-  {
-    id: "uuid-1",
-    status: "In Progress",
-    page_title: "AI for Social Good Grant",
-    funder_name: "The Future Foundation",
-    page_url: "https://futurefoundation.org/ai-grant",
-    application_deadline: "2025-12-01",
-    date_saved: "2025-07-10T10:00:00Z",
-    user_notes: "This seems like a perfect fit for Project Starlight. Need to check the budget restrictions.",
-    extracted_emails: ["grants@futurefoundation.org"],
-    type: "grant",
-    funding_amount: 500000
-  },
-  {
-    id: "uuid-2",
-    status: "To Review",
-    page_title: "Seed Funding for Climate Tech",
-    funder_name: "GreenTech Ventures",
-    page_url: "https://greentechvc.com/funding",
-    application_deadline: "2025-07-20",
-    date_saved: "2025-07-09T14:30:00Z",
-    user_notes: "Early stage funding opportunity. Need to prepare pitch deck.",
-    extracted_emails: ["hello@greentechvc.com", "applications@greentechvc.com"],
-    type: "investor",
-    funding_amount: 2000000
-  },
-  {
-    id: "uuid-3",
-    status: "Applied",
-    page_title: "Innovation Grant Program",
-    funder_name: "Tech Innovation Council",
-    page_url: "https://techcouncil.org/grants",
-    application_deadline: "2025-08-15",
-    date_saved: "2025-07-08T09:15:00Z",
-    user_notes: "Application submitted. Follow up scheduled for next week.",
-    extracted_emails: ["grants@techcouncil.org"],
-    type: "grant",
-    funding_amount: 250000
-  }
-];
+// Sample data button component for testing
+const SampleDataButton = ({ onAddSampleData }: { onAddSampleData: () => void }) => (
+  <button
+    onClick={onAddSampleData}
+    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+  >
+    Add Sample Data
+  </button>
+);
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
-  const { opportunities, loading: opportunitiesLoading, error } = useOpportunities();
+  const { 
+    opportunities, 
+    loading: opportunitiesLoading, 
+    error, 
+    addSampleData,
+    updateStatus,
+    deleteOpportunity
+  } = useOpportunities();
   
   const [selectedView, setSelectedView] = useState<'all' | 'grants' | 'investors'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -104,7 +78,12 @@ const Dashboard = () => {
               <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
               <p className="text-gray-600">Manage your funding opportunities and profile</p>
             </div>
-            <ProfileHub />
+            <div className="flex items-center gap-4">
+              {opportunities.length === 0 && (
+                <SampleDataButton onAddSampleData={addSampleData} />
+              )}
+              <ProfileHub />
+            </div>
           </div>
 
           <OpportunityPipeline opportunities={opportunities} />
@@ -135,6 +114,8 @@ const Dashboard = () => {
             <OpportunityTable
               opportunities={sortedOpportunities}
               onOpportunityClick={setSelectedOpportunity}
+              onStatusUpdate={updateStatus}
+              onDelete={deleteOpportunity}
             />
           )}
 
