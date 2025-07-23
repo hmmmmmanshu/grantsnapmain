@@ -10,6 +10,7 @@ import ProfileHub from '@/components/dashboard/ProfileHub';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Navigate } from 'react-router-dom';
+import DebugInfo from '@/components/DebugInfo';
 
 // Sample data button component for testing
 const SampleDataButton = ({ onAddSampleData }: { onAddSampleData: () => void }) => (
@@ -129,6 +130,8 @@ const Dashboard = () => {
           onClose={() => setSelectedOpportunity(null)}
         />
       )}
+      
+      <DebugInfo />
     </div>
   );
 };

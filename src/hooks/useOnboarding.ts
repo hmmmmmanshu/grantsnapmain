@@ -16,6 +16,7 @@ export function useOnboarding() {
       }
 
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('user_profiles')
           .select('id')

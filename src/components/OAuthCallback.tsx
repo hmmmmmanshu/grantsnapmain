@@ -30,21 +30,16 @@ const OAuthCallback: React.FC = () => {
             // Clean up the URL
             window.history.replaceState(null, '', window.location.pathname);
             
-            // Redirect based on onboarding status
-            if (needsOnboarding) {
-              navigate('/onboarding', { replace: true });
-            } else {
-              navigate('/dashboard', { replace: true });
-            }
+            // Wait a moment for the session to be fully established
+            setTimeout(() => {
+              // Check if user has profile
+              checkUserProfileAndRedirect();
+            }, 1000);
           }
         } else {
           // No hash fragment, check if user is already authenticated
           if (user) {
-            if (needsOnboarding) {
-              navigate('/onboarding', { replace: true });
-            } else {
-              navigate('/dashboard', { replace: true });
-            }
+            checkUserProfileAndRedirect();
           } else {
             // No authentication, redirect to login
             navigate('/login', { replace: true });
@@ -58,8 +53,33 @@ const OAuthCallback: React.FC = () => {
       }
     };
 
+    const checkUserProfileAndRedirect = async () => {
+      try {
+        if (!user) return;
+        
+        // Check if user has profile
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+
+        const hasProfile = !error && data;
+        
+        if (hasProfile) {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/onboarding', { replace: true });
+        }
+      } catch (err) {
+        console.error('Error checking profile:', err);
+        // Default to dashboard if there's an error
+        navigate('/dashboard', { replace: true });
+      }
+    };
+
     handleOAuthCallback();
-  }, [navigate, user, needsOnboarding]);
+  }, [navigate, user]);
 
   if (loading) {
     return (
