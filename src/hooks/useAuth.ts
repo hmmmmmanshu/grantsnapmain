@@ -8,12 +8,36 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Handle OAuth callback with hash fragment
+    const handleAuthCallback = async () => {
+      const hash = window.location.hash
+      if (hash && hash.includes('access_token')) {
+        try {
+          const { data, error } = await supabase.auth.getSession()
+          if (error) {
+            console.error('Error getting session after OAuth:', error)
+          } else if (data.session) {
+            setSession(data.session)
+            setUser(data.session.user)
+            setLoading(false)
+            // Clean up the URL hash
+            window.history.replaceState(null, '', window.location.pathname)
+          }
+        } catch (error) {
+          console.error('Error handling OAuth callback:', error)
+        }
+      }
+    }
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     })
+
+    // Handle OAuth callback
+    handleAuthCallback()
 
     // Listen for auth changes
     const {
@@ -69,7 +93,7 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

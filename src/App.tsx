@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingFlow from "./components/OnboardingFlow";
+import OAuthCallback from "./components/OAuthCallback";
 
 // Create the query client outside of the component to avoid recreation on each render
 const queryClient = new QueryClient({
@@ -38,6 +39,7 @@ const App: React.FC = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/auth/callback" element={<OAuthCallback />} />
             <Route path="/onboarding" element={
               <ProtectedRoute>
                 <OnboardingFlow />
