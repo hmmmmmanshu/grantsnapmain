@@ -15,10 +15,63 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from '@/components/ui/sheet';
-import { User, Building, Target, Users, FileText } from 'lucide-react';
+import { User, Building, Target, Users, FileText, Save } from 'lucide-react';
+import { useProfile } from '@/hooks/useProfile';
+import { toast } from '@/hooks/use-toast';
 
 const ProfileHub = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { profile, loading, saveProfile } = useProfile();
+  const [formData, setFormData] = useState({
+    startup_name: '',
+    one_line_pitch: '',
+    problem_statement: '',
+    solution_description: '',
+    target_market: '',
+    team_description: '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  // Update form data when profile loads
+  React.useEffect(() => {
+    if (profile) {
+      setFormData({
+        startup_name: profile.startup_name || '',
+        one_line_pitch: profile.one_line_pitch || '',
+        problem_statement: profile.problem_statement || '',
+        solution_description: profile.solution_description || '',
+        target_market: profile.target_market || '',
+        team_description: profile.team_description || '',
+      });
+    }
+  }, [profile]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const { error } = await saveProfile(formData);
+      if (error) {
+        toast({
+          title: "Error",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Profile updated successfully!",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save profile",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -27,9 +80,19 @@ const ProfileHub = () => {
           variant="outline" 
           size="lg"
           className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
+          disabled={loading}
         >
-          <User className="w-4 h-4 mr-2" />
-          Profile & Autofill Hub
+          {loading ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Loading...
+            </>
+          ) : (
+            <>
+              <User className="w-4 h-4 mr-2" />
+              Profile & Autofill Hub
+            </>
+          )}
         </Button>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto">
@@ -77,38 +140,43 @@ const ProfileHub = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="company-name">Company Name</Label>
-                      <Input id="company-name" placeholder="Enter your company name" />
+                      <Label htmlFor="startup-name">Startup Name</Label>
+                      <Input 
+                        id="startup-name" 
+                        placeholder="Enter your startup name"
+                        value={formData.startup_name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, startup_name: e.target.value }))}
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="website">Website URL</Label>
-                      <Input id="website" placeholder="https://yourcompany.com" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="location">Company Location</Label>
-                      <Input id="location" placeholder="City, State/Country" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="company-type">Company Type</Label>
-                      <Select>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select company type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="for-profit">For-Profit (C-Corp, LLC, etc.)</SelectItem>
-                          <SelectItem value="non-profit">Non-Profit (501(c)(3), etc.)</SelectItem>
-                          <SelectItem value="academic">Academic/University</SelectItem>
-                          <SelectItem value="individual">Individual Researcher</SelectItem>
-                          <SelectItem value="student">Student Project</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="one-line-pitch">One Line Pitch</Label>
+                      <Input 
+                        id="one-line-pitch" 
+                        placeholder="Brief description of your startup"
+                        value={formData.one_line_pitch}
+                        onChange={(e) => setFormData(prev => ({ ...prev, one_line_pitch: e.target.value }))}
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tax-id">Tax ID / EIN</Label>
-                    <Input id="tax-id" placeholder="Enter your Tax ID or EIN" />
+                    <Label htmlFor="problem-statement">Problem Statement</Label>
+                    <Textarea 
+                      id="problem-statement" 
+                      placeholder="Describe the problem your startup solves"
+                      value={formData.problem_statement}
+                      onChange={(e) => setFormData(prev => ({ ...prev, problem_statement: e.target.value }))}
+                      rows={4}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="solution-description">Solution Description</Label>
+                    <Textarea 
+                      id="solution-description" 
+                      placeholder="Describe your solution and how it works"
+                      value={formData.solution_description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, solution_description: e.target.value }))}
+                      rows={4}
+                    />
                   </div>
                 </CardContent>
               </Card>
@@ -179,7 +247,13 @@ const ProfileHub = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="target-market">Target Market</Label>
-                    <Textarea id="target-market" placeholder="Ideal customer profile" rows={3} />
+                    <Textarea 
+                      id="target-market" 
+                      placeholder="Ideal customer profile" 
+                      value={formData.target_market}
+                      onChange={(e) => setFormData(prev => ({ ...prev, target_market: e.target.value }))}
+                      rows={3} 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="competitors">Competitor Landscape</Label>
@@ -234,8 +308,14 @@ const ProfileHub = () => {
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="team-bios">Founder & Team Bios</Label>
-                    <Textarea id="team-bios" placeholder="Brief bios for key members (100-word and 250-word versions recommended)" rows={6} />
+                    <Label htmlFor="team-description">Team Description</Label>
+                    <Textarea 
+                      id="team-description" 
+                      placeholder="Brief bios for key members and team information" 
+                      value={formData.team_description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, team_description: e.target.value }))}
+                      rows={6} 
+                    />
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,8 +402,18 @@ const ProfileHub = () => {
             <Button variant="outline" onClick={() => setIsOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setIsOpen(false)}>
-              Save Profile
+            <Button onClick={handleSave} disabled={saving || loading}>
+              {saving ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Profile
+                </>
+              )}
             </Button>
           </div>
         </div>
