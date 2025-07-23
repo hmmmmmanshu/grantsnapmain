@@ -7,10 +7,13 @@ import OpportunityTable from '@/components/dashboard/OpportunityTable';
 import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
+import TeamManagement from '@/components/dashboard/TeamManagement';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Navigate } from 'react-router-dom';
 import DebugInfo from '@/components/DebugInfo';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Target, Users } from 'lucide-react';
 
 // Sample data button component for testing
 const SampleDataButton = ({ onAddSampleData }: { onAddSampleData: () => void }) => (
@@ -38,6 +41,7 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<'deadline' | 'saved'>('deadline');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
+  const [activeTab, setActiveTab] = useState<'opportunities' | 'team'>('opportunities');
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
@@ -73,54 +77,72 @@ const Dashboard = () => {
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
-          {/* Profile & Autofill Hub - Primary Feature */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
-              <p className="text-gray-600">Manage your funding opportunities and profile</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {opportunities.length === 0 && (
-                <SampleDataButton onAddSampleData={addSampleData} />
+          {/* Main Navigation Tabs */}
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'opportunities' | 'team')} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="opportunities" className="flex items-center gap-2">
+                <Target className="h-4 w-4" />
+                Funding Opportunities
+              </TabsTrigger>
+              <TabsTrigger value="team" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                Team Management
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="opportunities" className="space-y-6">
+              {/* Profile & Autofill Hub - Primary Feature */}
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
+                  <p className="text-gray-600">Manage your funding opportunities and profile</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  {opportunities.length === 0 && (
+                    <SampleDataButton onAddSampleData={addSampleData} />
+                  )}
+                  <ProfileHub />
+                </div>
+              </div>
+
+              <OpportunityPipeline opportunities={opportunities} />
+              
+              <ViewToggle 
+                selectedView={selectedView} 
+                onViewChange={setSelectedView} 
+              />
+              
+              <ControlBar
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+              />
+              
+              {opportunitiesLoading ? (
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Loading opportunities...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <p className="text-red-500">Error loading opportunities: {error}</p>
+                </div>
+              ) : (
+                <OpportunityTable
+                  opportunities={sortedOpportunities}
+                  onOpportunityClick={setSelectedOpportunity}
+                  onStatusUpdate={updateStatus}
+                  onDelete={deleteOpportunity}
+                />
               )}
-              <ProfileHub />
-            </div>
-          </div>
+            </TabsContent>
 
-          <OpportunityPipeline opportunities={opportunities} />
-          
-          <ViewToggle 
-            selectedView={selectedView} 
-            onViewChange={setSelectedView} 
-          />
-          
-          <ControlBar
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-          
-          {opportunitiesLoading ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Loading opportunities...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-12">
-              <p className="text-red-500">Error loading opportunities: {error}</p>
-            </div>
-          ) : (
-            <OpportunityTable
-              opportunities={sortedOpportunities}
-              onOpportunityClick={setSelectedOpportunity}
-              onStatusUpdate={updateStatus}
-              onDelete={deleteOpportunity}
-            />
-          )}
-
-
+            <TabsContent value="team" className="space-y-6">
+              <TeamManagement />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

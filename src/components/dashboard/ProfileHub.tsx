@@ -29,6 +29,7 @@ const ProfileHub = () => {
     error: docsError,
     uploadDocument,
     deleteDocument,
+    getDocumentUrl,
     refetch: refetchDocuments,
   } = useDocuments();
   const [uploading, setUploading] = useState(false);
@@ -90,8 +91,21 @@ const ProfileHub = () => {
     if (!selectedFile) return;
     setUploading(true);
     setUploadError(null);
-    const { error } = await uploadDocument(selectedFile);
-    if (error) setUploadError(error);
+    const { error, success } = await uploadDocument(selectedFile);
+    if (error) {
+      setUploadError(error);
+      toast({
+        title: "Upload Failed",
+        description: error,
+        variant: "destructive",
+      });
+    } else if (success) {
+      toast({
+        title: "Upload Successful",
+        description: `${selectedFile.name} uploaded successfully!`,
+      });
+      refetchDocuments();
+    }
     setUploading(false);
     setSelectedFile(null);
   };
@@ -418,23 +432,41 @@ const ProfileHub = () => {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                asChild
                                 title="Download"
+                                onClick={async () => {
+                                  const url = await getDocumentUrl(doc.storage_path);
+                                  if (url) {
+                                    window.open(url, '_blank');
+                                  } else {
+                                    toast({
+                                      title: "Error",
+                                      description: "Failed to generate download link",
+                                      variant: "destructive",
+                                    });
+                                  }
+                                }}
                               >
-                                <a href={
-                                  // Assuming supabase.storage.from('documents').getPublicUrl is available
-                                  // This part needs actual implementation of supabase client
-                                  // For now, it's a placeholder.
-                                  `https://storage.googleapis.com/your-bucket-name/${doc.storage_path}`
-                                } target="_blank" rel="noopener noreferrer">
-                                  <Download className="w-4 h-4" />
-                                </a>
+                                <Download className="w-4 h-4" />
                               </Button>
                               <Button
                                 size="icon"
                                 variant="ghost"
                                 title="Delete"
-                                onClick={() => deleteDocument(doc.id, doc.storage_path)}
+                                onClick={async () => {
+                                  const { error, success } = await deleteDocument(doc.id, doc.storage_path);
+                                  if (error) {
+                                    toast({
+                                      title: "Delete Failed",
+                                      description: error,
+                                      variant: "destructive",
+                                    });
+                                  } else if (success) {
+                                    toast({
+                                      title: "Document Deleted",
+                                      description: `${doc.document_name} deleted successfully!`,
+                                    });
+                                  }
+                                }}
                               >
                                 <Trash2 className="w-4 h-4 text-red-600" />
                               </Button>
