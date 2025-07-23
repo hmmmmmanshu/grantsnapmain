@@ -15,13 +15,25 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from '@/components/ui/sheet';
-import { User, Building, Target, Users, FileText, Save } from 'lucide-react';
+import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from '@/hooks/use-toast';
+import { useDocuments } from '@/hooks/useDocuments';
 
 const ProfileHub = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { profile, loading, saveProfile } = useProfile();
+  const {
+    documents,
+    loading: docsLoading,
+    error: docsError,
+    uploadDocument,
+    deleteDocument,
+    refetch: refetchDocuments,
+  } = useDocuments();
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     startup_name: '',
     one_line_pitch: '',
@@ -71,6 +83,17 @@ const ProfileHub = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Docs Tab upload handler
+  const handleDocUpload = async () => {
+    if (!selectedFile) return;
+    setUploading(true);
+    setUploadError(null);
+    const { error } = await uploadDocument(selectedFile);
+    if (error) setUploadError(error);
+    setUploading(false);
+    setSelectedFile(null);
   };
 
   return (
@@ -360,22 +383,74 @@ const ProfileHub = () => {
                   <CardTitle>Documents & Links</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">Document Uploads</h4>
-                    <div className="grid grid-cols-1 gap-4">
+                  {/* Upload Section */}
+                  <div className="space-y-2">
+                    <Label htmlFor="supporting-docs">Upload Document</Label>
+                    <Input
+                      id="supporting-docs"
+                      type="file"
+                      onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                      disabled={uploading}
+                    />
+                    <Button onClick={handleDocUpload} disabled={!selectedFile || uploading} className="mt-2">
+                      {uploading ? 'Uploading...' : 'Upload'}
+                    </Button>
+                    {uploadError && <div className="text-red-600 text-xs mt-1">{uploadError}</div>}
+                  </div>
+                  {/* File List Section */}
+                  <div className="mt-6">
+                    <h4 className="font-semibold mb-2">Your Uploaded Documents</h4>
+                    {docsLoading ? (
+                      <div>Loading documents...</div>
+                    ) : docsError ? (
+                      <div className="text-red-600">{docsError}</div>
+                    ) : documents.length === 0 ? (
+                      <div className="text-gray-500">No documents uploaded yet.</div>
+                    ) : (
                       <div className="space-y-2">
-                        <Label htmlFor="pitch-deck">Pitch Deck (PDF)</Label>
-                        <Input id="pitch-deck" type="file" accept=".pdf" />
+                        {documents.map(doc => (
+                          <div key={doc.id} className="flex items-center justify-between border rounded px-3 py-2 bg-gray-50">
+                            <div>
+                              <div className="font-medium">{doc.document_name}</div>
+                              <div className="text-xs text-gray-500">Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                asChild
+                                title="Download"
+                              >
+                                <a href={
+                                  // Assuming supabase.storage.from('documents').getPublicUrl is available
+                                  // This part needs actual implementation of supabase client
+                                  // For now, it's a placeholder.
+                                  `https://storage.googleapis.com/your-bucket-name/${doc.storage_path}`
+                                } target="_blank" rel="noopener noreferrer">
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                title="Delete"
+                                onClick={() => deleteDocument(doc.id, doc.storage_path)}
+                              >
+                                <Trash2 className="w-4 h-4 text-red-600" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="outline"
+                                title="Analyze with AI (coming soon)"
+                                disabled
+                              >
+                                <Bot className="w-4 h-4 text-blue-600" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="business-plan">Business Plan / Whitepaper (PDF)</Label>
-                        <Input id="business-plan" type="file" accept=".pdf" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="supporting-docs">Supporting Documents</Label>
-                        <Input id="supporting-docs" type="file" multiple />
-                      </div>
-                    </div>
+                    )}
                   </div>
                   
                   <div className="space-y-4">
