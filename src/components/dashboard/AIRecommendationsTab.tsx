@@ -10,12 +10,13 @@ import { useTeam } from '@/hooks/useTeam';
 import { useSkills } from '@/hooks/useSkills';
 import { useNotifications } from '@/hooks/useNotifications';
 import { AITeamRecommendation } from '@/types/team';
-import { Lightbulb, Sparkles, CheckCircle, XCircle, Clock, AlertTriangle, TrendingUp, Brain } from 'lucide-react';
+import { Lightbulb, Sparkles, CheckCircle, XCircle, Clock, AlertTriangle, TrendingUp, Brain, Users } from 'lucide-react';
 
 export default function AIRecommendationsTab() {
   const { 
     recommendations, 
     loading, 
+    error,
     generating,
     updateRecommendationStatus, 
     deleteRecommendation,
@@ -32,76 +33,126 @@ export default function AIRecommendationsTab() {
   const [filterStatus, setFilterStatus] = useState<string>('');
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
-  const stats = getRecommendationStats();
+  // Safely get stats
+  const getSafeStats = () => {
+    try {
+      return getRecommendationStats();
+    } catch (error) {
+      console.error('Error getting recommendation stats:', error);
+      return {
+        total: 0,
+        pending: 0,
+        implemented: 0,
+        dismissed: 0,
+        implementationRate: 0
+      };
+    }
+  };
 
-  const filteredRecommendations = recommendations.filter(rec => {
-    const matchesType = !filterType || rec.recommendation_type === filterType;
-    const matchesPriority = !filterPriority || rec.priority === filterPriority;
-    const matchesStatus = !filterStatus || rec.status === filterStatus;
-    return matchesType && matchesPriority && matchesStatus;
-  });
+  const stats = getSafeStats();
+
+  // Safely filter recommendations
+  const getFilteredRecommendations = () => {
+    try {
+      return (recommendations || []).filter(rec => {
+        const matchesType = !filterType || rec.recommendation_type === filterType;
+        const matchesPriority = !filterPriority || rec.priority === filterPriority;
+        const matchesStatus = !filterStatus || rec.status === filterStatus;
+        return matchesType && matchesPriority && matchesStatus;
+      });
+    } catch (error) {
+      console.error('Error filtering recommendations:', error);
+      return [];
+    }
+  };
+
+  const filteredRecommendations = getFilteredRecommendations();
 
   const handleGenerateRecommendations = async () => {
-    if (teamMembers.length === 0) {
-      alert('Please add team members first to generate recommendations.');
-      return;
-    }
-
-    const teamData = {
-      teamMembers,
-      skills: [], // This would be populated with skill matrix data
-      opportunities: [], // This would be populated with opportunities data
-      preferences: preferences || {
-        email_notifications: true,
-        push_notifications: true,
-        grant_deadline_reminders: true,
-        team_updates: true,
-        ai_recommendations: true,
-        weekly_summary: true,
-        reminder_frequency: 'daily',
-        quiet_hours_start: '22:00',
-        quiet_hours_end: '08:00',
+    try {
+      if ((teamMembers || []).length === 0) {
+        alert('Please add team members first to generate recommendations.');
+        return;
       }
-    };
 
-    await generateTeamOptimizationRecommendations(teamData);
-    setShowGenerateDialog(false);
+      const teamData = {
+        teamMembers: teamMembers || [],
+        skills: [], // This would be populated with skill matrix data
+        opportunities: [], // This would be populated with opportunities data
+        preferences: preferences || {
+          email_notifications: true,
+          push_notifications: true,
+          grant_deadline_reminders: true,
+          team_updates: true,
+          ai_recommendations: true,
+          weekly_summary: true,
+          reminder_frequency: 'daily',
+          quiet_hours_start: '22:00',
+          quiet_hours_end: '08:00',
+        }
+      };
+
+      await generateTeamOptimizationRecommendations(teamData);
+      setShowGenerateDialog(false);
+    } catch (error) {
+      console.error('Error generating recommendations:', error);
+    }
   };
 
   const handleStatusUpdate = async (recommendation: AITeamRecommendation, status: 'pending' | 'implemented' | 'dismissed') => {
-    await updateRecommendationStatus(recommendation.id, status);
+    try {
+      await updateRecommendationStatus(recommendation.id, status);
+    } catch (error) {
+      console.error('Error updating recommendation status:', error);
+    }
   };
 
   const handleDelete = async (recommendation: AITeamRecommendation) => {
-    if (confirm('Are you sure you want to delete this recommendation?')) {
-      await deleteRecommendation(recommendation.id);
+    try {
+      if (confirm('Are you sure you want to delete this recommendation?')) {
+        await deleteRecommendation(recommendation.id);
+      }
+    } catch (error) {
+      console.error('Error deleting recommendation:', error);
     }
   };
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100 border-red-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-100 border-yellow-200';
-      case 'low': return 'text-green-600 bg-green-100 border-green-200';
-      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+    try {
+      switch (priority) {
+        case 'high': return 'text-red-600 bg-red-100 border-red-200';
+        case 'medium': return 'text-yellow-600 bg-yellow-100 border-yellow-200';
+        case 'low': return 'text-green-600 bg-green-100 border-green-200';
+        default: return 'text-gray-600 bg-gray-100 border-gray-200';
+      }
+    } catch (error) {
+      return 'text-gray-600 bg-gray-100 border-gray-200';
     }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'implemented': return 'text-green-600 bg-green-100 border-green-200';
-      case 'dismissed': return 'text-gray-600 bg-gray-100 border-gray-200';
-      case 'pending': return 'text-blue-600 bg-blue-100 border-blue-200';
-      default: return 'text-gray-600 bg-gray-100 border-gray-200';
+    try {
+      switch (status) {
+        case 'implemented': return 'text-green-600 bg-green-100 border-green-200';
+        case 'dismissed': return 'text-gray-600 bg-gray-100 border-gray-200';
+        case 'pending': return 'text-blue-600 bg-blue-100 border-blue-200';
+        default: return 'text-gray-600 bg-gray-100 border-gray-200';
+      }
+    } catch (error) {
+      return 'text-gray-600 bg-gray-100 border-gray-200';
     }
   };
 
   const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'skill_gap': return <Brain className="h-4 w-4" />;
-      case 'role_assignment': return <TrendingUp className="h-4 w-4" />;
-      case 'team_structure': return <Lightbulb className="h-4 w-4" />;
-      default: return <Lightbulb className="h-4 w-4" />;
+    try {
+      switch (type) {
+        case 'skill_gap': return <Brain className="h-4 w-4" />;
+        case 'role_assignment': return <Users className="h-4 w-4" />;
+        case 'team_structure': return <TrendingUp className="h-4 w-4" />;
+        default: return <Lightbulb className="h-4 w-4" />;
+      }
+    } catch (error) {
+      return <Lightbulb className="h-4 w-4" />;
     }
   };
 
@@ -110,6 +161,16 @@ export default function AIRecommendationsTab() {
       <Card>
         <CardContent className="flex items-center justify-center h-32">
           <div className="text-muted-foreground">Loading AI recommendations...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <div className="text-red-600">Error loading AI recommendations: {error}</div>
         </CardContent>
       </Card>
     );

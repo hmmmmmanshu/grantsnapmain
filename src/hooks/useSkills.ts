@@ -244,9 +244,9 @@ export const useSkills = () => {
     const skillGaps: SkillGapAnalysis[] = [];
 
     skillMatrix.forEach(entry => {
-      const totalProficiency = entry.teamMembers.reduce((sum, member) => 
+      const totalProficiency = entry.teamMembers.length > 0 ? entry.teamMembers.reduce((sum, member) => 
         sum + member.proficiency, 0
-      );
+      ) : 0;
       const currentStrength = entry.teamMembers.length > 0 
         ? totalProficiency / entry.teamMembers.length 
         : 0;
@@ -310,9 +310,9 @@ export const useSkills = () => {
     return {
       totalSkills,
       categories: skillsByCategory,
-      mostCommonCategory: skillsByCategory.reduce((prev, current) => 
+      mostCommonCategory: skillsByCategory.length > 0 ? skillsByCategory.reduce((prev, current) => 
         prev.count > current.count ? prev : current
-      ),
+      ) : null,
     };
   };
 

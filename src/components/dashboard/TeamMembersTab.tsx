@@ -15,7 +15,7 @@ import { CreateTeamMemberData, TeamMember } from '@/types/team';
 import { Plus, Edit, Trash2, ExternalLink, Mail, Github, Linkedin, User, Search, Filter } from 'lucide-react';
 
 export default function TeamMembersTab() {
-  const { teamMembers, loading, createTeamMember, updateTeamMember, deleteTeamMember, toggleTeamMemberStatus, searchTeamMembers } = useTeam();
+  const { teamMembers, loading, error, createTeamMember, updateTeamMember, deleteTeamMember, toggleTeamMemberStatus, searchTeamMembers } = useTeam();
   const { skills, getSkillsByCategory } = useSkills();
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,24 +33,49 @@ export default function TeamMembersTab() {
     portfolio_url: '',
   });
 
-  const filteredMembers = searchTeamMembers(searchTerm).filter(member => 
-    !filterRole || member.role.toLowerCase().includes(filterRole.toLowerCase())
-  );
+  // Safely get filtered members
+  const getFilteredMembers = () => {
+    try {
+      const searched = searchTeamMembers(searchTerm);
+      return searched.filter(member => 
+        !filterRole || member.role.toLowerCase().includes(filterRole.toLowerCase())
+      );
+    } catch (error) {
+      console.error('Error filtering members:', error);
+      return teamMembers || [];
+    }
+  };
 
-  const roles = [...new Set(teamMembers.map(m => m.role))];
+  const filteredMembers = getFilteredMembers();
+
+  // Safely get roles
+  const getRoles = () => {
+    try {
+      return [...new Set((teamMembers || []).map(m => m.role))];
+    } catch (error) {
+      console.error('Error getting roles:', error);
+      return [];
+    }
+  };
+
+  const roles = getRoles();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (editingMember) {
-      await updateTeamMember(editingMember.id, formData);
-    } else {
-      await createTeamMember(formData);
+    try {
+      if (editingMember) {
+        await updateTeamMember(editingMember.id, formData);
+      } else {
+        await createTeamMember(formData);
+      }
+      
+      setShowAddDialog(false);
+      setEditingMember(null);
+      resetForm();
+    } catch (error) {
+      console.error('Error submitting form:', error);
     }
-    
-    setShowAddDialog(false);
-    setEditingMember(null);
-    resetForm();
   };
 
   const resetForm = () => {
@@ -83,12 +108,20 @@ export default function TeamMembersTab() {
 
   const handleDelete = async (member: TeamMember) => {
     if (confirm(`Are you sure you want to remove ${member.name} from the team?`)) {
-      await deleteTeamMember(member.id);
+      try {
+        await deleteTeamMember(member.id);
+      } catch (error) {
+        console.error('Error deleting member:', error);
+      }
     }
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    try {
+      return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    } catch (error) {
+      return 'U';
+    }
   };
 
   if (loading) {
@@ -96,6 +129,16 @@ export default function TeamMembersTab() {
       <Card>
         <CardContent className="flex items-center justify-center h-32">
           <div className="text-muted-foreground">Loading team members...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <div className="text-red-600">Error loading team members: {error}</div>
         </CardContent>
       </Card>
     );

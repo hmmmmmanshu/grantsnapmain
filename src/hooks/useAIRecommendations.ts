@@ -163,7 +163,7 @@ export const useAIRecommendations = () => {
         })),
         opportunities: teamData.opportunities,
         skillGaps: teamData.skills.filter(entry => entry.teamMembers.length === 0 || 
-          entry.teamMembers.reduce((sum, member) => sum + member.proficiency, 0) / entry.teamMembers.length < 3
+          (entry.teamMembers.length > 0 && entry.teamMembers.reduce((sum, member) => sum + member.proficiency, 0) / entry.teamMembers.length < 3)
         ).map(entry => ({
           skill: entry.skill.name,
           category: entry.skill.category,

@@ -18,6 +18,7 @@ export default function SkillMatrixTab() {
   const { 
     skills, 
     loading, 
+    error,
     getSkillMatrix, 
     analyzeSkillGaps, 
     addTeamMemberSkill,
@@ -39,60 +40,93 @@ export default function SkillMatrixTab() {
     is_primary_skill: false,
   });
 
-  const categories = getSkillCategories();
+  // Safely get categories
+  const getSafeCategories = () => {
+    try {
+      return getSkillCategories();
+    } catch (error) {
+      console.error('Error getting categories:', error);
+      return [];
+    }
+  };
+
+  const categories = getSafeCategories();
 
   useEffect(() => {
-    if (teamMembers.length > 0 && skills.length > 0) {
+    if ((teamMembers || []).length > 0 && (skills || []).length > 0) {
       loadSkillMatrix();
     }
   }, [teamMembers, skills]);
 
   const loadSkillMatrix = async () => {
-    const matrix = await getSkillMatrix(teamMembers);
-    setSkillMatrix(matrix);
-    
-    const gaps = analyzeSkillGaps(matrix);
-    setSkillGaps(gaps);
+    try {
+      const matrix = await getSkillMatrix(teamMembers || []);
+      setSkillMatrix(matrix || []);
+      
+      const gaps = analyzeSkillGaps(matrix || []);
+      setSkillGaps(gaps || []);
+    } catch (error) {
+      console.error('Error loading skill matrix:', error);
+      setSkillMatrix([]);
+      setSkillGaps([]);
+    }
   };
 
-  const filteredSkills = skillMatrix.filter(entry => {
-    const matchesCategory = !selectedCategory || entry.skill.category === selectedCategory;
-    const matchesSearch = !searchTerm || 
-      entry.skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.skill.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesCategory && matchesSearch;
+  const filteredSkills = (skillMatrix || []).filter(entry => {
+    try {
+      const matchesCategory = !selectedCategory || entry.skill.category === selectedCategory;
+      const matchesSearch = !searchTerm || 
+        entry.skill.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.skill.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      return matchesCategory && matchesSearch;
+    } catch (error) {
+      console.error('Error filtering skills:', error);
+      return false;
+    }
   });
 
   const handleAddSkill = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (selectedMember && selectedSkill) {
-      await addTeamMemberSkill(selectedMember.id, skillFormData);
-      setShowAddSkillDialog(false);
-      setSelectedMember(null);
-      setSelectedSkill(null);
-      setSkillFormData({
-        skill_id: '',
-        proficiency_level: 3,
-        years_experience: 0,
-        is_primary_skill: false,
-      });
-      loadSkillMatrix();
+    try {
+      if (selectedMember && selectedSkill) {
+        await addTeamMemberSkill(selectedMember.id, skillFormData);
+        setShowAddSkillDialog(false);
+        setSelectedMember(null);
+        setSelectedSkill(null);
+        setSkillFormData({
+          skill_id: '',
+          proficiency_level: 3,
+          years_experience: 0,
+          is_primary_skill: false,
+        });
+        loadSkillMatrix();
+      }
+    } catch (error) {
+      console.error('Error adding skill:', error);
     }
   };
 
   const getProficiencyColor = (level: number) => {
-    if (level >= 4) return 'bg-green-500';
-    if (level >= 3) return 'bg-yellow-500';
-    if (level >= 2) return 'bg-orange-500';
-    return 'bg-red-500';
+    try {
+      if (level >= 4) return 'bg-green-500';
+      if (level >= 3) return 'bg-yellow-500';
+      if (level >= 2) return 'bg-orange-500';
+      return 'bg-red-500';
+    } catch (error) {
+      return 'bg-gray-500';
+    }
   };
 
   const getGapPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-600 bg-red-100';
-      case 'medium': return 'text-yellow-600 bg-yellow-100';
-      case 'low': return 'text-green-600 bg-green-100';
-      default: return 'text-gray-600 bg-gray-100';
+    try {
+      switch (priority) {
+        case 'high': return 'text-red-600 bg-red-100';
+        case 'medium': return 'text-yellow-600 bg-yellow-100';
+        case 'low': return 'text-green-600 bg-green-100';
+        default: return 'text-gray-600 bg-gray-100';
+      }
+    } catch (error) {
+      return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -101,6 +135,16 @@ export default function SkillMatrixTab() {
       <Card>
         <CardContent className="flex items-center justify-center h-32">
           <div className="text-muted-foreground">Loading skill matrix...</div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center h-32">
+          <div className="text-red-600">Error loading skills: {error}</div>
         </CardContent>
       </Card>
     );
