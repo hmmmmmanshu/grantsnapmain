@@ -1,0 +1,16 @@
+# Cursor Rules for Grants Snap Project
+
+## Project Overview
+This is a Grants Snap project with Supabase integration.
+
+## Development Guidelines
+- Use TypeScript for all new code
+- Follow the existing component structure
+- Use the established Supabase hooks for data operations
+- Follow the existing Supabase integration patterns
+
+## File Structure
+- `src/lib/supabase.ts` - Supabase client configuration
+- `src/hooks/useAuth.ts` - Authentication hooks
+- `src/hooks/useOpportunities.ts` - Opportunities data hooks
+- `src/hooks/useProfile.ts` - Profile management hooks 
