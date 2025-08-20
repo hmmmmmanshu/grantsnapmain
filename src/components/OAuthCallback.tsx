@@ -14,30 +14,41 @@ const OAuthCallback: React.FC = () => {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // Check if we have a hash fragment with access token
+        // Check if we have a hash fragment with access token (implicit flow)
         const hash = window.location.hash;
         if (hash && hash.includes('access_token')) {
-          // Get the current session
-          const { data, error } = await supabase.auth.getSession();
+          // Extract tokens from hash fragment
+          const params = new URLSearchParams(hash.substring(1));
+          const accessToken = params.get('access_token');
+          const refreshToken = params.get('refresh_token');
           
-          if (error) {
-            setError('Authentication failed. Please try again.');
-            console.error('OAuth callback error:', error);
-          } else if (data.session) {
-            // Successfully authenticated
-            console.log('OAuth authentication successful');
+          if (accessToken && refreshToken) {
+            // Set the session with the tokens
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken,
+            });
             
-            // Clean up the URL
-            window.history.replaceState(null, '', window.location.pathname);
-            
-            // Wait a moment for the session to be fully established
-            setTimeout(() => {
-              // Check if user has profile
-              checkUserProfileAndRedirect();
-            }, 1000);
+            if (error) {
+              setError('Authentication failed. Please try again.');
+              console.error('OAuth callback error:', error);
+            } else if (data.session) {
+              // Successfully authenticated
+              console.log('OAuth authentication successful');
+              
+              // Clean up the URL
+              window.history.replaceState(null, '', window.location.pathname);
+              
+              // Wait a moment for the session to be fully established
+              setTimeout(() => {
+                checkUserProfileAndRedirect();
+              }, 1000);
+            }
+          } else {
+            setError('Invalid OAuth response. Please try again.');
           }
         } else {
-          // No hash fragment, check if user is already authenticated
+          // Check if user is already authenticated
           if (user) {
             checkUserProfileAndRedirect();
           } else {

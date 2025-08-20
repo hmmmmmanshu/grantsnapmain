@@ -7,6 +7,15 @@ export function useAuth() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Helper function to get the correct redirect URL based on environment
+  const getRedirectUrl = (path: string) => {
+    if (import.meta.env.DEV) {
+      return `http://localhost:5173${path}`
+    }
+    // Production domain
+    return `https://grantsnap.pro${path}`
+  }
+
   useEffect(() => {
     // Handle OAuth callback with hash fragment
     const handleAuthCallback = async () => {
@@ -74,7 +83,7 @@ export function useAuth() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: getRedirectUrl('/dashboard')
         }
       })
       
@@ -93,7 +102,7 @@ export function useAuth() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: getRedirectUrl('/auth/callback'),
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -123,7 +132,7 @@ export function useAuth() {
   const resetPassword = async (email: string) => {
     try {
       const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: getRedirectUrl('/reset-password')
       })
       
       if (error) {
@@ -158,7 +167,7 @@ export function useAuth() {
         type: 'signup',
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          emailRedirectTo: getRedirectUrl('/dashboard')
         }
       })
       

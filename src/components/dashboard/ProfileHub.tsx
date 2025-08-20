@@ -119,7 +119,7 @@ const ProfileHub = () => {
     
     try {
       // First, upload to pitch-decks storage bucket
-      const { data: supabase } = await import('@/lib/supabase');
+      const { supabase } = await import('@/lib/supabase');
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
