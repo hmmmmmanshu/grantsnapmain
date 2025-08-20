@@ -14,6 +14,7 @@ import DebugInfo from '@/components/DebugInfo';
 import { Target, Globe, Download } from 'lucide-react';
 import { isExtensionAvailable, promptExtensionInstallation } from '@/lib/extensionService';
 import ExtensionTest from '@/components/ExtensionTest';
+import { Button } from '@/components/ui/button';
 
 // Sample data button component for testing
 const SampleDataButton = ({ onAddSampleData }: { onAddSampleData: () => void }) => (

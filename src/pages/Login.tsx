@@ -86,12 +86,8 @@ const Login = () => {
       } else {
             // User is fully authenticated
         toast.success(isSignup ? 'Account created successfully!' : 'Signed in successfully!');
-            // Redirect new users to onboarding, existing users to dashboard
-            if (isSignup) {
-              navigate('/onboarding');
-            } else {
-        navigate('/dashboard');
-            }
+            // Redirect all users to dashboard - they can complete onboarding later if needed
+            navigate('/dashboard');
           }
       }
     } catch (error) {

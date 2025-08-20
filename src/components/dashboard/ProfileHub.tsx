@@ -208,33 +208,68 @@ const ProfileHub = () => {
         </SheetHeader>
         
         <div className="mt-6">
-          <Tabs defaultValue="organization" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="organization" className="flex items-center gap-1">
-                <Building className="w-3 h-3" />
-                <span className="hidden sm:inline">Organization</span>
-              </TabsTrigger>
-              <TabsTrigger value="pitch" className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span className="hidden sm:inline">Pitch</span>
-              </TabsTrigger>
-              <TabsTrigger value="pitch-deck" className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span className="hidden sm:inline">Pitch Deck</span>
-              </TabsTrigger>
-              <TabsTrigger value="market" className="flex items-center gap-1">
-                <Target className="w-3 h-3" />
-                <span className="hidden sm:inline">Market</span>
-              </TabsTrigger>
-              <TabsTrigger value="team" className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                <span className="hidden sm:inline">Team</span>
-              </TabsTrigger>
-              <TabsTrigger value="documents" className="flex items-center gap-1">
-                <FileText className="w-3 h-3" />
-                <span className="hidden sm:inline">Docs</span>
-              </TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="onboarding" className="w-full">
+                      <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="onboarding" className="flex items-center gap-1">
+              <User className="w-3 h-3" />
+              <span className="hidden sm:inline">Onboarding</span>
+            </TabsTrigger>
+            <TabsTrigger value="organization" className="flex items-center gap-1">
+              <Building className="w-3 h-3" />
+              <span className="hidden sm:inline">Organization</span>
+            </TabsTrigger>
+            <TabsTrigger value="pitch" className="flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              <span className="hidden sm:inline">Pitch</span>
+            </TabsTrigger>
+            <TabsTrigger value="pitch-deck" className="flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              <span className="hidden sm:inline">Pitch Deck</span>
+            </TabsTrigger>
+            <TabsTrigger value="market" className="flex items-center gap-1">
+              <Target className="w-3 h-3" />
+              <span className="hidden sm:inline">Market</span>
+            </TabsTrigger>
+            <TabsTrigger value="team" className="flex items-center gap-1">
+              <Users className="w-3 h-3" />
+              <span className="hidden sm:inline">Team</span>
+            </TabsTrigger>
+            <TabsTrigger value="documents" className="flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              <span className="hidden sm:inline">Docs</span>
+            </TabsTrigger>
+          </TabsList>
+
+            {/* Onboarding Tab */}
+            <TabsContent value="onboarding" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Complete Your Onboarding
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <User className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Welcome to Grants Snap!
+                    </h3>
+                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                      Complete your onboarding to unlock personalized grant recommendations, AI-powered insights, and advanced features.
+                    </p>
+                    <Button 
+                      onClick={() => window.location.href = '/onboarding'}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Start Onboarding
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Organization Tab */}
             <TabsContent value="organization" className="space-y-6">

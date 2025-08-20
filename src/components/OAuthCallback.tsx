@@ -66,11 +66,8 @@ const OAuthCallback: React.FC = () => {
 
         const hasProfile = !error && data;
         
-        if (hasProfile) {
-          navigate('/dashboard', { replace: true });
-        } else {
-          navigate('/onboarding', { replace: true });
-        }
+        // Always redirect to dashboard - users can complete onboarding later if needed
+        navigate('/dashboard', { replace: true });
       } catch (err) {
         console.error('Error checking profile:', err);
         // Default to dashboard if there's an error

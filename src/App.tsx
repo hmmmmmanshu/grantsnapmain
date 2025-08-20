@@ -81,14 +81,15 @@ const queryClient = new QueryClient({
   },
 });
 
-// AuthRedirector: Redirects authenticated users from / or /login to /dashboard
+// AuthRedirector: Redirects authenticated users from /login to /dashboard (but not from /)
 function AuthRedirector() {
   const { user, loading } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user && (location.pathname === '/' || location.pathname === '/login')) {
+    // Only redirect from /login to /dashboard, not from home page
+    if (!loading && user && location.pathname === '/login') {
       navigate('/dashboard', { replace: true });
     }
   }, [user, loading, location, navigate]);
@@ -129,7 +130,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
-              <ProtectedRoute requireOnboarding={true}>
+              <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
             } />
