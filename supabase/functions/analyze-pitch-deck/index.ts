@@ -287,15 +287,28 @@ serve(async (req) => {
     console.log(`Path: ${requestBody.file_path}`)
     // Download the file from storage
     console.log("Downloading file from storage...")
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from("pitch-decks")
-      .download(requestBody.file_path)
-    if (downloadError) {
-      console.error("File download failed:", downloadError)
+    // Try 'pitch-decks' first, then fall back to legacy 'documents' bucket
+    let fileData: Blob | null = null
+    let lastError: any = null
+    const attempt = async (bucket: string) => {
+      const { data, error } = await supabase.storage
+        .from(bucket)
+        .download(requestBody.file_path)
+      if (data) return data
+      lastError = error
+      return null
+    }
+    fileData = await attempt("pitch-decks")
+    if (!fileData) {
+      console.log("Fallback to 'documents' bucket...")
+      fileData = await attempt("documents")
+    }
+    if (!fileData) {
+      console.error("File download failed:", lastError)
       return new Response(
         JSON.stringify({ 
           error: "File Download Failed",
-          message: `Failed to download file: ${downloadError.message}` 
+          message: `Failed to download file: ${lastError?.message || 'Unknown error'}` 
         }),
         { 
           status: 500,
@@ -356,7 +369,7 @@ serve(async (req) => {
         pitch_deck_summary: summaryJson,
         updated_at: new Date().toISOString()
       })
-      .eq("user_id", user.id)
+      .eq("id", user.id)
     if (updateError) {
       console.error("Profile update failed:", updateError)
       return new Response(
