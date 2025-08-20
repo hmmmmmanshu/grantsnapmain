@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { broadcastUserAuthenticated } from '@/lib/extensionService';
 
 const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -31,10 +32,19 @@ const OAuthCallback: React.FC = () => {
             
             if (error) {
               setError('Authentication failed. Please try again.');
-              console.error('OAuth callback error:', error);
+              console.log('OAuth callback error:', error);
             } else if (data.session) {
               // Successfully authenticated
               console.log('OAuth authentication successful');
+              
+              // 🚀 PHASE 1 IMPLEMENTATION: Broadcast to extension
+              try {
+                await broadcastUserAuthenticated(data.user, data.session);
+                console.log('✅ Authentication broadcasted to extension successfully');
+              } catch (broadcastError) {
+                console.log('⚠️ Extension broadcast failed (non-critical):', broadcastError.message);
+                // Don't fail the login if extension broadcast fails
+              }
               
               // Clean up the URL
               window.history.replaceState(null, '', window.location.pathname);
@@ -50,6 +60,17 @@ const OAuthCallback: React.FC = () => {
         } else {
           // Check if user is already authenticated
           if (user) {
+            // 🚀 PHASE 1 IMPLEMENTATION: Broadcast existing session to extension
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session) {
+                await broadcastUserAuthenticated(user, session);
+                console.log('✅ Existing session broadcasted to extension');
+              }
+            } catch (broadcastError) {
+              console.log('⚠️ Extension broadcast failed (non-critical):', broadcastError.message);
+            }
+            
             checkUserProfileAndRedirect();
           } else {
             // No authentication, redirect to login
@@ -58,7 +79,7 @@ const OAuthCallback: React.FC = () => {
         }
       } catch (err) {
         setError('An unexpected error occurred. Please try again.');
-        console.error('OAuth callback error:', err);
+        console.log('OAuth callback error:', err);
       } finally {
         setLoading(false);
       }
@@ -80,7 +101,7 @@ const OAuthCallback: React.FC = () => {
         // Always redirect to dashboard - users can complete onboarding later if needed
         navigate('/dashboard', { replace: true });
       } catch (err) {
-        console.error('Error checking profile:', err);
+        console.log('Error checking profile:', err);
         // Default to dashboard if there's an error
         navigate('/dashboard', { replace: true });
       }

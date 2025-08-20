@@ -11,10 +11,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Navigate } from 'react-router-dom';
 import DebugInfo from '@/components/DebugInfo';
-import { Target, Globe, Download } from 'lucide-react';
-import { isExtensionAvailable, promptExtensionInstallation } from '@/lib/extensionService';
+import { Target, Globe, Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  isExtensionAvailable, 
+  promptExtensionInstallation,
+  broadcastUserAuthenticated,
+  broadcastProfileUpdate
+} from '@/lib/extensionService';
 import ExtensionTest from '@/components/ExtensionTest';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 
 // Sample data button component for testing
 const SampleDataButton = ({ onAddSampleData }: { onAddSampleData: () => void }) => (
@@ -43,20 +49,89 @@ const Dashboard = () => {
   const [sortBy, setSortBy] = useState<'deadline' | 'saved'>('deadline');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [extensionAvailable, setExtensionAvailable] = useState<boolean | null>(null);
+  const [extensionStatus, setExtensionStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
+  const [lastAuthBroadcast, setLastAuthBroadcast] = useState<Date | null>(null);
 
-  // Check extension availability on component mount
+  // Check extension availability and broadcast authentication on component mount
   useEffect(() => {
-    const checkExtension = async () => {
+    const initializeExtension = async () => {
       try {
+        // Check if extension is available
         const available = await isExtensionAvailable();
         setExtensionAvailable(available);
+        
+        if (available && user) {
+          // 🚀 PHASE 1 IMPLEMENTATION: Broadcast authentication to extension
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              await broadcastUserAuthenticated(user, session);
+              setExtensionStatus('connected');
+              setLastAuthBroadcast(new Date());
+              console.log('✅ Dashboard: Authentication broadcasted to extension');
+            }
+          } catch (broadcastError) {
+            console.log('⚠️ Dashboard: Extension broadcast failed:', broadcastError.message);
+            setExtensionStatus('error');
+          }
+        } else if (!available) {
+          setExtensionStatus('disconnected');
+        }
       } catch (error) {
+        console.log('Dashboard: Extension check failed:', error);
+        setExtensionStatus('error');
         setExtensionAvailable(false);
       }
     };
     
-    checkExtension();
-  }, []);
+    if (user) {
+      initializeExtension();
+    }
+  }, [user]);
+
+  // Monitor extension status periodically
+  useEffect(() => {
+    if (!user || !extensionAvailable) return;
+
+    const checkExtensionStatus = async () => {
+      try {
+        const available = await isExtensionAvailable();
+        if (available) {
+          setExtensionStatus('connected');
+        } else {
+          setExtensionStatus('disconnected');
+        }
+      } catch (error) {
+        setExtensionStatus('error');
+      }
+    };
+
+    // Check every 30 seconds
+    const interval = setInterval(checkExtensionStatus, 30000);
+    return () => clearInterval(interval);
+  }, [user, extensionAvailable]);
+
+  // Manual extension status refresh
+  const refreshExtensionStatus = async () => {
+    setExtensionStatus('checking');
+    try {
+      const available = await isExtensionAvailable();
+      setExtensionAvailable(available);
+      
+      if (available && user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await broadcastUserAuthenticated(user, session);
+          setExtensionStatus('connected');
+          setLastAuthBroadcast(new Date());
+        }
+      } else {
+        setExtensionStatus('disconnected');
+      }
+    } catch (error) {
+      setExtensionStatus('error');
+    }
+  };
 
   // Redirect if not authenticated
   if (!authLoading && !user) {
@@ -144,29 +219,53 @@ const Dashboard = () => {
 
           {/* Extension Integration & Virtual CFO Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Extension Status Card */}
+            {/* Enhanced Extension Status Card */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <Globe className="w-6 h-6 text-green-600" />
                   <h3 className="text-xl font-semibold text-gray-900">Chrome Extension</h3>
                 </div>
-                {extensionAvailable === null ? (
-                  <div className="w-3 h-3 bg-gray-400 rounded-full animate-pulse"></div>
-                ) : extensionAvailable ? (
-                  <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
-                    <span className="w-2 h-2 bg-green-600 rounded-full"></span>
-                    Active
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
-                    <span className="w-2 h-2 bg-red-600 rounded-full"></span>
-                    Not Installed
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {/* Status Indicator */}
+                  {extensionStatus === 'checking' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      Checking...
+                    </div>
+                  )}
+                  {extensionStatus === 'connected' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                      <CheckCircle className="w-3 h-3" />
+                      Connected
+                    </div>
+                  )}
+                  {extensionStatus === 'disconnected' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                      <AlertCircle className="w-3 h-3" />
+                      Disconnected
+                    </div>
+                  )}
+                  {extensionStatus === 'error' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                      <AlertCircle className="w-3 h-3" />
+                      Error
+                    </div>
+                  )}
+                  
+                  {/* Refresh Button */}
+                  <Button
+                    onClick={refreshExtensionStatus}
+                    size="sm"
+                    variant="outline"
+                    className="h-6 w-6 p-0"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                  </Button>
+                </div>
               </div>
               
-              {extensionAvailable ? (
+              {extensionStatus === 'connected' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">
                     Your extension is active and ready to capture grant opportunities from any website.
@@ -175,8 +274,13 @@ const Dashboard = () => {
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                     Seamlessly integrated with your dashboard
                   </div>
+                  {lastAuthBroadcast && (
+                    <div className="text-xs text-gray-500">
+                      Last synced: {lastAuthBroadcast.toLocaleTimeString()}
+                    </div>
+                  )}
                 </div>
-              ) : (
+              ) : extensionStatus === 'disconnected' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">
                     Install the Grants Snap Chrome extension to capture opportunities directly from grant websites.
@@ -189,6 +293,36 @@ const Dashboard = () => {
                     <Download className="w-4 h-4 mr-2" />
                     Install Extension
                   </Button>
+                </div>
+              ) : extensionStatus === 'error' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    There was an issue connecting to your extension. Try refreshing or reinstalling.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={refreshExtensionStatus}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Retry
+                    </Button>
+                    <Button
+                      onClick={() => promptExtensionInstallation()}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Reinstall
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    Checking extension status...
+                  </p>
                 </div>
               )}
             </div>

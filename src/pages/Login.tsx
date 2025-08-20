@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { broadcastUserAuthenticated } from '@/lib/extensionService';
 
 const Login = () => {
   const [isSignup, setIsSignup] = useState(false);
@@ -77,18 +78,30 @@ const Login = () => {
           setVerificationEmail(email);
           setShowEmailVerification(true);
         }
-              } else {
-          if (isSignup && data?.user && !data.user.email_confirmed_at) {
-            // User signed up but needs to verify email
-            setVerificationEmail(email);
-            setShowEmailVerification(true);
-            toast.success('Account created! Please check your email to verify your account.');
       } else {
-            // User is fully authenticated
-        toast.success(isSignup ? 'Account created successfully!' : 'Signed in successfully!');
-            // Redirect all users to dashboard - they can complete onboarding later if needed
-            navigate('/dashboard');
+        if (isSignup && data?.user && !data.user.email_confirmed_at) {
+          // User signed up but needs to verify email
+          setVerificationEmail(email);
+          setShowEmailVerification(true);
+          toast.success('Account created! Please check your email to verify your account.');
+        } else {
+          // User is fully authenticated
+          toast.success(isSignup ? 'Account created successfully!' : 'Signed in successfully!');
+          
+          // 🚀 PHASE 1 IMPLEMENTATION: Broadcast to extension
+          try {
+            if (data?.user && data?.session) {
+              await broadcastUserAuthenticated(data.user, data.session);
+              console.log('✅ Email/password authentication broadcasted to extension');
+            }
+          } catch (broadcastError) {
+            console.log('⚠️ Extension broadcast failed (non-critical):', broadcastError.message);
+            // Don't fail the login if extension broadcast fails
           }
+          
+          // Redirect all users to dashboard - they can complete onboarding later if needed
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       toast.error('An unexpected error occurred');
