@@ -178,6 +178,20 @@ export async function broadcastProfileUpdate(user, profile) {
 }
 
 /**
+ * Checks if the Chrome extension is installed and available
+ * 
+ * @returns {Promise<boolean>} Promise that resolves to true if extension is available, false otherwise
+ */
+export async function isExtensionAvailable() {
+  try {
+    await sendCommandToExtension({ type: 'ping', data: 'availability-check' });
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
  * Gets the extension installation URL for Chrome Web Store
  * 
  * @returns {string} Chrome Web Store URL for the extension

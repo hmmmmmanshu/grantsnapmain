@@ -18,7 +18,6 @@ import {
   broadcastUserAuthenticated,
   broadcastProfileUpdate
 } from '@/lib/extensionService';
-import ExtensionTest from '@/components/ExtensionTest';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 
@@ -344,7 +343,7 @@ const Dashboard = () => {
 
           {/* Extension Test Component - Remove this in production */}
           <div className="mt-8">
-            <ExtensionTest />
+            {/* ExtensionTest component was removed */}
           </div>
         </div>
       </main>
