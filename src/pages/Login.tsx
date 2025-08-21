@@ -310,9 +310,9 @@ const Login = () => {
               <div className="text-center">
                 <Dialog open={showForgotPassword} onOpenChange={setShowForgotPassword}>
                   <DialogTrigger asChild>
-                <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
-                  Forgot your password?
-                </Button>
+                    <Button variant="link" className="text-sm text-muted-foreground hover:text-primary">
+                      Forgot your password?
+                    </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>

@@ -135,18 +135,18 @@ const VirtualCFO = () => {
 
   return (
     <>
-      <SheetTrigger asChild>
-        <Button
-          variant="outline"
-          className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:from-purple-100 hover:to-blue-100 text-purple-700 hover:text-purple-800"
-          onClick={() => setIsOpen(true)}
-        >
-          <Bot className="w-4 h-4 mr-2" />
-          Your Virtual CFO
-        </Button>
-      </SheetTrigger>
-      
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
+        <SheetTrigger asChild>
+          <Button
+            variant="outline"
+            className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 hover:from-purple-100 hover:to-blue-100 text-purple-700 hover:text-purple-800"
+            onClick={() => setIsOpen(true)}
+          >
+            <Bot className="w-4 h-4 mr-2" />
+            Your Virtual CFO
+          </Button>
+        </SheetTrigger>
+        
         <SheetContent side="right" className="w-full sm:max-w-2xl p-0">
           <SheetHeader className="px-6 py-4 border-b">
             <div className="flex items-center justify-between">
