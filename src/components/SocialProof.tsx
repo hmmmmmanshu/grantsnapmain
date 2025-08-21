@@ -1,14 +1,8 @@
 import React from 'react';
-import { Star, Users, TrendingUp, Clock, DollarSign, Bot, Chrome, CheckCircle } from "lucide-react";
+import { DollarSign, Bot, Chrome, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 const SocialProof = () => {
-  const launchStats = [
-    { icon: Users, value: "1,247+", label: "Waitlist Members" },
-    { icon: Clock, value: "August 1, 2025", label: "Expected Launch" },
-    { icon: TrendingUp, value: "50%", label: "Early Bird Discount" }
-  ];
-
   const features = [
     {
       icon: DollarSign,
@@ -49,23 +43,6 @@ const SocialProof = () => {
       transition: {
         staggerChildren: 0.2,
         duration: 0.6
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { 
-      opacity: 0, 
-      y: 30,
-      scale: 0.9
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94] as const
       }
     }
   };
@@ -117,61 +94,6 @@ const SocialProof = () => {
   return (
     <div className="py-12 sm:py-16 bg-gray-50 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Launch Stats Section - with animations */}
-        <motion.div 
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-50px" }}
-        >
-          {launchStats.map((stat, index) => (
-            <motion.div 
-              key={index} 
-              className="text-center p-4 sm:p-0 group"
-              variants={itemVariants}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <motion.div 
-                className="w-10 h-10 sm:w-12 sm:h-12 bg-black rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 relative overflow-hidden"
-                whileHover="hover"
-                whileTap="tap"
-                variants={iconVariants}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
-                  animate={{
-                    x: [-100, 100],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    repeatDelay: 3,
-                    ease: "linear"
-                  }}
-                />
-                <stat.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white relative z-10" />
-              </motion.div>
-              <motion.div 
-                className="text-2xl sm:text-3xl font-bold text-black mb-1 sm:mb-2"
-                initial={{ scale: 0 }}
-                whileInView={{ scale: 1 }}
-                transition={{ 
-                  delay: index * 0.2 + 0.3,
-                  type: "spring",
-                  stiffness: 200,
-                  damping: 10
-                }}
-                viewport={{ once: true }}
-              >
-                {stat.value}
-              </motion.div>
-              <div className="text-gray-600 text-sm sm:text-base">{stat.label}</div>
-            </motion.div>
-          ))}
-        </motion.div>
-
         {/* Features Section - with enhanced animations */}
         <motion.div 
           className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12"

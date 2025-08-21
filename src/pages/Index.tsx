@@ -15,14 +15,14 @@ const Index = () => {
     <div className="min-h-screen">
       <MinimalNavigation />
       <Hero />
+      <div id="how-it-works" className="scroll-mt-16">
+        <HowItWorks />
+      </div>
       <SocialProof />
       <div id="features" className="scroll-mt-16">
         <ProblemSection />
         <SolutionSection />
         <DemoSection />
-      </div>
-      <div id="how-it-works" className="scroll-mt-16">
-        <HowItWorks />
       </div>
       <div id="pricing" className="scroll-mt-16">
         <PricingSection />

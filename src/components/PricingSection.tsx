@@ -37,14 +37,12 @@ const PricingSection = () => {
         "Progress tracking",
         "Replace part-time intern costs"
       ],
-      buttonText: "Join Waitlist - 50% Off",
+      buttonText: "Join Waitlist",
       popular: true,
       icon: Zap,
       highlight: "Most Popular",
       borderColor: "border-black",
-      bgColor: "bg-gray-50",
-      earlyBirdPrice: "$19.50",
-      earlyBirdSavings: "50% off first year"
+      bgColor: "bg-gray-50"
     },
     {
       name: "Growth",
@@ -60,14 +58,12 @@ const PricingSection = () => {
         "Export capabilities",
         "Replace full consultant team"
       ],
-      buttonText: "Join Waitlist - 50% Off",
+      buttonText: "Join Waitlist",
       popular: false,
       icon: Crown,
       highlight: "Best Value",
       borderColor: "border-gray-300",
-      bgColor: "bg-gray-50",
-      earlyBirdPrice: "$29.50",
-      earlyBirdSavings: "50% off first year"
+      bgColor: "bg-gray-50"
     }
   ];
 
@@ -75,9 +71,6 @@ const PricingSection = () => {
     <section className="py-16 lg:py-24 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 lg:mb-16">
-          <span className="inline-block px-4 py-2 bg-green-100 border border-green-200 rounded-full text-green-700 text-sm font-medium mb-4">
-            Early Bird Special - Limited Time
-          </span>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-black mb-4 lg:mb-6">
             Save <span className="text-red-500">$30K+/year</span> vs Hiring
           </h2>
@@ -105,21 +98,10 @@ const PricingSection = () => {
                   <h3 className="text-2xl sm:text-3xl font-bold text-black mb-2">{plan.name}</h3>
                   <p className="text-gray-600 mb-4">{plan.description}</p>
                   <div className="mb-4">
-                    {plan.earlyBirdPrice ? (
-                      <div>
-                        <div className="flex items-center justify-center space-x-2">
-                          <span className="text-2xl sm:text-3xl font-bold text-red-500">{plan.earlyBirdPrice}</span>
-                          <span className="text-lg text-gray-400 line-through">{plan.price}</span>
-                          <span className="text-gray-500 ml-2">{plan.period}</span>
-                        </div>
-                        <p className="text-sm text-red-600 font-medium mt-1">{plan.earlyBirdSavings}</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <span className="text-4xl sm:text-5xl font-bold text-black">{plan.price}</span>
-                        <span className="text-gray-500 ml-2">{plan.period}</span>
-                      </div>
-                    )}
+                    <div>
+                      <span className="text-4xl sm:text-5xl font-bold text-black">{plan.price}</span>
+                      <span className="text-gray-500 ml-2">{plan.period}</span>
+                    </div>
                   </div>
                   
                   {/* Cost comparison */}
@@ -163,9 +145,6 @@ const PricingSection = () => {
         <div className="text-center mt-12 lg:mt-16">
           <p className="text-gray-500 text-sm sm:text-base mb-4">
             Secure waitlist signup • 30-day money-back guarantee • Instant early access
-          </p>
-          <p className="text-gray-700 font-semibold text-lg">
-            Lock in 50% off your first year - Limited to first 1,000 members
           </p>
         </div>
       </div>
