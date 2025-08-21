@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
-import { useOnboarding } from '@/hooks/useOnboarding';
 import { broadcastUserAuthenticated } from '@/lib/extensionService';
+import { Button } from '@/components/ui/button';
 
 const OAuthCallback: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { needsOnboarding } = useOnboarding();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,22 +36,19 @@ const OAuthCallback: React.FC = () => {
               // Successfully authenticated
               console.log('OAuth authentication successful');
               
+              // Clean up the URL immediately
+              window.history.replaceState(null, '', window.location.pathname);
+              
               // 🚀 PHASE 1 IMPLEMENTATION: Broadcast to extension
               try {
                 await broadcastUserAuthenticated(data.user, data.session);
                 console.log('✅ Authentication broadcasted to extension successfully');
               } catch (broadcastError) {
                 console.log('⚠️ Extension broadcast failed (non-critical):', broadcastError.message);
-                // Don't fail the login if extension broadcast fails
               }
               
-              // Clean up the URL
-              window.history.replaceState(null, '', window.location.pathname);
-              
-              // Wait a moment for the session to be fully established
-              setTimeout(() => {
-                checkUserProfileAndRedirect();
-              }, 1000);
+              // Redirect to dashboard immediately
+              navigate('/dashboard', { replace: true });
             }
           } else {
             setError('Invalid OAuth response. Please try again.');
@@ -71,7 +67,8 @@ const OAuthCallback: React.FC = () => {
               console.log('⚠️ Extension broadcast failed (non-critical):', broadcastError.message);
             }
             
-            checkUserProfileAndRedirect();
+            // Redirect to dashboard immediately
+            navigate('/dashboard', { replace: true });
           } else {
             // No authentication, redirect to login
             navigate('/login', { replace: true });
@@ -85,37 +82,16 @@ const OAuthCallback: React.FC = () => {
       }
     };
 
-    const checkUserProfileAndRedirect = async () => {
-      try {
-        if (!user) return;
-        
-        // Check if user has profile
-        const { data, error } = await supabase
-          .from('user_profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
-
-        const hasProfile = !error && data;
-        
-        // Always redirect to dashboard - users can complete onboarding later if needed
-        navigate('/dashboard', { replace: true });
-      } catch (err) {
-        console.log('Error checking profile:', err);
-        // Default to dashboard if there's an error
-        navigate('/dashboard', { replace: true });
-      }
-    };
-
     handleOAuthCallback();
   }, [navigate, user]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Completing authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Completing Authentication</h2>
+          <p className="text-gray-600">Please wait while we set up your account...</p>
         </div>
       </div>
     );
@@ -123,20 +99,30 @@ const OAuthCallback: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center max-w-md mx-auto px-4">
           <div className="text-red-600 mb-4">
-            <svg className="w-12 h-12 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button
-            onClick={() => navigate('/login')}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Back to Login
-          </button>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Authentication Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="space-y-3">
+            <Button
+              onClick={() => navigate('/login')}
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+            >
+              Back to Login
+            </Button>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="outline"
+              className="w-full"
+            >
+              Try Again
+            </Button>
+          </div>
         </div>
       </div>
     );

@@ -7,6 +7,7 @@ import OpportunityTable from '@/components/dashboard/OpportunityTable';
 import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
+import VirtualCFO from '@/components/dashboard/VirtualCFO';
 import { useAuth } from '@/hooks/useAuth';
 import { useOpportunities } from '@/hooks/useOpportunities';
 import { Navigate } from 'react-router-dom';
@@ -177,6 +178,7 @@ const Dashboard = () => {
                 <SampleDataButton onAddSampleData={addSampleData} />
               )}
               <ProfileHub />
+              <VirtualCFO />
             </div>
           </div>
 
