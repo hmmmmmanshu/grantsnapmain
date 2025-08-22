@@ -29,8 +29,8 @@ const server = createServer((req, res) => {
       case '/health':
         res.writeHead(200)
         res.end(JSON.stringify({ 
-          status: 'ok', 
-          timestamp: new Date().toISOString(),
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
           message: 'MCP Server is running successfully!',
           endpoints: [
             '/health - Server health check',
@@ -140,7 +140,7 @@ const server = createServer((req, res) => {
       case '/tables':
         res.writeHead(200)
         res.end(JSON.stringify({ 
-          success: true, 
+      success: true, 
           data: [
             { table_name: 'user_profiles', table_schema: 'public' },
             { table_name: 'user_documents', table_schema: 'public' },

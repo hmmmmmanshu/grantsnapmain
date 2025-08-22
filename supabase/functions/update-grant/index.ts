@@ -4,14 +4,16 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'PUT, OPTIONS',
 }
 
-interface SaveGrantRequest {
-  grant_name: string
-  grant_url: string
-  notes?: string
+interface UpdateGrantRequest {
+  grant_id: string
+  grant_name?: string
+  grant_url?: string
+  status?: string
   application_deadline?: string
+  notes?: string
   funding_amount?: number
   eligibility_criteria?: string
 }
@@ -37,12 +39,12 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow POST requests
-    if (req.method !== 'POST') {
+    // Only allow PUT requests
+    if (req.method !== 'PUT') {
       return new Response(
         JSON.stringify({ 
           error: 'Method not allowed',
-          message: 'Only POST requests are supported' 
+          message: 'Only PUT requests are supported' 
         }),
         { 
           status: 405,
@@ -119,7 +121,7 @@ serve(async (req) => {
     }
 
     // Parse the request body
-    let requestBody: SaveGrantRequest
+    let requestBody: UpdateGrantRequest
     try {
       requestBody = await req.json()
     } catch (parseError) {
@@ -137,11 +139,11 @@ serve(async (req) => {
     }
 
     // Validate required fields
-    if (!requestBody.grant_name || !requestBody.grant_url) {
+    if (!requestBody.grant_id) {
       return new Response(
         JSON.stringify({ 
           error: 'Bad Request',
-          message: 'grant_name and grant_url are required fields' 
+          message: 'grant_id is required' 
         }),
         { 
           status: 400,
@@ -150,48 +152,71 @@ serve(async (req) => {
       )
     }
 
-    // Validate URL format
-    try {
-      new URL(requestBody.grant_url)
-    } catch (urlError) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Bad Request',
-          message: 'grant_url must be a valid URL' 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Prepare the grant data for insertion
-    const grantData = {
-      user_id: user.id,
-      grant_name: requestBody.grant_name.trim(),
-      grant_url: requestBody.grant_url.trim(),
-      status: 'Interested', // Default status
-      application_deadline: requestBody.application_deadline || null,
-      notes: requestBody.notes || null,
-      funding_amount: requestBody.funding_amount || null,
-      eligibility_criteria: requestBody.eligibility_criteria || null,
-    }
-
-    // Insert the new grant into the tracked_grants table
-    const { data: newGrant, error: insertError } = await supabase
+    // First, verify the grant belongs to the user
+    const { data: existingGrant, error: fetchError } = await supabase
       .from('tracked_grants')
-      .insert(grantData)
+      .select('*')
+      .eq('id', requestBody.grant_id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (fetchError || !existingGrant) {
+      console.error('Grant not found or access denied:', fetchError)
+      return new Response(
+        JSON.stringify({ 
+          error: 'Not Found',
+          message: 'Grant not found or access denied' 
+        }),
+        { 
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Prepare update data (only include fields that are provided)
+    const updateData: Partial<GrantRecord> = {
+      updated_at: new Date().toISOString()
+    }
+
+    if (requestBody.grant_name !== undefined) {
+      updateData.grant_name = requestBody.grant_name.trim()
+    }
+    if (requestBody.grant_url !== undefined) {
+      updateData.grant_url = requestBody.grant_url.trim()
+    }
+    if (requestBody.status !== undefined) {
+      updateData.status = requestBody.status
+    }
+    if (requestBody.application_deadline !== undefined) {
+      updateData.application_deadline = requestBody.application_deadline
+    }
+    if (requestBody.notes !== undefined) {
+      updateData.notes = requestBody.notes
+    }
+    if (requestBody.funding_amount !== undefined) {
+      updateData.funding_amount = requestBody.funding_amount
+    }
+    if (requestBody.eligibility_criteria !== undefined) {
+      updateData.eligibility_criteria = requestBody.eligibility_criteria
+    }
+
+    // Update the grant
+    const { data: updatedGrant, error: updateError } = await supabase
+      .from('tracked_grants')
+      .update(updateData)
+      .eq('id', requestBody.grant_id)
+      .eq('user_id', user.id)
       .select()
       .single()
 
-    if (insertError) {
-      console.error('Database insertion error:', insertError)
+    if (updateError) {
+      console.error('Database update error:', updateError)
       return new Response(
         JSON.stringify({ 
           error: 'Internal Server Error',
-          message: 'Failed to save grant to database',
-          details: insertError.message 
+          message: 'Failed to update grant in database',
+          details: updateError.message 
         }),
         { 
           status: 500,
@@ -203,22 +228,11 @@ serve(async (req) => {
     // Success response
     const responseData = {
       success: true,
-      message: 'Grant saved successfully',
-      data: {
-        id: newGrant.id,
-        grant_name: newGrant.grant_name,
-        grant_url: newGrant.grant_url,
-        status: newGrant.status,
-        application_deadline: newGrant.application_deadline,
-        notes: newGrant.notes,
-        funding_amount: newGrant.funding_amount,
-        eligibility_criteria: newGrant.eligibility_criteria,
-        created_at: newGrant.created_at,
-        updated_at: newGrant.updated_at
-      }
+      message: 'Grant updated successfully',
+      data: updatedGrant
     }
 
-    console.log(`✅ Grant saved successfully for user ${user.id}: ${newGrant.grant_name}`)
+    console.log(`✅ Grant updated successfully for user ${user.id}: ${updatedGrant.grant_name}`)
 
     return new Response(
       JSON.stringify(responseData),
@@ -229,7 +243,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error in save-grant function:', error)
+    console.error('Unexpected error in update-grant function:', error)
     
     return new Response(
       JSON.stringify({ 

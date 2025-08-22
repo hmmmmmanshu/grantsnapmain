@@ -453,6 +453,9 @@ export type Database = {
           status: string | null
           updated_at: string | null
           user_id: string
+          notes: string | null
+          funding_amount: number | null
+          eligibility_criteria: string | null
         }
         Insert: {
           application_deadline?: string | null
@@ -463,6 +466,9 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id: string
+          notes?: string | null
+          funding_amount?: number | null
+          eligibility_criteria?: string | null
         }
         Update: {
           application_deadline?: string | null
@@ -473,6 +479,9 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           user_id?: string
+          notes?: string | null
+          funding_amount?: number | null
+          eligibility_criteria?: string | null
         }
         Relationships: []
       }

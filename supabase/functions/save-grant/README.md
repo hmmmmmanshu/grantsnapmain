@@ -37,7 +37,9 @@ Content-Type: application/json
   "grant_name": "Small Business Innovation Research Grant",
   "grant_url": "https://example.com/grant-details",
   "notes": "AI-focused grant for small businesses",
-  "application_deadline": "2024-12-31"
+  "application_deadline": "2024-12-31",
+  "funding_amount": 50000.00,
+  "eligibility_criteria": "Startups in tech sector with AI focus"
 }
 ```
 
@@ -48,6 +50,8 @@ Content-Type: application/json
 ### Optional Fields
 - `notes`: Additional notes about the grant
 - `application_deadline`: Application deadline (YYYY-MM-DD format)
+- `funding_amount`: Grant amount in decimal format
+- `eligibility_criteria`: Eligibility requirements and criteria
 
 ## ✅ Response
 
@@ -62,6 +66,9 @@ Content-Type: application/json
     "grant_url": "https://example.com/grant-details",
     "status": "Interested",
     "application_deadline": "2024-12-31",
+    "notes": "AI-focused grant for small businesses",
+    "funding_amount": 50000.00,
+    "eligibility_criteria": "Startups in tech sector with AI focus",
     "created_at": "2024-01-15T10:30:00Z",
     "updated_at": "2024-01-15T10:30:00Z"
   }
@@ -116,9 +123,32 @@ CREATE TABLE tracked_grants (
   status TEXT DEFAULT 'Interested',
   application_deadline DATE,
   notes TEXT,
+  funding_amount DECIMAL(15,2),
+  eligibility_criteria TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Indexes for performance
+CREATE INDEX idx_grants_user_id ON tracked_grants(user_id);
+CREATE INDEX idx_grants_status ON tracked_grants(status);
+CREATE INDEX idx_grants_created_at ON tracked_grants(created_at);
+
+-- Row Level Security
+ALTER TABLE tracked_grants ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Users can view own grants" ON tracked_grants
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own grants" ON tracked_grants
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own grants" ON tracked_grants
+  FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own grants" ON tracked_grants
+  FOR DELETE USING (auth.uid() = user_id);
 ```
 
 ## 🧪 Testing
@@ -132,7 +162,9 @@ curl -X POST https://[PROJECT_REF].supabase.co/functions/v1/save-grant \
     "grant_name": "Test Grant",
     "grant_url": "https://example.com/test",
     "notes": "Test grant for development",
-    "application_deadline": "2024-12-31"
+    "application_deadline": "2024-12-31",
+    "funding_amount": 25000.00,
+    "eligibility_criteria": "Early-stage startups in technology sector"
   }'
 ```
 
@@ -148,7 +180,9 @@ const response = await fetch('https://[PROJECT_REF].supabase.co/functions/v1/sav
     grant_name: 'Test Grant',
     grant_url: 'https://example.com/test',
     notes: 'Test grant for development',
-    application_deadline: '2024-12-31'
+    application_deadline: '2024-12-31',
+    funding_amount: 25000.00,
+    eligibility_criteria: 'Early-stage startups in technology sector'
   })
 });
 

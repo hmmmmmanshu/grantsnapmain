@@ -4,16 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-interface SaveGrantRequest {
-  grant_name: string
-  grant_url: string
-  notes?: string
-  application_deadline?: string
-  funding_amount?: number
-  eligibility_criteria?: string
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
 }
 
 interface GrantRecord {
@@ -37,12 +28,12 @@ serve(async (req) => {
   }
 
   try {
-    // Only allow POST requests
-    if (req.method !== 'POST') {
+    // Only allow GET requests
+    if (req.method !== 'GET') {
       return new Response(
         JSON.stringify({ 
           error: 'Method not allowed',
-          message: 'Only POST requests are supported' 
+          message: 'Only GET requests are supported' 
         }),
         { 
           status: 405,
@@ -118,80 +109,35 @@ serve(async (req) => {
       )
     }
 
-    // Parse the request body
-    let requestBody: SaveGrantRequest
-    try {
-      requestBody = await req.json()
-    } catch (parseError) {
-      console.error('Failed to parse request body:', parseError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Bad Request',
-          message: 'Invalid JSON in request body' 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
+    // Get query parameters for filtering
+    const url = new URL(req.url)
+    const status = url.searchParams.get('status')
+    const limit = parseInt(url.searchParams.get('limit') || '50')
+    const offset = parseInt(url.searchParams.get('offset') || '0')
 
-    // Validate required fields
-    if (!requestBody.grant_name || !requestBody.grant_url) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Bad Request',
-          message: 'grant_name and grant_url are required fields' 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Validate URL format
-    try {
-      new URL(requestBody.grant_url)
-    } catch (urlError) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Bad Request',
-          message: 'grant_url must be a valid URL' 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Prepare the grant data for insertion
-    const grantData = {
-      user_id: user.id,
-      grant_name: requestBody.grant_name.trim(),
-      grant_url: requestBody.grant_url.trim(),
-      status: 'Interested', // Default status
-      application_deadline: requestBody.application_deadline || null,
-      notes: requestBody.notes || null,
-      funding_amount: requestBody.funding_amount || null,
-      eligibility_criteria: requestBody.eligibility_criteria || null,
-    }
-
-    // Insert the new grant into the tracked_grants table
-    const { data: newGrant, error: insertError } = await supabase
+    // Build the query
+    let query = supabase
       .from('tracked_grants')
-      .insert(grantData)
-      .select()
-      .single()
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1)
 
-    if (insertError) {
-      console.error('Database insertion error:', insertError)
+    // Add status filter if provided
+    if (status && status !== 'all') {
+      query = query.eq('status', status)
+    }
+
+    // Execute the query
+    const { data: grants, error: fetchError, count } = await query
+
+    if (fetchError) {
+      console.error('Database fetch error:', fetchError)
       return new Response(
         JSON.stringify({ 
           error: 'Internal Server Error',
-          message: 'Failed to save grant to database',
-          details: insertError.message 
+          message: 'Failed to fetch grants from database',
+          details: fetchError.message 
         }),
         { 
           status: 500,
@@ -203,22 +149,19 @@ serve(async (req) => {
     // Success response
     const responseData = {
       success: true,
-      message: 'Grant saved successfully',
+      message: 'Grants retrieved successfully',
       data: {
-        id: newGrant.id,
-        grant_name: newGrant.grant_name,
-        grant_url: newGrant.grant_url,
-        status: newGrant.status,
-        application_deadline: newGrant.application_deadline,
-        notes: newGrant.notes,
-        funding_amount: newGrant.funding_amount,
-        eligibility_criteria: newGrant.eligibility_criteria,
-        created_at: newGrant.created_at,
-        updated_at: newGrant.updated_at
+        grants: grants || [],
+        pagination: {
+          total: count || 0,
+          limit,
+          offset,
+          hasMore: (count || 0) > offset + limit
+        }
       }
     }
 
-    console.log(`✅ Grant saved successfully for user ${user.id}: ${newGrant.grant_name}`)
+    console.log(`✅ Retrieved ${grants?.length || 0} grants for user ${user.id}`)
 
     return new Response(
       JSON.stringify(responseData),
@@ -229,7 +172,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Unexpected error in save-grant function:', error)
+    console.error('Unexpected error in get-user-grants function:', error)
     
     return new Response(
       JSON.stringify({ 
