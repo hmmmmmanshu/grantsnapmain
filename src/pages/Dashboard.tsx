@@ -36,7 +36,7 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [sortBy, setSortBy] = useState<'deadline' | 'saved'>('deadline');
-  const [selectedGrant, setSelectedGrant] = useState<TrackedGrant | null>(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [extensionAvailable, setExtensionAvailable] = useState<boolean | null>(null);
   const [extensionStatus, setExtensionStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
   const [lastAuthBroadcast, setLastAuthBroadcast] = useState<Date | null>(null);
@@ -197,143 +197,223 @@ const Dashboard = () => {
           <div className="space-y-6">
             <OpportunityPipeline opportunities={transformedOpportunities} />
             
-            {/* Success Message when grants are loaded */}
-            {!grantsLoading && !error && grants.length > 0 && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <ViewToggle 
+              selectedView={selectedView} 
+              onViewChange={setSelectedView} 
+            />
+            
+            <ControlBar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+            />
+            
+            {grantsLoading ? (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Loading your grants...</h3>
+                  <p className="text-gray-500">
+                    Fetching your saved grant opportunities from the extension.
+                  </p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
+                    <AlertCircle className="w-8 h-8 text-red-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading grants</h3>
+                  <p className="text-red-500 mb-4">{error}</p>
+                  <Button
+                    onClick={() => window.location.reload()}
+                    variant="outline"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Try Again
+                  </Button>
+                </div>
+              </div>
+            ) : grants.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="max-w-md mx-auto">
+                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <Target className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No grants yet</h3>
+                  <p className="text-gray-500 mb-4">
+                    Start capturing grant opportunities using the Chrome Extension. 
+                    Browse grant websites and click the extension to save them here.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <Button
+                      onClick={() => promptExtensionInstallation()}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Install Extension
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open('https://chrome.google.com/webstore', '_blank')}
+                    >
+                      <Globe className="w-4 h-4 mr-2" />
+                      Chrome Web Store
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <OpportunityTable
+                opportunities={sortedOpportunities}
+                onOpportunityClick={setSelectedOpportunity}
+                onStatusUpdate={handleStatusUpdate}
+                onDelete={handleGrantDelete}
+              />
+            )}
+          </div>
+
+          {/* Extension Integration & Virtual CFO Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Enhanced Extension Status Card */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+              <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <div>
-                    <h3 className="text-sm font-medium text-green-800">
-                      Grants loaded successfully
-                    </h3>
-                    <p className="text-sm text-green-700">
-                      Found {grants.length} grant opportunity{grants.length === 1 ? '' : 'ies'} from your Chrome Extension
-                    </p>
-                  </div>
+                  <Globe className="w-6 h-6 text-green-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Chrome Extension</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Status Indicator */}
+                  {extensionStatus === 'checking' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      Checking...
+                    </div>
+                  )}
+                  {extensionStatus === 'connected' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                      <CheckCircle className="w-3 h-3" />
+                      Connected
+                    </div>
+                  )}
+                  {extensionStatus === 'disconnected' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
+                      <AlertCircle className="w-3 h-3" />
+                      Disconnected
+                    </div>
+                  )}
+                  {extensionStatus === 'error' && (
+                    <div className="flex items-center gap-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
+                      <AlertCircle className="w-3 h-3" />
+                      Error
+                    </div>
+                  )}
+                  
+                  {/* Refresh Button */}
+                  <Button
+                    onClick={refreshExtensionStatus}
+                    size="sm"
+                    variant="outline"
+                    className="h-6 w-6 p-0"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                  </Button>
                 </div>
               </div>
-            )}
-            
-            {/* Extension Ready Message */}
-            {extensionStatus === 'connected' && grants.length === 0 && !grantsLoading && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center gap-3">
-                  <Globe className="w-5 h-5 text-blue-600" />
-                  <div>
-                    <h3 className="text-sm font-medium text-blue-800">
-                      Extension connected and ready
-                    </h3>
-                    <p className="text-sm text-blue-700">
-                      Your Chrome Extension is active. Browse grant websites and click the extension to start saving opportunities here.
-                    </p>
+              
+              {extensionStatus === 'connected' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    Your extension is active and ready to capture grant opportunities from any website.
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-green-700">
+                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                    Seamlessly integrated with your dashboard
+                  </div>
+                  {lastAuthBroadcast && (
+                    <div className="text-xs text-gray-500">
+                      Last synced: {lastAuthBroadcast.toLocaleTimeString()}
+                    </div>
+                  )}
+                </div>
+              ) : extensionStatus === 'disconnected' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    Install the Grants Snap Chrome extension to capture opportunities directly from grant websites.
+                  </p>
+                  <Button
+                    onClick={() => promptExtensionInstallation()}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Install Extension
+                  </Button>
+                </div>
+              ) : extensionStatus === 'error' ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    There was an issue connecting to your extension. Try refreshing or reinstalling.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={refreshExtensionStatus}
+                      size="sm"
+                      variant="outline"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Retry
+                    </Button>
+                    <Button
+                      onClick={() => promptExtensionInstallation()}
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Reinstall
+                    </Button>
                   </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Real-time Extension Status */}
-            {extensionStatus === 'connected' && (
-              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2">
-                <div className="flex items-center justify-center gap-2 text-xs text-emerald-700">
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                  Extension is actively monitoring and will update this dashboard in real-time
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    Checking extension status...
+                  </p>
                 </div>
-              </div>
-            )}
-            
-            {/* Extension Instructions */}
-            {extensionStatus === 'connected' && (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <div className="text-center">
-                  <h3 className="text-sm font-medium text-gray-900 mb-2">
-                    How to capture grants:
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-gray-600">
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">1</span>
-                      </div>
-                      <p>Browse grant websites</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">2</span>
-                      </div>
-                      <p>Click the extension icon</p>
-                    </div>
-                    <div className="flex flex-col items-center gap-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">3</span>
-                      </div>
-                      <p>Save to your dashboard</p>
-                    </div>
-                  </div>
+              )}
+            </div>
+
+            {/* Virtual CFO Placeholder Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+              <div className="text-center space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></span>
+                  Coming Soon
                 </div>
+                <h3 className="text-xl font-bold text-gray-900">Your Virtual CFO</h3>
+                <p className="text-sm text-gray-600">
+                  Advanced financial tracking, runway analysis, and automated reporting are coming soon to help you manage your finances like a pro.
+                </p>
               </div>
-            )}
-            
-            {/* Extension Features */}
-            {extensionStatus === 'connected' && (
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-4">
-                <div className="text-center">
-                  <h3 className="text-sm font-medium text-purple-800 mb-2">
-                    Extension Features Available:
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-purple-700">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      Auto-capture grant details
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      Save funding amounts
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      Extract eligibility criteria
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                      Real-time dashboard sync
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Extension Status Summary */}
-            {extensionStatus === 'connected' && (
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium text-green-800">
-                        Extension Status: Connected
-                      </h3>
-                      <p className="text-xs text-green-700">
-                        Real-time sync enabled • Grants will appear automatically
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xs text-green-600 font-medium">
-                      {grants.length} grant{grants.length === 1 ? '' : 's'} saved
-                    </div>
-                    {lastAuthBroadcast && (
-                      <div className="text-xs text-green-500">
-                        Last sync: {lastAuthBroadcast.toLocaleTimeString()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </main>
+
+      {selectedOpportunity && (
+        <DetailPanel
+          opportunity={selectedOpportunity}
+          onClose={() => setSelectedOpportunity(null)}
+        />
+      )}
+      
+      <DebugInfo />
     </div>
   );
 };
