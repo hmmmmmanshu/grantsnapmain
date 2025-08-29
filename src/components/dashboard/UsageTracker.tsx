@@ -257,3 +257,5 @@ export function UsageTracker() {
     </Card>
   )
 }
+
+export default UsageTracker;

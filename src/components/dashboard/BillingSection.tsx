@@ -346,3 +346,5 @@ export function BillingSection() {
     </div>
   )
 }
+
+export default BillingSection;
