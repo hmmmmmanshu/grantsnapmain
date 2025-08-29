@@ -60,7 +60,7 @@ export function useTrackedGrants() {
           user_id: user.id,
           grant_name: grant.grant_name,
           grant_url: grant.grant_url,
-          application_deadline: grant.application_deadline,
+          application_deadline: grant.application_deadline || null,
           status: grant.status || 'Interested',
           notes: grant.notes,
           funding_amount: grant.funding_amount,

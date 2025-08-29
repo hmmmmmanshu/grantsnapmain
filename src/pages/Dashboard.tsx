@@ -11,6 +11,7 @@ import VirtualCFO from '@/components/dashboard/VirtualCFO';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { Navigate } from 'react-router-dom';
+import { getDefaultDate, safeGetTimestamp } from '@/lib/dateUtils';
 import DebugInfo from '@/components/DebugInfo';
 import { Target, Globe, Download, RefreshCw, CheckCircle, AlertCircle } from 'lucide-react';
 import { 
@@ -128,19 +129,43 @@ const Dashboard = () => {
   }
 
   // Transform tracked grants to match Opportunity interface for existing components
-  const transformedOpportunities: Opportunity[] = grants.map(grant => ({
-    id: grant.id,
-    status: (grant.status as 'To Review' | 'In Progress' | 'Applied') || 'To Review',
-    page_title: grant.grant_name || 'Untitled Grant',
-    funder_name: 'Grant Opportunity',
-    page_url: grant.grant_url || '',
-    application_deadline: grant.application_deadline || '',
-    date_saved: grant.created_at || new Date().toISOString(),
-    user_notes: grant.notes || '',
-    extracted_emails: [],
-    type: 'grant' as const,
-    funding_amount: grant.funding_amount || undefined,
-  }));
+  const transformedOpportunities: Opportunity[] = grants.map(grant => {
+    try {
+      // Ensure we have valid dates for required fields
+      const safeDeadline = grant.application_deadline || getDefaultDate();
+      const safeCreatedAt = grant.created_at || getDefaultDate();
+      
+      return {
+        id: grant.id,
+        status: (grant.status as 'To Review' | 'In Progress' | 'Applied') || 'To Review',
+        page_title: grant.grant_name || 'Untitled Grant',
+        funder_name: 'Grant Opportunity',
+        page_url: grant.grant_url || '',
+        application_deadline: safeDeadline,
+        date_saved: safeCreatedAt,
+        user_notes: grant.notes || '',
+        extracted_emails: [],
+        type: 'grant' as const,
+        funding_amount: grant.funding_amount || undefined,
+      };
+    } catch (error) {
+      console.error('Error transforming grant:', grant, error);
+      // Return a safe fallback opportunity
+      return {
+        id: grant.id,
+        status: 'To Review' as const,
+        page_title: grant.grant_name || 'Untitled Grant',
+        funder_name: 'Grant Opportunity',
+        page_url: grant.grant_url || '',
+        application_deadline: getDefaultDate(),
+        date_saved: getDefaultDate(),
+        user_notes: grant.notes || '',
+        extracted_emails: [],
+        type: 'grant' as const,
+        funding_amount: grant.funding_amount || undefined,
+      };
+    }
+  });
 
   // Filter opportunities based on selected view and filters
   const filteredOpportunities = transformedOpportunities.filter(opp => {
@@ -158,10 +183,25 @@ const Dashboard = () => {
 
   // Sort opportunities
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
-    if (sortBy === 'deadline') {
-      return new Date(a.application_deadline).getTime() - new Date(b.application_deadline).getTime();
-    } else {
-      return new Date(b.date_saved).getTime() - new Date(a.date_saved).getTime();
+    try {
+      if (sortBy === 'deadline') {
+        const timestampA = safeGetTimestamp(a.application_deadline);
+        const timestampB = safeGetTimestamp(b.application_deadline);
+        // Handle invalid dates by treating them as far future dates
+        if (timestampA === null) return 1;
+        if (timestampB === null) return -1;
+        return timestampA - timestampB;
+      } else {
+        const timestampA = safeGetTimestamp(a.date_saved);
+        const timestampB = safeGetTimestamp(b.date_saved);
+        // Handle invalid dates by treating them as old dates
+        if (timestampA === null) return 1;
+        if (timestampB === null) return -1;
+        return timestampB - timestampA;
+      }
+    } catch (error) {
+      console.error('Error sorting opportunities:', error);
+      return 0; // Keep original order if sorting fails
     }
   });
 

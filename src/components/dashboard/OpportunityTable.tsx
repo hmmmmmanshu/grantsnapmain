@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MoreHorizontal, Globe } from 'lucide-react';
+import { MoreHorizontal, Globe, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 import { Opportunity } from '@/types/dashboard';
 import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
 import { sendCommandToExtension, handleExtensionError, promptExtensionInstallation } from '@/lib/extensionService';
+import { safeParseDate } from '@/lib/dateUtils';
 
 interface OpportunityTableProps {
   opportunities: Opportunity[];
@@ -46,8 +47,30 @@ const OpportunityTable = ({
   onStatusUpdate, 
   onDelete 
 }: OpportunityTableProps) => {
+  // Add error boundary for date parsing
+  const safeOpportunities = opportunities.map(opp => {
+    try {
+      // Validate that required fields exist
+      if (!opp.id || !opp.page_title) {
+        console.warn('Invalid opportunity data:', opp);
+        return null;
+      }
+      return opp;
+    } catch (error) {
+      console.error('Error processing opportunity:', opp, error);
+      return null;
+    }
+  }).filter(Boolean) as Opportunity[];
   const formatDeadline = (deadline: string) => {
-    const deadlineDate = new Date(deadline);
+    const deadlineDate = safeParseDate(deadline);
+    
+    if (!deadlineDate) {
+      return {
+        formatted: 'No deadline',
+        isUpcoming: false
+      };
+    }
+    
     const now = new Date();
     const sevenDaysFromNow = subDays(now, -7);
     
@@ -61,7 +84,12 @@ const OpportunityTable = ({
   };
 
   const formatSavedDate = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = safeParseDate(dateString);
+    
+    if (!date) {
+      return 'Invalid date';
+    }
+    
     const now = new Date();
     const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
     
@@ -96,15 +124,28 @@ const OpportunityTable = ({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {opportunities.map((opportunity) => {
-              const deadline = formatDeadline(opportunity.application_deadline);
-              
-              return (
-                <tr
-                  key={opportunity.id}
-                  className="hover:bg-gray-50 cursor-pointer group"
-                  onClick={() => onOpportunityClick(opportunity)}
-                >
+            {safeOpportunities.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
+                  <div className="flex flex-col items-center">
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                      <FileText className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm">No opportunities to display</p>
+                    <p className="text-xs text-gray-400 mt-1">Try refreshing or check your data</p>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              safeOpportunities.map((opportunity) => {
+                const deadline = formatDeadline(opportunity.application_deadline);
+                
+                return (
+                  <tr
+                    key={opportunity.id}
+                    className="hover:bg-gray-50 cursor-pointer group"
+                    onClick={() => onOpportunityClick(opportunity)}
+                  >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -223,16 +264,12 @@ const OpportunityTable = ({
                   </td>
                 </tr>
               );
-            })}
+            }))
           </tbody>
         </table>
       </div>
       
-      {opportunities.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">No opportunities found</p>
-        </div>
-      )}
+
     </div>
   );
 };

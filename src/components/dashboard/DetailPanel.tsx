@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Opportunity } from '@/types/dashboard';
 import { format } from 'date-fns';
 import { sendCommandToExtension, handleExtensionError, promptExtensionInstallation } from '@/lib/extensionService';
+import { safeFormatDate } from '@/lib/dateUtils';
 
 interface DetailPanelProps {
   opportunity: Opportunity;
@@ -102,7 +103,11 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
                 <h3 className="text-sm font-medium text-gray-900">Deadline</h3>
               </div>
               <p className="text-sm text-gray-600 pl-6">
-                {format(new Date(opportunity.application_deadline), 'MMMM d, yyyy')}
+                {safeFormatDate(
+                  opportunity.application_deadline,
+                  (date) => format(date, 'MMMM d, yyyy'),
+                  'No deadline set'
+                )}
               </p>
             </div>
 
