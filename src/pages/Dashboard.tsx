@@ -429,6 +429,12 @@ const Dashboard = () => {
               )}
             </div>
 
+            {/* Usage Tracking and Billing Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <UsageTracker />
+              <BillingSection />
+            </div>
+
             {/* Virtual CFO Placeholder Card */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
               <div className="text-center space-y-4">

@@ -496,6 +496,30 @@ serve(async (req) => {
     console.log(`Style: ${requestBody.refinement_style}`)
     console.log(`Limit: ${requestBody.limit_object.value} ${requestBody.limit_object.type}`)
 
+    // Increment usage counter for AI generations
+    const currentMonthStart = new Date()
+    currentMonthStart.setDate(1)
+    currentMonthStart.setHours(0, 0, 0, 0)
+    const monthStartString = currentMonthStart.toISOString().split('T')[0]
+
+    const { error: usageError } = await supabase
+      .from('usage_stats')
+      .upsert({
+        user_id: user.id,
+        month_start_date: monthStartString,
+        ai_generations_used: supabase.sql`COALESCE(ai_generations_used, 0) + 1`,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,month_start_date'
+      })
+
+    if (usageError) {
+      console.warn('Failed to update usage stats:', usageError)
+      // Don't fail the request if usage tracking fails
+    } else {
+      console.log('📊 Usage stats updated for AI generation')
+    }
+
     return new Response(
       JSON.stringify(responseData),
       { 
