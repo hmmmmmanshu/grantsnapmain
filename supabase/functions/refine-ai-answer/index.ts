@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { isProUser } from '../_shared/pro-user-check.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -267,6 +268,21 @@ serve(async (req) => {
         }),
         { 
           status: 405,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    // Check if user has Pro access
+    const isPro = await isProUser(req.headers.get('Authorization'))
+    if (!isPro) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Pro Access Required',
+          message: 'Upgrade to Pro to use this feature.' 
+        }),
+        { 
+          status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
