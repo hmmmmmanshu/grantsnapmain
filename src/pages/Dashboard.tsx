@@ -8,7 +8,6 @@ import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
-import UsageTracker from '@/components/dashboard/UsageTracker';
 import BillingSection from '@/components/dashboard/BillingSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
@@ -235,9 +234,8 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Usage Tracking and Billing Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <UsageTracker />
+          {/* Billing Section */}
+          <div className="mb-8">
             <BillingSection />
           </div>
 
