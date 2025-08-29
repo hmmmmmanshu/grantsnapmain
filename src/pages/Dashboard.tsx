@@ -235,6 +235,12 @@ const Dashboard = () => {
             </div>
           </div>
 
+          {/* Usage Tracking and Billing Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <UsageTracker />
+            <BillingSection />
+          </div>
+
           {/* Funding Opportunities Section */}
           <div className="space-y-6">
             <OpportunityPipeline opportunities={transformedOpportunities} />
@@ -322,7 +328,7 @@ const Dashboard = () => {
           </div>
 
           {/* Extension Integration & Virtual CFO Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             {/* Enhanced Extension Status Card */}
             <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
               <div className="flex items-start justify-between mb-4">
@@ -431,11 +437,7 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Usage Tracking and Billing Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <UsageTracker />
-              <BillingSection />
-            </div>
+
 
             {/* Virtual CFO Placeholder Card */}
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
