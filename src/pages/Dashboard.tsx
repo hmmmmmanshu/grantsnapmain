@@ -8,7 +8,6 @@ import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
-import BillingSection from '@/components/dashboard/BillingSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { Navigate } from 'react-router-dom';
@@ -234,10 +233,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Billing Section */}
-          <div className="mb-8">
-            <BillingSection />
-          </div>
+
 
           {/* Funding Opportunities Section */}
           <div className="space-y-6">

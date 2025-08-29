@@ -86,9 +86,9 @@ const DashboardHeader = () => {
                   <Settings className="w-4 h-4 mr-2" />
                   Profile & Autofill Data
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Billing
+                  Billing & Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-600" onClick={handleSignOut}>
