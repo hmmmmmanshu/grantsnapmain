@@ -8,6 +8,8 @@ import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
+import UsageTracker from '@/components/dashboard/UsageTracker';
+import BillingSection from '@/components/dashboard/BillingSection';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { Navigate } from 'react-router-dom';
