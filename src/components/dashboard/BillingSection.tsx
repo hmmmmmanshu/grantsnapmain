@@ -3,8 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProBadge } from '@/components/ui/ProBadge'
-import { Progress } from '@/components/ui/progress'
-import { CreditCard, Calendar, DollarSign, Crown, TrendingUp, Users, Zap, Brain, Search } from 'lucide-react'
+import { CreditCard, Calendar, DollarSign, Crown, TrendingUp, Users, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
@@ -20,27 +19,7 @@ interface SubscriptionData {
   updated_at: string
 }
 
-interface UsageStats {
-  user_id: string
-  month_start_date: string
-  ai_generations_used: number
-  deep_scans_used: number
-  updated_at: string
-}
 
-interface UsageData {
-  current_month: string
-  usage_stats: UsageStats
-  subscription: SubscriptionData
-  quotas: {
-    ai_generations: number
-    deep_scans: number
-  }
-  progress: {
-    ai_generations: number
-    deep_scans: number
-  }
-}
 
 interface PlanFeatures {
   [key: string]: {
@@ -78,15 +57,12 @@ const PLAN_FEATURES: PlanFeatures = {
 
 export function BillingSection() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
-  const [usageData, setUsageData] = useState<UsageData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [usageLoading, setUsageLoading] = useState(true)
   const { user } = useAuth()
 
   useEffect(() => {
     if (user) {
       fetchSubscriptionData()
-      fetchUsageData()
     }
   }, [user])
 
@@ -136,70 +112,7 @@ export function BillingSection() {
      }
    }
 
-   const fetchUsageData = async () => {
-     try {
-       setUsageLoading(true)
-       
-       // For now, create mock usage data since the table might not exist yet
-       const mockUsageData = {
-         current_month: new Date().toISOString().slice(0, 7), // YYYY-MM format
-         usage_stats: {
-           user_id: user?.id || '',
-           month_start_date: new Date().toISOString().split('T')[0],
-           ai_generations_used: 0,
-           deep_scans_used: 0,
-           updated_at: new Date().toISOString()
-         },
-         subscription: subscription || {
-           id: 'mock-1',
-           user_id: user?.id || '',
-           tier: 'basic',
-           status: 'active',
-           current_period_start: new Date().toISOString(),
-           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-           created_at: new Date().toISOString(),
-           updated_at: new Date().toISOString()
-         },
-         quotas: {
-           ai_generations: 10,
-           deep_scans: 5
-         },
-         progress: {
-           ai_generations: 0,
-           deep_scans: 0
-         }
-       }
-       
-       setUsageData(mockUsageData)
-       
-       // TODO: Uncomment when get-usage Edge Function is ready
-       /*
-       const { data: { session } } = await supabase.auth.getSession()
-       if (!session) {
-         throw new Error('No active session')
-       }
 
-       const response = await fetch(`${supabase.supabaseUrl}/functions/v1/get-usage`, {
-         headers: {
-           'Authorization': `Bearer ${session.access_token}`,
-           'Content-Type': 'application/json',
-         },
-       })
-
-       if (!response.ok) {
-         throw new Error('Failed to fetch usage data')
-       }
-
-       const data = await response.json()
-       setUsageData(data.data)
-       */
-     } catch (error) {
-       console.error('Error fetching usage data:', error)
-       // Don't show error toast for now since we're using mock data
-     } finally {
-       setUsageLoading(false)
-     }
-   }
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -285,117 +198,6 @@ export function BillingSection() {
 
   return (
     <div className="space-y-6">
-      {/* Usage Tracking Section */}
-      <Card className="w-full">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5" />
-                Usage This Month
-              </CardTitle>
-              <CardDescription>
-                {usageData ? `${new Date(usageData.usage_stats.month_start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${new Date(usageData.subscription.current_period_end).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}` : 'Loading...'}
-              </CardDescription>
-            </div>
-            {usageData && <ProBadge tier={usageData.subscription.tier} />}
-          </div>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          {usageLoading ? (
-            <div className="space-y-4">
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                <div className="h-2 bg-gray-200 rounded"></div>
-              </div>
-              <div className="animate-pulse">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                <div className="h-2 bg-gray-200 rounded"></div>
-              </div>
-            </div>
-          ) : !usageData ? (
-            <div className="text-center py-4">
-              <button 
-                onClick={fetchUsageData}
-                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
-              >
-                Try again
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* AI Generations Usage */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-600" />
-                    <span className="font-medium">AI Generations</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {usageData.usage_stats.ai_generations_used} / {usageData.quotas.ai_generations}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {usageData.progress.ai_generations}%
-                    </Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Progress 
-                    value={usageData.progress.ai_generations} 
-                    className="h-2"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Used: {usageData.usage_stats.ai_generations_used}</span>
-                    <span>Limit: {usageData.quotas.ai_generations}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Deep Scans Usage */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Search className="w-4 h-4 text-blue-600" />
-                    <span className="font-medium">Deep Scans</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {usageData.usage_stats.deep_scans_used} / {usageData.quotas.deep_scans}
-                    </span>
-                    <Badge variant="outline" className="text-xs">
-                      {usageData.progress.deep_scans}%
-                    </Badge>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Progress 
-                    value={usageData.progress.deep_scans} 
-                    className="h-2"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>Used: {usageData.usage_stats.deep_scans_used}</span>
-                    <span>Limit: {usageData.quotas.deep_scans}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Refresh Button */}
-              <button
-                onClick={fetchUsageData}
-                className="w-full text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 
-                           hover:bg-blue-50 dark:hover:bg-blue-950/20 py-2 px-3 rounded-md transition-colors"
-              >
-                Refresh Usage Data
-              </button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Current Plan Card */}
       <Card className="w-full">
         <CardHeader>

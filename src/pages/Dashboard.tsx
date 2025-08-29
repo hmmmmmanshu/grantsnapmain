@@ -8,6 +8,7 @@ import DetailPanel from '@/components/dashboard/DetailPanel';
 import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
+import UsageTracker from '@/components/dashboard/UsageTracker';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { Navigate } from 'react-router-dom';
@@ -184,14 +185,14 @@ const Dashboard = () => {
   // Sort opportunities
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
     try {
-      if (sortBy === 'deadline') {
+    if (sortBy === 'deadline') {
         const timestampA = safeGetTimestamp(a.application_deadline);
         const timestampB = safeGetTimestamp(b.application_deadline);
         // Handle invalid dates by treating them as far future dates
         if (timestampA === null) return 1;
         if (timestampB === null) return -1;
         return timestampA - timestampB;
-      } else {
+    } else {
         const timestampA = safeGetTimestamp(a.date_saved);
         const timestampB = safeGetTimestamp(b.date_saved);
         // Handle invalid dates by treating them as old dates
@@ -222,39 +223,44 @@ const Dashboard = () => {
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
           {/* Main Dashboard Header */}
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
-              <p className="text-gray-600">Manage your funding opportunities and profile</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <ProfileHub />
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
+                  <p className="text-gray-600">Manage your funding opportunities and profile</p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <ProfileHub />
               <VirtualCFO />
-            </div>
+                </div>
+              </div>
+
+
+
+          {/* Usage Tracking Section */}
+          <div className="mb-8">
+            <UsageTracker />
           </div>
-
-
 
           {/* Funding Opportunities Section */}
           <div className="space-y-6">
             <OpportunityPipeline opportunities={transformedOpportunities} />
-            
-            <ViewToggle 
-              selectedView={selectedView} 
-              onViewChange={setSelectedView} 
-            />
-            
-            <ControlBar
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              sortBy={sortBy}
-              onSortChange={setSortBy}
-            />
-            
+              
+              <ViewToggle 
+                selectedView={selectedView} 
+                onViewChange={setSelectedView} 
+              />
+              
+              <ControlBar
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+              />
+              
             {grantsLoading ? (
-              <div className="text-center py-12">
+                <div className="text-center py-12">
                 <div className="max-w-md mx-auto">
                   <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                     <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
@@ -264,9 +270,9 @@ const Dashboard = () => {
                     Fetching your saved grant opportunities from the extension.
                   </p>
                 </div>
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
                 <div className="max-w-md mx-auto">
                   <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
                     <AlertCircle className="w-8 h-8 text-red-400" />
@@ -310,11 +316,11 @@ const Dashboard = () => {
                     </Button>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <OpportunityTable
-                opportunities={sortedOpportunities}
-                onOpportunityClick={setSelectedOpportunity}
+                </div>
+              ) : (
+                <OpportunityTable
+                  opportunities={sortedOpportunities}
+                  onOpportunityClick={setSelectedOpportunity}
                 onStatusUpdate={handleStatusUpdate}
                 onDelete={handleGrantDelete}
               />
