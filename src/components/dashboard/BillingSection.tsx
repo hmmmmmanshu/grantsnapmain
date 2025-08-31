@@ -6,6 +6,8 @@ import { ProBadge } from '@/components/ui/ProBadge'
 import { CreditCard, Calendar, DollarSign, Crown, TrendingUp, Users, Zap } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { usePricing } from '@/hooks/usePricing'
+import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 interface SubscriptionData {
@@ -59,6 +61,8 @@ export function BillingSection() {
   const [subscription, setSubscription] = useState<SubscriptionData | null>(null)
   const [loading, setLoading] = useState(true)
   const { user } = useAuth()
+  const { plans, createSubscription } = usePricing()
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (user) {
@@ -131,8 +135,7 @@ export function BillingSection() {
   }
 
   const handleUpgrade = () => {
-    // TODO: Implement upgrade flow
-    toast.info('Upgrade flow coming soon!')
+    navigate('/pricing')
   }
 
   const handleManageBilling = () => {

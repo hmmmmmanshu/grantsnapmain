@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
+import Pricing from "./pages/Pricing";
 import NotFound from "./pages/NotFound";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -144,6 +145,7 @@ const App: React.FC = () => {
                 <Settings />
               </ProtectedRoute>
             } />
+            <Route path="/pricing" element={<Pricing />} />
             {/* Legal and Information Pages */}
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
