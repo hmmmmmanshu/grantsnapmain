@@ -33,10 +33,10 @@ const PricingSection = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 lg:mb-16">
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-black mb-4 lg:mb-6">
-            Save <span className="text-red-500">{symbol}30K+/year</span> vs Hiring
+            Save <span className="text-red-500">{symbol}15K+/year</span> vs Hiring
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-4">
-            Why pay consultants {symbol}2,000-5,000/month when AI can do it better, faster, and cheaper?
+            Why pay consultants {symbol}1,500-3,000/month when AI can do it better, faster, and cheaper?
           </p>
           <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
             <Globe className="h-4 w-4" />
@@ -83,12 +83,12 @@ const PricingSection = () => {
                   {/* Cost comparison */}
                   {plan.id === 'pro' && (
                     <div className="text-sm text-green-600 font-medium">
-                      vs {symbol}500-600/month intern
+                      vs {symbol}800-1,200/month intern
                     </div>
                   )}
                   {plan.id === 'enterprise' && (
                     <div className="text-sm text-green-600 font-medium">
-                      vs {symbol}2,000-3,000/month consultant
+                      vs {symbol}1,500-3,000/month consultant
                     </div>
                   )}
                 </div>

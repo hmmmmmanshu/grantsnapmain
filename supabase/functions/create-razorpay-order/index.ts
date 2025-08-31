@@ -150,17 +150,17 @@ serve(async (req) => {
     const planConfigs = {
       'pro': {
         plan_id: 'plan_pro_monthly',
-        amount: 2900, // ₹29.00 in paise
+        amount: 3900, // ₹39.00 in paise
         currency: 'INR',
         interval: 'monthly',
-        name: 'Pro Plan'
+        name: 'Proof Plan'
       },
       'enterprise': {
         plan_id: 'plan_enterprise_monthly',
-        amount: 9900, // ₹99.00 in paise
+        amount: 5900, // ₹59.00 in paise
         currency: 'INR',
         interval: 'monthly',
-        name: 'Enterprise Plan'
+        name: 'Growth Plan'
       }
     };
 

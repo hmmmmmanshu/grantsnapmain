@@ -31,18 +31,19 @@ interface PricingData {
 // Base pricing in USD
 const BASE_PRICING = {
   basic: {
-    name: "Basic",
+    name: "Base",
     price: 0,
     period: "forever",
-    description: "Perfect for trying out Grants Snap",
+    description: "Perfect for getting organized and experiencing the core magic of GrantSnap",
     features: [
-      "3 Form auto-fills per week",
-      "Basic AI optimization",
-      "Chrome extension access",
-      "Email support",
-      "Save on consultant fees"
+      "Unlimited Grant Capture & Tracking",
+      "Central Dashboard Access",
+      "10 Concierge AI Autofills / month",
+      "Standard Page Analysis",
+      "Deadline Notifications",
+      "Standard Email Support"
     ],
-    buttonText: "Get Started Free",
+    buttonText: "Start for Free",
     popular: false,
     highlight: "Free Forever",
     borderColor: "border-green-200",
@@ -50,19 +51,18 @@ const BASE_PRICING = {
     icon: "Gift"
   },
   pro: {
-    name: "Pro",
-    price: 29,
+    name: "Proof",
+    price: 39,
     period: "monthly",
-    description: "Great for regular grant applications",
+    description: "The essential AI toolkit for the serious solo founder ready to save time and write better applications",
     features: [
-      "15 Form auto-fills per week",
-      "Advanced AI optimization",
-      "Chrome extension access",
-      "Priority email support",
-      "Progress tracking",
-      "Replace part-time intern costs"
+      "Everything in Base, plus:",
+      "150 Concierge AI Autofills / month",
+      "Unlimited AI Answer Refinement Engine",
+      "One-Click Pitch Deck Analysis",
+      "Priority Email Support"
     ],
-    buttonText: "Upgrade to Pro",
+    buttonText: "Get Proof",
     popular: true,
     highlight: "Most Popular",
     borderColor: "border-black",
@@ -71,20 +71,19 @@ const BASE_PRICING = {
     razorpayPlanId: "plan_pro_monthly"
   },
   enterprise: {
-    name: "Enterprise",
-    price: 99,
+    name: "Growth",
+    price: 59,
     period: "monthly",
-    description: "Unlimited access for scaling startups",
+    description: "The ultimate strategic advantage for scaling startups who need to win competitive funding",
     features: [
-      "Unlimited form fills per month",
-      "Advanced AI copilot",
-      "Priority support & phone calls",
-      "Custom templates",
-      "Analytics dashboard",
-      "Export capabilities",
-      "Replace full consultant team"
+      "Everything in Proof, plus:",
+      "400 Concierge AI Autofills / month",
+      "25 Deep Scans / month (with HyperBrowser)",
+      "Analytics Dashboard",
+      "Data Export Capabilities",
+      "Priority Email & Phone Support"
     ],
-    buttonText: "Upgrade to Enterprise",
+    buttonText: "Scale with Growth",
     popular: false,
     highlight: "Best Value",
     borderColor: "border-gray-300",

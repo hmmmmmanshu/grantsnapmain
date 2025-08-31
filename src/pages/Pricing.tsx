@@ -141,7 +141,7 @@ const Pricing = () => {
               Choose Your Plan
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-              Save <span className="text-red-500 font-semibold">$30K+/year</span> vs hiring consultants
+              Save <span className="text-red-500 font-semibold">{symbol}15K+/year</span> vs hiring consultants
             </p>
             <p className="text-sm text-gray-500">
               Prices shown in {currency} • Secure payment via Razorpay
@@ -189,12 +189,12 @@ const Pricing = () => {
                     {/* Cost comparison */}
                     {plan.id === 'pro' && (
                       <div className="text-sm text-green-600 font-medium">
-                        vs {symbol}500-600/month intern
+                        vs {symbol}800-1,200/month intern
                       </div>
                     )}
                     {plan.id === 'enterprise' && (
                       <div className="text-sm text-green-600 font-medium">
-                        vs {symbol}2,000-3,000/month consultant
+                        vs {symbol}1,500-3,000/month consultant
                       </div>
                     )}
                   </div>
