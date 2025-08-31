@@ -1,348 +1,285 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { isProUser } from '../_shared/pro-user-check.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { isProUser } from '../_shared/pro-user-check.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-}
-
-interface DeepScanRequest {
-  grant_id: string
-  url_to_scan: string
-}
-
-interface HyperBrowserResponse {
-  funder_mission: string
-  funder_values: string
-  past_project_examples: string
-}
-
-interface FunderProfile {
-  funder_mission: string
-  funder_values: string
-  past_project_examples: string
-  scanned_at: string
-  source_url: string
-}
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', {
+      headers: corsHeaders
+    });
   }
 
   try {
     // Only allow POST requests
     if (req.method !== 'POST') {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Method not allowed',
-          message: 'Only POST requests are supported' 
-        }),
-        { 
-          status: 405,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({
+        error: 'Method not allowed',
+        message: 'Only POST requests are supported'
+      }), {
+        status: 405,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
-    }
-
-    // Check if user has Pro access
-    const isPro = await isProUser(req.headers.get('Authorization'))
-    if (!isPro) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Pro Access Required',
-          message: 'Upgrade to Pro to use this feature.' 
-        }),
-        { 
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
+      });
     }
 
     // Get the authorization header
-    const authHeader = req.headers.get('Authorization')
+    const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Unauthorized',
-          message: 'Authorization header is required' 
-        }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        message: 'Authorization header is required'
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
 
-    // Extract the JWT token from the Authorization header
-    const token = authHeader.replace('Bearer ', '')
-    if (!token) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Unauthorized',
-          message: 'Valid Bearer token is required' 
-        }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    // Check if user is Pro user
+    const isPro = await isProUser(authHeader);
+    if (!isPro) {
+      return new Response(JSON.stringify({
+        error: 'Upgrade Required',
+        message: 'Upgrade to Pro to use this feature'
+      }), {
+        status: 403,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
+    }
+
+    // Parse the request body
+    let requestBody;
+    try {
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return new Response(JSON.stringify({
+        error: 'Bad Request',
+        message: 'Invalid JSON in request body'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Validate required fields
+    if (!requestBody.grant_id || !requestBody.url_to_scan) {
+      return new Response(JSON.stringify({
+        error: 'Bad Request',
+        message: 'grant_id and url_to_scan are required fields'
+      }), {
+        status: 400,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+
+    // Get HyperBrowser API key from environment
+    const hyperBrowserApiKey = Deno.env.get('HYPERBROWSER_API_KEY');
+    if (!hyperBrowserApiKey) {
+      console.error('Missing HYPERBROWSER_API_KEY environment variable');
+      return new Response(JSON.stringify({
+        error: 'Internal Server Error',
+        message: 'Server configuration error'
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
+        }
+      });
     }
 
     // Create Supabase client
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
-    
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY')
-      return new Response(
-        JSON.stringify({ 
-          error: 'Internal Server Error',
-          message: 'Server configuration error' 
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error('Missing Supabase environment variables');
+      return new Response(JSON.stringify({
+        error: 'Internal Server Error',
+        message: 'Server configuration error'
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verify the JWT token and get user information
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    
+    // Extract the JWT token and get user information
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     if (authError || !user) {
-      console.error('Authentication error:', authError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Unauthorized',
-          message: 'Invalid or expired token' 
-        }),
-        { 
-          status: 401,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error('Authentication error:', authError);
+      return new Response(JSON.stringify({
+        error: 'Unauthorized',
+        message: 'Invalid or expired token'
+      }), {
+        status: 401,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
 
-    // Parse request body
-    const requestBody: DeepScanRequest = await req.json()
-    
-    if (!requestBody.grant_id || !requestBody.url_to_scan) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'Bad Request',
-          message: 'grant_id and url_to_scan are required' 
-        }),
-        { 
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Verify the grant belongs to the authenticated user
+    // Verify the grant belongs to the user
     const { data: grant, error: grantError } = await supabase
       .from('tracked_grants')
-      .select('id, user_id, grant_name')
+      .select('*')
       .eq('id', requestBody.grant_id)
       .eq('user_id', user.id)
-      .single()
+      .single();
 
     if (grantError || !grant) {
-      console.error('Grant access error:', grantError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Forbidden',
-          message: 'Grant not found or access denied' 
-        }),
-        { 
-          status: 403,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error('Grant not found or access denied:', grantError);
+      return new Response(JSON.stringify({
+        error: 'Not Found',
+        message: 'Grant not found or access denied'
+      }), {
+        status: 404,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
-
-    // Get HyperBrowser API key from Supabase secrets
-    const hyperBrowserApiKey = Deno.env.get('HYPERBROWSER_API_KEY')
-    if (!hyperBrowserApiKey) {
-      console.error('Missing HYPERBROWSER_API_KEY environment variable')
-      return new Response(
-        JSON.stringify({ 
-          error: 'Internal Server Error',
-          message: 'HyperBrowser service not configured' 
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
-    // Construct the prompt for HyperBrowser
-    const hyperBrowserPrompt = `Go to the URL: ${requestBody.url_to_scan}. Analyze the content to identify the funder's core mission, their stated values, and the types of projects they have funded in the past. Return a structured JSON object with the keys: funder_mission, funder_values, and past_project_examples.`
-
-    console.log('🔍 Initiating HyperBrowser deep scan for:', requestBody.url_to_scan)
 
     // Call HyperBrowser API
-    const hyperBrowserResponse = await fetch('https://api.hyperbrowser.ai/v1/scan', {
+    const hyperBrowserPrompt = `Go to the URL: ${requestBody.url_to_scan}. Analyze the content to identify the funder's core mission, their stated values, and the types of projects they have funded in the past. Return a structured JSON object with the keys: funder_mission, funder_values, and past_project_examples.`;
+
+    const hyperBrowserResponse = await fetch('https://api.hyperbrowser.io/v1/analyze', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${hyperBrowserApiKey}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         url: requestBody.url_to_scan,
         prompt: hyperBrowserPrompt,
-        max_depth: 3,
-        include_metadata: true
+        format: 'json'
       })
-    })
+    });
 
     if (!hyperBrowserResponse.ok) {
-      const errorText = await hyperBrowserResponse.text()
-      console.error('HyperBrowser API error:', hyperBrowserResponse.status, errorText)
-      return new Response(
-        JSON.stringify({ 
-          error: 'HyperBrowser Service Error',
-          message: 'Failed to analyze the URL',
-          details: errorText
-        }),
-        { 
-          status: 502,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error('HyperBrowser API error:', await hyperBrowserResponse.text());
+      return new Response(JSON.stringify({
+        error: 'External Service Error',
+        message: 'Failed to analyze the URL with HyperBrowser'
+      }), {
+        status: 502,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
 
-    // Parse HyperBrowser response
-    const hyperBrowserData = await hyperBrowserResponse.json()
-    console.log('✅ HyperBrowser analysis completed')
+    const hyperBrowserData = await hyperBrowserResponse.json();
 
-    // Extract the structured response
-    let funderProfile: FunderProfile
-    
-    try {
-      // Try to parse the response content as JSON
-      const responseContent = hyperBrowserData.content || hyperBrowserData.response || hyperBrowserData
-      let parsedContent: HyperBrowserResponse
-      
-      if (typeof responseContent === 'string') {
-        // Extract JSON from markdown or text response
-        const jsonMatch = responseContent.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          parsedContent = JSON.parse(jsonMatch[0])
-        } else {
-          throw new Error('No JSON content found in response')
-        }
-      } else {
-        parsedContent = responseContent
-      }
-
-      funderProfile = {
-        funder_mission: parsedContent.funder_mission || 'Mission not identified',
-        funder_values: parsedContent.funder_values || 'Values not identified',
-        past_project_examples: parsedContent.past_project_examples || 'No past projects identified',
-        scanned_at: new Date().toISOString(),
-        source_url: requestBody.url_to_scan
-      }
-    } catch (parseError) {
-      console.error('Failed to parse HyperBrowser response:', parseError)
-      // Create a fallback profile with raw response
-      funderProfile = {
-        funder_mission: 'Analysis completed but structured data unavailable',
-        funder_values: 'Analysis completed but structured data unavailable',
-        past_project_examples: 'Analysis completed but structured data unavailable',
-        scanned_at: new Date().toISOString(),
-        source_url: requestBody.url_to_scan
-      }
-    }
-
-    // Update the tracked_grants table with the funder profile
+    // Update the grant with the funder profile data
     const { data: updatedGrant, error: updateError } = await supabase
       .from('tracked_grants')
       .update({
-        application_data: supabase.sql`COALESCE(application_data, '{}'::jsonb) || ${JSON.stringify({ funder_profile: funderProfile })}::jsonb`,
+        application_data: {
+          ...grant.application_data,
+          funder_profile: hyperBrowserData
+        },
         updated_at: new Date().toISOString()
       })
       .eq('id', requestBody.grant_id)
       .eq('user_id', user.id)
       .select()
-      .single()
+      .single();
 
     if (updateError) {
-      console.error('Database update error:', updateError)
-      return new Response(
-        JSON.stringify({ 
-          error: 'Database Error',
-          message: 'Failed to save funder profile' 
-        }),
-        { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.error('Error updating grant with funder profile:', updateError);
+      return new Response(JSON.stringify({
+        error: 'Internal Server Error',
+        message: 'Failed to save funder profile to database'
+      }), {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json'
         }
-      )
+      });
     }
 
-    console.log('💾 Funder profile saved to database for grant:', grant.grant_name)
-
-    // Increment usage counter for deep scans
-    const currentMonthStart = new Date()
-    currentMonthStart.setDate(1)
-    currentMonthStart.setHours(0, 0, 0, 0)
-    const monthStartString = currentMonthStart.toISOString().split('T')[0]
+    // Increment usage stats
+    const currentMonthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const currentMonthString = currentMonthStart.toISOString().split('T')[0];
 
     const { error: usageError } = await supabase
       .from('usage_stats')
       .upsert({
         user_id: user.id,
-        month_start_date: monthStartString,
-        deep_scans_used: supabase.sql`COALESCE(deep_scans_used, 0) + 1`,
-        updated_at: new Date().toISOString()
+        month_start_date: currentMonthString,
+        deep_scans_used: 1
       }, {
-        onConflict: 'user_id,month_start_date'
-      })
+        onConflict: 'user_id,month_start_date',
+        ignoreDuplicates: false
+      });
 
     if (usageError) {
-      console.warn('Failed to update usage stats:', usageError)
-      // Don't fail the request if usage tracking fails
-    } else {
-      console.log('📊 Usage stats updated for deep scan')
+      console.error('Error updating usage stats:', usageError);
+      // Don't fail the request for usage tracking errors
     }
 
-    // Return success response
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'Deep scan completed successfully',
+    // Success response
+    const responseData = {
+      success: true,
+      message: 'Deep scan completed successfully',
+      data: {
         grant_id: requestBody.grant_id,
-        funder_profile: funderProfile,
-        scanned_url: requestBody.url_to_scan,
-        updated_at: updatedGrant.updated_at
-      }),
-      { 
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        funder_profile: hyperBrowserData,
+        updated_grant: updatedGrant
       }
-    )
+    };
+
+    console.log(`✅ Deep scan completed for grant ${requestBody.grant_id} by user ${user.id}`);
+    return new Response(JSON.stringify(responseData), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
 
   } catch (error) {
-    console.error('Unexpected error in trigger-deep-scan:', error)
-    return new Response(
-      JSON.stringify({ 
-        error: 'Internal Server Error',
-        message: 'An unexpected error occurred',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    console.error('Unexpected error in trigger-deep-scan function:', error);
+    return new Response(JSON.stringify({
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
       }
-    )
+    });
   }
-})
+});
