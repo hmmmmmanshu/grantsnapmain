@@ -156,9 +156,9 @@ const Pricing = () => {
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-4 lg:mb-6">
               Choose Your Plan
             </h1>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6">
-              Save <span className="text-red-500 font-semibold">{symbol}15K+/year</span> vs hiring consultants
-            </p>
+                         <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto mb-6">
+               Save <span className="text-red-500 font-semibold currency-symbol">{symbol}15K+/year</span> vs hiring consultants
+             </p>
             <p className="text-sm text-gray-500">
               Prices shown in {currency} • Secure payment via Razorpay
             </p>
@@ -190,9 +190,9 @@ const Pricing = () => {
                     <p className="text-gray-600 mb-4">{plan.description}</p>
                     <div className="mb-4">
                       <div>
-                        <span className="text-4xl sm:text-5xl font-bold text-black">
-                          {plan.price === 0 ? 'Free' : `${symbol}${plan.price}`}
-                        </span>
+                                                 <span className="text-4xl sm:text-5xl font-bold text-black currency-symbol">
+                           {plan.price === 0 ? 'Free' : `${symbol}${plan.price}`}
+                         </span>
                         <span className="text-gray-500 ml-2">{plan.period}</span>
                       </div>
                       {plan.originalPrice && plan.originalPrice !== plan.price && (
@@ -202,17 +202,17 @@ const Pricing = () => {
                       )}
                     </div>
                     
-                    {/* Cost comparison */}
-                    {plan.id === 'pro' && (
-                      <div className="text-sm text-green-600 font-medium">
-                        vs {symbol}800-1,200/month intern
-                      </div>
-                    )}
-                    {plan.id === 'enterprise' && (
-                      <div className="text-sm text-green-600 font-medium">
-                        vs {symbol}1,500-3,000/month consultant
-                      </div>
-                    )}
+                                         {/* Cost comparison */}
+                     {plan.id === 'pro' && (
+                       <div className="text-sm text-green-600 font-medium currency-symbol">
+                         vs {symbol}800-1,200/month intern
+                       </div>
+                     )}
+                     {plan.id === 'enterprise' && (
+                       <div className="text-sm text-green-600 font-medium currency-symbol">
+                         vs {symbol}1,500-3,000/month consultant
+                       </div>
+                     )}
                   </div>
 
                   <ul className="space-y-4 mb-6 lg:mb-8">
