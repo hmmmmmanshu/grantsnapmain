@@ -34,21 +34,7 @@ const Pricing = () => {
     setLoadingPlan(plan.id);
 
     try {
-      // For now, let's simulate the subscription process
-      // TODO: Replace with actual Edge Function call when deployed
-      console.log('Attempting to subscribe to plan:', plan.id);
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // For now, just show success message
-      toast.success(`Successfully subscribed to ${plan.name}! Redirecting to dashboard...`);
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 2000);
-
-      // TODO: Uncomment when Edge Functions are deployed
-      /*
+      // Call the Edge Function to create Razorpay subscription
       const subscriptionData = await createSubscription(plan.id);
       
       // Initialize Razorpay
@@ -83,7 +69,6 @@ const Pricing = () => {
         rzp.open();
       };
       document.body.appendChild(script);
-      */
 
     } catch (error: any) {
       console.error('Subscription error:', error);
