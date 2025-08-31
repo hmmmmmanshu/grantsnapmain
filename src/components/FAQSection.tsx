@@ -86,7 +86,7 @@ const FAQSection = () => {
           <h3 className="text-2xl font-bold text-black mb-2">Got a question?</h3>
           <p className="text-gray-600 mb-6">Talk to our team Himanshu and Akshay</p>
           <a 
-            href="mailto:support@grantssnap.com" 
+            href="mailto:RealStartup911@gmail.com" 
             className="inline-flex items-center bg-red-500 hover:bg-red-600 text-white font-semibold px-8 py-3 rounded-lg transition-colors"
           >
             Book a call
