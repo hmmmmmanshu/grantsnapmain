@@ -1,6 +1,7 @@
 
 import { Chrome, Twitter, Linkedin, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -28,9 +29,9 @@ const Footer = () => {
           <div>
             <h4 className="text-black font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-gray-600">
-              <li><a href="#" className="hover:text-black transition-colors">Features</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">How it Works</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Pricing</a></li>
+              <li><a href="#features" className="hover:text-black transition-colors">Features</a></li>
+              <li><a href="#how-it-works" className="hover:text-black transition-colors">How it Works</a></li>
+              <li><a href="#pricing" className="hover:text-black transition-colors">Pricing</a></li>
               <li><a href="#" className="hover:text-black transition-colors">Demo</a></li>
             </ul>
           </div>
@@ -39,10 +40,26 @@ const Footer = () => {
           <div>
             <h4 className="text-black font-semibold mb-4">Support</h4>
             <ul className="space-y-2 text-gray-600">
-              <li><a href="/contact" className="hover:text-black transition-colors">Contact Us</a></li>
-              <li><a href="/privacy" className="hover:text-black transition-colors">Privacy Policy</a></li>
-              <li><a href="/terms" className="hover:text-black transition-colors">Terms of Service</a></li>
-              <li><a href="/shipping-policy" className="hover:text-black transition-colors">Shipping Policy</a></li>
+              <li>
+                <Link to="/contact" className="hover:text-black transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-black transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-black transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipping-policy" className="hover:text-black transition-colors">
+                  Shipping Policy
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
