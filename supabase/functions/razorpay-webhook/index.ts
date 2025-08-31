@@ -192,18 +192,101 @@ serve(async (req) => {
 async function handleSubscriptionActivated(supabase: any, subscription: any) {
   try {
     const userId = subscription.notes?.user_id;
-    if (!userId) {
-      console.error('No user_id found in subscription notes');
+    const guestEmail = subscription.notes?.guest_email;
+    const isGuestCheckout = subscription.notes?.is_guest_checkout === 'true';
+
+    // Determine tier based on plan_id
+    let tier = 'pro';
+    if (subscription.plan_id === 'plan_RC4Q5IDADCw9lu') {
+      tier = 'enterprise';
+    } else if (subscription.plan_id === 'plan_RC4Oy32XyvwR1b') {
+      tier = 'pro';
+    }
+
+    if (isGuestCheckout && guestEmail) {
+      // Handle guest checkout - create user account automatically
+      await handleGuestSubscriptionActivated(supabase, subscription, guestEmail, tier);
+    } else if (userId) {
+      // Handle regular user subscription
+      await handleUserSubscriptionActivated(supabase, subscription, userId, tier);
+    } else {
+      console.error('No user_id or guest_email found in subscription notes');
       return;
     }
+  } catch (error) {
+    console.error('Error handling subscription activation:', error);
+    throw error;
+  }
+}
 
-    // Determine tier based on plan_id or amount
-    let tier = 'pro';
-    if (subscription.plan_id) {
-      // You can map plan_id to tier here
-      // For example: if (subscription.plan_id === 'plan_enterprise') tier = 'enterprise';
+// Handle guest subscription activation by creating user account
+async function handleGuestSubscriptionActivated(supabase: any, subscription: any, guestEmail: string, tier: string) {
+  try {
+    // Check if user already exists with this email
+    const { data: existingUser, error: userCheckError } = await supabase.auth.admin.listUsers();
+    
+    let user = null;
+    if (existingUser?.users) {
+      user = existingUser.users.find((u: any) => u.email === guestEmail);
     }
 
+    if (!user) {
+      // Create new user account with temporary password
+      const tempPassword = generateRandomPassword();
+      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+        email: guestEmail,
+        password: tempPassword,
+        email_confirm: true // Auto-confirm email for guest purchases
+      });
+
+      if (createError) {
+        console.error('Error creating guest user:', createError);
+        throw createError;
+      }
+
+      user = newUser.user;
+      console.log(`✅ Created new user account for guest: ${guestEmail}`);
+    }
+
+    if (user) {
+      // Create subscription record for the user
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .upsert({
+          user_id: user.id,
+          tier: tier,
+          status: 'active',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          razorpay_subscription_id: subscription.id,
+          razorpay_plan_id: subscription.plan_id
+        }, {
+          onConflict: 'user_id'
+        })
+        .select();
+
+      if (error) {
+        console.error('Error creating guest subscription:', error);
+        throw error;
+      }
+
+      // Update the order record with user_id
+      await supabase
+        .from('orders')
+        .update({ user_id: user.id })
+        .eq('razorpay_subscription_id', subscription.id);
+
+      console.log(`✅ Guest subscription activated for ${guestEmail}:`, data);
+    }
+  } catch (error) {
+    console.error('Error handling guest subscription activation:', error);
+    throw error;
+  }
+}
+
+// Handle regular user subscription activation
+async function handleUserSubscriptionActivated(supabase: any, subscription: any, userId: string, tier: string) {
+  try {
     // Upsert subscription record
     const { data, error } = await supabase
       .from('subscriptions')
@@ -212,7 +295,7 @@ async function handleSubscriptionActivated(supabase: any, subscription: any) {
         tier: tier,
         status: 'active',
         current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         razorpay_subscription_id: subscription.id,
         razorpay_plan_id: subscription.plan_id
       }, {
@@ -227,9 +310,19 @@ async function handleSubscriptionActivated(supabase: any, subscription: any) {
 
     console.log(`✅ Subscription activated for user ${userId}:`, data);
   } catch (error) {
-    console.error('Error handling subscription activation:', error);
+    console.error('Error handling user subscription activation:', error);
     throw error;
   }
+}
+
+// Generate random password for guest users
+function generateRandomPassword(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
 }
 
 // Handle subscription cancellation

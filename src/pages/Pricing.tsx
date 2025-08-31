@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const Pricing = () => {
-  const { plans, loading, error, country, currency, symbol, createSubscription } = usePricing();
+  const { plans, loading, error, country, currency, symbol, createSubscription, createGuestSubscription } = usePricing();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
@@ -19,18 +19,86 @@ const Pricing = () => {
   };
 
   const handleSubscribe = async (plan: any) => {
-    if (!user) {
-      toast.error('Please log in to subscribe');
-      navigate('/login');
-      return;
-    }
-
     if (plan.id === 'basic') {
+      if (!user) {
+        toast.info('Basic plan is free! Please sign up to get started.');
+        navigate('/login');
+        return;
+      }
       toast.info('Basic plan is free! You can start using it right away.');
       navigate('/dashboard');
       return;
     }
 
+    // For paid plans, allow guest checkout
+    if (!user) {
+      // Show email collection modal for guest users
+      const email = prompt('Enter your email address to proceed with payment:');
+      if (!email || !email.includes('@')) {
+        toast.error('Please enter a valid email address');
+        return;
+      }
+      
+      // Proceed with guest checkout
+      await handleGuestCheckout(plan, email);
+      return;
+    }
+
+    // Regular checkout for logged-in users
+    await handleLoggedInCheckout(plan);
+  };
+
+  const handleGuestCheckout = async (plan: any, email: string) => {
+    setLoadingPlan(plan.id);
+
+    try {
+      // Call Edge Function with guest email
+      const subscriptionData = await createGuestSubscription(plan.id, email);
+      
+      // Initialize Razorpay for guest
+      const options = {
+        key: subscriptionData.razorpay_key_id,
+        subscription_id: subscriptionData.subscription_id,
+        name: 'GrantSnap',
+        description: `${plan.name} Plan Subscription`,
+        image: '/logo.png',
+        handler: function (response: any) {
+          toast.success('Payment successful! Please check your email for account details.');
+          // Redirect to login page with success message
+          navigate('/login?message=payment-success');
+        },
+        prefill: {
+          email: email,
+          name: email.split('@')[0]
+        },
+        notes: {
+          plan: plan.name,
+          guest_email: email,
+          is_guest_checkout: 'true'
+        },
+        theme: {
+          color: '#000000'
+        }
+      };
+
+      // Load Razorpay script
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => {
+        const rzp = new (window as any).Razorpay(options);
+        rzp.open();
+      };
+      document.body.appendChild(script);
+
+    } catch (error: any) {
+      console.error('Guest subscription error:', error);
+      toast.error(error.message || 'Failed to create subscription');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleLoggedInCheckout = async (plan: any) => {
     setLoadingPlan(plan.id);
 
     try {
@@ -49,12 +117,12 @@ const Pricing = () => {
           navigate('/dashboard');
         },
         prefill: {
-          email: user.email,
-          name: user.user_metadata?.full_name || user.email
+          email: user!.email,
+          name: user!.user_metadata?.full_name || user!.email
         },
         notes: {
           plan: plan.name,
-          user_id: user.id
+          user_id: user!.id
         },
         theme: {
           color: '#000000'

@@ -194,11 +194,38 @@ export const usePricing = () => {
     }
   };
 
+  const createGuestSubscription = async (planId: string, email: string) => {
+    try {
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/create-guest-razorpay-order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: planId,
+          email: email
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create guest subscription');
+      }
+
+      const data = await response.json();
+      return data.data;
+    } catch (error) {
+      console.error('Error creating guest subscription:', error);
+      throw error;
+    }
+  };
+
   return {
     ...pricingData,
     country,
     currency,
     symbol,
-    createSubscription
+    createSubscription,
+    createGuestSubscription
   };
 };
