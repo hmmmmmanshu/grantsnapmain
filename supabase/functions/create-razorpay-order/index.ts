@@ -146,17 +146,17 @@ serve(async (req) => {
       });
     }
 
-    // Define plan configurations
+    // ⚡ CRITICAL UPDATE: Use the correct Razorpay plan IDs you provided
     const planConfigs = {
       'pro': {
-        plan_id: 'plan_pro_monthly',
+        plan_id: 'plan_RC4Oy32XyvwR1b', // ✅ Your actual Proof plan ID
         amount: 3900, // ₹39.00 in paise
         currency: 'INR',
         interval: 'monthly',
         name: 'Proof Plan'
       },
       'enterprise': {
-        plan_id: 'plan_enterprise_monthly',
+        plan_id: 'plan_RC4Q5IDADCw9lu', // ✅ Your actual Growth plan ID
         amount: 5900, // ₹59.00 in paise
         currency: 'INR',
         interval: 'monthly',
