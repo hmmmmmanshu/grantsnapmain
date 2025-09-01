@@ -3,7 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ProBadge } from '@/components/ui/ProBadge';
-import { Zap, Brain, Search, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Zap, Brain, Search, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { getPlanQuotas, calculateUsagePercentage, isNearLimit, hasExceededLimit, getPlanDisplayName } from '@/lib/planUtils';
@@ -37,6 +38,7 @@ export function UsageTracker() {
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [userTier, setUserTier] = useState<string>('basic');
+  const [isCollapsed, setIsCollapsed] = useState(true); // Default to collapsed
   const { user } = useAuth();
 
   useEffect(() => {
@@ -181,22 +183,61 @@ export function UsageTracker() {
 
   return (
     <Card className="w-full">
-      <CardHeader>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
               <Zap className="w-5 h-5" />
-              Usage This Month
-            </CardTitle>
-            <CardDescription>
-              {`${new Date(usageData.usage_stats.month_start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${new Date(usageData.subscription.current_period_end).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`}
-            </CardDescription>
+              <CardTitle className="text-lg">Usage This Month</CardTitle>
+              <ProBadge tier={usageData.subscription.tier} />
+            </div>
+            {!isCollapsed && (
+              <CardDescription className="mt-1">
+                {`${new Date(usageData.usage_stats.month_start_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} - ${new Date(usageData.subscription.current_period_end).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`}
+              </CardDescription>
+            )}
           </div>
-          <ProBadge tier={usageData.subscription.tier} />
+          
+          {/* Collapsed View - Show compact progress bars */}
+          {isCollapsed && (
+            <div className="flex items-center gap-4 mr-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4 h-4 text-purple-600" />
+                <div className="w-20">
+                  <Progress value={usageData.progress.ai_generations} className="h-1.5" />
+                </div>
+                <span className="text-xs text-gray-500 w-12">{usageData.usage_stats.ai_generations_used}/{usageData.quotas.ai_generations}</span>
+              </div>
+              {usageData.quotas.deep_scans > 0 && (
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-blue-600" />
+                  <div className="w-20">
+                    <Progress value={usageData.progress.deep_scans} className="h-1.5" />
+                  </div>
+                  <span className="text-xs text-gray-500 w-12">{usageData.usage_stats.deep_scans_used}/{usageData.quotas.deep_scans}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Toggle Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="ml-2"
+          >
+            {isCollapsed ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronUp className="w-4 h-4" />
+            )}
+          </Button>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-6">
+      {!isCollapsed && (
+        <CardContent className="pt-0 space-y-6">
         {/* AI Generations Usage */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -336,7 +377,8 @@ export function UsageTracker() {
         >
           Refresh Usage Data
         </button>
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 }
