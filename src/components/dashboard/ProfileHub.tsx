@@ -222,7 +222,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           <Button 
             variant="outline" 
             size="lg"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary pr-12"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
             disabled={loading}
           >
             {loading ? (
@@ -237,16 +237,13 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
               </>
             )}
           </Button>
-          {/* Completion Badge */}
-          {!loading && (
-            <div className="absolute -top-2 -right-2">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${
-                completion.percentage >= 90 ? 'bg-green-500' :
+          {/* Subtle Progress Dot */}
+          {!loading && completion.percentage < 90 && (
+            <div className="absolute -top-1 -right-1">
+              <div className={`w-3 h-3 rounded-full ${
                 completion.percentage >= 70 ? 'bg-blue-500' :
                 completion.percentage >= 40 ? 'bg-amber-500' : 'bg-red-500'
-              }`}>
-                {completion.percentage}%
-              </div>
+              } shadow-sm`}></div>
             </div>
           )}
         </div>
@@ -277,8 +274,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusDisplay.color} ${statusDisplay.bgColor}`}>
-                    <span>{statusDisplay.icon}</span>
+                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusDisplay.color} ${statusDisplay.bgColor}`}>
                     {statusDisplay.message}
                   </div>
                 </div>

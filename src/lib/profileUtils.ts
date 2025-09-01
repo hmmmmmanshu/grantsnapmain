@@ -98,7 +98,7 @@ export function getCompletionStatusDisplay(completion: ProfileCompletionStatus) 
       bgColor: 'bg-green-100',
       borderColor: 'border-green-200',
       message: 'Profile Complete!',
-      icon: '✅',
+      icon: '',
     };
   } else if (completion.percentage >= 70) {
     return {
@@ -106,7 +106,7 @@ export function getCompletionStatusDisplay(completion: ProfileCompletionStatus) 
       bgColor: 'bg-blue-100',
       borderColor: 'border-blue-200',
       message: 'Almost there!',
-      icon: '🔄',
+      icon: '',
     };
   } else if (completion.percentage >= 40) {
     return {
@@ -114,7 +114,7 @@ export function getCompletionStatusDisplay(completion: ProfileCompletionStatus) 
       bgColor: 'bg-amber-100',
       borderColor: 'border-amber-200',
       message: 'Good progress',
-      icon: '⚡',
+      icon: '',
     };
   } else {
     return {
@@ -122,7 +122,7 @@ export function getCompletionStatusDisplay(completion: ProfileCompletionStatus) 
       bgColor: 'bg-red-100',
       borderColor: 'border-red-200',
       message: 'Needs attention',
-      icon: '🚀',
+      icon: '',
     };
   }
 }

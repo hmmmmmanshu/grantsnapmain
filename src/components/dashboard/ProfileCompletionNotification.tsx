@@ -43,7 +43,7 @@ export function ProfileCompletionNotification({ onOpenProfile }: ProfileCompleti
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="text-sm font-semibold text-gray-900">
-                  {statusDisplay.icon} Complete Your Profile ({completion.percentage}%)
+                  Complete Your Profile ({completion.percentage}%)
                 </h3>
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${statusDisplay.color} ${statusDisplay.bgColor}`}>
                   {statusDisplay.message}
