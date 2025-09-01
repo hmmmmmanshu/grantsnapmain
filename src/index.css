@@ -150,3 +150,12 @@
   font-feature-settings: "tnum";
   font-variant-numeric: tabular-nums;
 }
+
+/* Progress bar warning and danger states */
+.progress-warning [data-progress-indicator] {
+  background-color: rgb(245 158 11) !important; /* amber-500 */
+}
+
+.progress-danger [data-progress-indicator] {
+  background-color: rgb(239 68 68) !important; /* red-500 */
+}

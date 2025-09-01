@@ -3,9 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ProBadge } from '@/components/ui/ProBadge';
-import { Zap, Brain, Search } from 'lucide-react';
+import { Zap, Brain, Search, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { getPlanQuotas, calculateUsagePercentage, isNearLimit, hasExceededLimit, getPlanDisplayName } from '@/lib/planUtils';
 
 interface UsageStats {
   user_id: string;
@@ -35,39 +36,67 @@ interface UsageData {
 export function UsageTracker() {
   const [usageData, setUsageData] = useState<UsageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userTier, setUserTier] = useState<string>('basic');
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
-      fetchUsageData();
+      fetchUserSubscription();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && userTier) {
+      fetchUsageData();
+    }
+  }, [user, userTier]);
+
+  const fetchUserSubscription = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('tier, status')
+        .eq('user_id', user?.id)
+        .eq('status', 'active')
+        .single();
+
+      if (!error && data) {
+        setUserTier(data.tier);
+      } else {
+        setUserTier('basic'); // Default to basic if no subscription found
+      }
+    } catch (error) {
+      console.error('Error fetching user subscription:', error);
+      setUserTier('basic');
+    }
+  };
 
   const fetchUsageData = async () => {
     try {
       setLoading(true);
       
-      // For now, create mock usage data since the table might not exist yet
+      // Get dynamic quotas based on user's actual tier
+      const currentTier = userTier || 'basic';
+      const planQuotas = getPlanQuotas(currentTier);
+      
+      // For now, create mock usage data with dynamic quotas
       const mockUsageData = {
         current_month: new Date().toISOString().slice(0, 7), // YYYY-MM format
         usage_stats: {
           user_id: user?.id || '',
           month_start_date: new Date().toISOString().split('T')[0],
-          ai_generations_used: 0,
-          deep_scans_used: 0,
+          ai_generations_used: 3, // Some realistic usage
+          deep_scans_used: 1,
           updated_at: new Date().toISOString()
         },
         subscription: {
-          tier: 'basic',
+          tier: currentTier,
           current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         },
-        quotas: {
-          ai_generations: 10,
-          deep_scans: 5
-        },
+        quotas: planQuotas,
         progress: {
-          ai_generations: 0,
-          deep_scans: 0
+          ai_generations: calculateUsagePercentage(3, planQuotas.ai_generations),
+          deep_scans: calculateUsagePercentage(1, planQuotas.deep_scans)
         }
       };
       
@@ -174,12 +203,24 @@ export function UsageTracker() {
             <div className="flex items-center gap-2">
               <Brain className="w-4 h-4 text-purple-600" />
               <span className="font-medium">AI Generations</span>
+              {hasExceededLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations) && (
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
                 {usageData.usage_stats.ai_generations_used} / {usageData.quotas.ai_generations}
               </span>
-              <Badge variant="outline" className="text-xs">
+              <Badge 
+                variant={
+                  hasExceededLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations) 
+                    ? "destructive" 
+                    : isNearLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations)
+                    ? "secondary" 
+                    : "outline"
+                } 
+                className="text-xs"
+              >
                 {usageData.progress.ai_generations}%
               </Badge>
             </div>
@@ -188,12 +229,25 @@ export function UsageTracker() {
           <div className="space-y-2">
             <Progress 
               value={usageData.progress.ai_generations} 
-              className="h-2"
+              className={`h-2 ${
+                hasExceededLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations)
+                  ? 'progress-danger'
+                  : isNearLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations)
+                  ? 'progress-warning'
+                  : ''
+              }`}
             />
             <div className="flex justify-between text-xs text-gray-500">
               <span>Used: {usageData.usage_stats.ai_generations_used}</span>
               <span>Limit: {usageData.quotas.ai_generations}</span>
             </div>
+            {hasExceededLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations) && (
+              <p className="text-xs text-red-600">⚠️ You've reached your monthly limit. Upgrade for more!</p>
+            )}
+            {isNearLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations) && 
+             !hasExceededLimit(usageData.usage_stats.ai_generations_used, usageData.quotas.ai_generations) && (
+              <p className="text-xs text-amber-600">🔔 You're close to your monthly limit</p>
+            )}
           </div>
         </div>
 
@@ -203,26 +257,74 @@ export function UsageTracker() {
             <div className="flex items-center gap-2">
               <Search className="w-4 h-4 text-blue-600" />
               <span className="font-medium">Deep Scans</span>
+              {usageData.quotas.deep_scans === 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Pro Feature
+                </Badge>
+              )}
+              {usageData.quotas.deep_scans > 0 && hasExceededLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans) && (
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {usageData.usage_stats.deep_scans_used} / {usageData.quotas.deep_scans}
+                {usageData.usage_stats.deep_scans_used} / {usageData.quotas.deep_scans || 'N/A'}
               </span>
-              <Badge variant="outline" className="text-xs">
-                {usageData.progress.deep_scans}%
-              </Badge>
+              {usageData.quotas.deep_scans > 0 && (
+                <Badge 
+                  variant={
+                    hasExceededLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans) 
+                      ? "destructive" 
+                      : isNearLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans)
+                      ? "secondary" 
+                      : "outline"
+                  } 
+                  className="text-xs"
+                >
+                  {usageData.progress.deep_scans}%
+                </Badge>
+              )}
             </div>
           </div>
           
           <div className="space-y-2">
-            <Progress 
-              value={usageData.progress.deep_scans} 
-              className="h-2"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>Used: {usageData.usage_stats.deep_scans_used}</span>
-              <span>Limit: {usageData.quotas.deep_scans}</span>
-            </div>
+            {usageData.quotas.deep_scans > 0 ? (
+              <>
+                <Progress 
+                  value={usageData.progress.deep_scans} 
+                  className={`h-2 ${
+                    hasExceededLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans)
+                      ? 'progress-danger'
+                      : isNearLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans)
+                      ? 'progress-warning'
+                      : ''
+                  }`}
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Used: {usageData.usage_stats.deep_scans_used}</span>
+                  <span>Limit: {usageData.quotas.deep_scans}</span>
+                </div>
+                {hasExceededLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans) && (
+                  <p className="text-xs text-red-600">⚠️ You've reached your monthly limit. Upgrade for more!</p>
+                )}
+                {isNearLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans) && 
+                 !hasExceededLimit(usageData.usage_stats.deep_scans_used, usageData.quotas.deep_scans) && (
+                  <p className="text-xs text-amber-600">🔔 You're close to your monthly limit</p>
+                )}
+              </>
+            ) : (
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Deep Scans available in {userTier === 'basic' ? 'Proof' : 'Growth'} plan
+                </p>
+                <button 
+                  onClick={() => window.open('/pricing', '_blank')}
+                  className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                >
+                  Upgrade Now →
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

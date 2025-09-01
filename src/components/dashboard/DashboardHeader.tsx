@@ -33,9 +33,14 @@ const DashboardHeader = () => {
 
           if (!error && data) {
             setSubscription(data);
+          } else {
+            // If no subscription found, user is on basic plan
+            setSubscription({ tier: 'basic', status: 'active' });
           }
         } catch (error) {
           console.error('Error fetching subscription:', error);
+          // Default to basic plan on error
+          setSubscription({ tier: 'basic', status: 'active' });
         }
       }
     };
