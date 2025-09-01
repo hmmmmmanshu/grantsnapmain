@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Settings as SettingsIcon, CreditCard, User, Shield, Bell } from 'lucide-react';
+import { Settings as SettingsIcon, CreditCard, User, Shield } from 'lucide-react';
 import BillingSection from '@/components/dashboard/BillingSection';
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate } from 'react-router-dom';
@@ -52,10 +52,6 @@ const Settings = () => {
                   <button className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2">
                     <Shield className="w-4 h-4" />
                     Security & Privacy
-                  </button>
-                  <button className="w-full text-left px-3 py-2 rounded-md hover:bg-gray-100 transition-colors flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Notifications
                   </button>
                   <button className="w-full text-left px-3 py-2 rounded-md bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors flex items-center gap-2">
                     <CreditCard className="w-4 h-4" />

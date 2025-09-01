@@ -3,12 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ProBadge } from '@/components/ui/ProBadge'
-import { CreditCard, Calendar, DollarSign, Crown, TrendingUp, Users, Zap } from 'lucide-react'
+import { CreditCard, Calendar, DollarSign, Crown, TrendingUp, Users, Zap, Gift, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { usePricing } from '@/hooks/usePricing'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
+import { getPlanInfo } from '@/lib/planUtils'
 
 interface SubscriptionData {
   id: string
@@ -30,30 +31,55 @@ interface PlanFeatures {
     features: string[]
     color: string
     icon: React.ReactNode
+    buttonText: string
   }
 }
 
+// Use pricing page data that matches the main site
 const PLAN_FEATURES: PlanFeatures = {
   basic: {
-    name: 'Basic',
+    name: 'Base',
     price: 'Free',
-    features: ['Core grant management', 'Basic templates', 'Email support'],
-    color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-    icon: <Zap className="w-4 h-4" />
+    features: [
+      'Unlimited Grant Capture & Tracking',
+      'Central Dashboard Access',
+      '10 Concierge AI Autofills / month',
+      'Standard Page Analysis',
+      'Deadline Notifications',
+      'Standard Email Support'
+    ],
+    color: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-200',
+    icon: <Gift className="w-4 h-4" />,
+    buttonText: 'Start for Free'
   },
   pro: {
-    name: 'Pro',
-    price: '$29/month',
-    features: ['AI answer refinement', 'HyperBrowser deep scans', 'Priority support', 'Advanced analytics'],
-    color: 'bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-200',
-    icon: <Crown className="w-4 h-4" />
+    name: 'Proof',
+    price: '$39/month',
+    features: [
+      'Everything in Base, plus:',
+      '150 Concierge AI Autofills / month',
+      'Unlimited AI Answer Refinement Engine',
+      'One-Click Pitch Deck Analysis',
+      'Priority Email Support'
+    ],
+    color: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-200',
+    icon: <Zap className="w-4 h-4" />,
+    buttonText: 'Get Proof'
   },
   enterprise: {
-    name: 'Enterprise',
-    price: '$99/month',
-    features: ['Team collaboration', 'Custom integrations', 'Dedicated support', 'White-label options'],
+    name: 'Growth',
+    price: '$59/month',
+    features: [
+      'Everything in Proof, plus:',
+      '400 Concierge AI Autofills / month',
+      '25 Deep Scans / month (with HyperBrowser)',
+      'Analytics Dashboard',
+      'Data Export Capabilities',
+      'Priority Email & Phone Support'
+    ],
     color: 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-200',
-    icon: <Users className="w-4 h-4" />
+    icon: <Crown className="w-4 h-4" />,
+    buttonText: 'Scale with Growth'
   }
 }
 
@@ -70,51 +96,52 @@ export function BillingSection() {
     }
   }, [user])
 
-  const fetchSubscriptionData = async () => {
+    const fetchSubscriptionData = async () => {
     try {
       setLoading(true)
       
-      // For now, create a mock subscription since the table might not exist yet
-      const mockSubscription = {
-        id: 'mock-1',
-        user_id: user?.id || '',
-        tier: 'basic',
-        status: 'active',
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      setSubscription(mockSubscription)
-      
-      // TODO: Uncomment when subscriptions table is ready
-      /*
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        throw new Error('No active session')
-      }
-
+      // Try to fetch real subscription data first
       const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user?.id)
+        .eq('status', 'active')
         .single()
 
-      if (error) {
-        throw error
+      if (!error && data) {
+        setSubscription(data)
+      } else {
+        // If no subscription found, user is on basic plan
+        const basicSubscription = {
+          id: 'basic-default',
+          user_id: user?.id || '',
+          tier: 'basic',
+          status: 'active',
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now for free plan
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        setSubscription(basicSubscription)
       }
-
-      setSubscription(data)
-      */
     } catch (error) {
       console.error('Error fetching subscription data:', error)
-      // Don't show error toast for now since we're using mock data
-      // toast.error('Failed to load subscription information')
-         } finally {
-       setLoading(false)
-     }
-   }
+      // Default to basic plan on error
+      const basicSubscription = {
+        id: 'basic-error',
+        user_id: user?.id || '',
+        tier: 'basic',
+        status: 'active',
+        current_period_start: new Date().toISOString(),
+        current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+      setSubscription(basicSubscription)
+    } finally {
+      setLoading(false)
+    }
+  }
 
 
 
@@ -230,7 +257,7 @@ export function BillingSection() {
             <div className="space-y-2">
               {plan.features.map((feature, index) => (
                 <div key={index} className="flex items-center gap-2 text-sm">
-                  <div className="w-1.5 h-1.5 rounded-full bg-current opacity-60"></div>
+                  <Check className="w-3 h-3 text-current opacity-60 flex-shrink-0" />
                   {feature}
                 </div>
               ))}
@@ -262,16 +289,22 @@ export function BillingSection() {
             
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Renews:</span>
-                <span className="font-medium">{formatDate(subscription.current_period_end)}</span>
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {subscription.tier === 'basic' ? 'Free Forever' : 'Renews:'}
+                </span>
+                <span className="font-medium">
+                  {subscription.tier === 'basic' ? 'No Expiration' : formatDate(subscription.current_period_end)}
+                </span>
               </div>
               
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Days Left:</span>
-                <Badge variant="outline" className={daysUntilRenewal <= 7 ? 'border-red-300 text-red-600' : ''}>
-                  {daysUntilRenewal} days
-                </Badge>
-              </div>
+              {subscription.tier !== 'basic' && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Days Left:</span>
+                  <Badge variant="outline" className={daysUntilRenewal <= 7 ? 'border-red-300 text-red-600' : ''}>
+                    {daysUntilRenewal} days
+                  </Badge>
+                </div>
+              )}
               
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600 dark:text-gray-400">Last Updated:</span>
@@ -294,10 +327,10 @@ export function BillingSection() {
             {subscription.tier === 'basic' ? (
               <Button 
                 onClick={handleUpgrade} 
-                className="flex-1 bg-amber-600 hover:bg-amber-700"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
               >
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Upgrade Plan
+                <Crown className="w-4 h-4 mr-2" />
+                Upgrade to Pro
               </Button>
             ) : (
               <Button 
@@ -347,7 +380,7 @@ export function BillingSection() {
                 <ul className="space-y-2 mb-4">
                   {planData.features.map((feature, index) => (
                     <li key={index} className="flex items-center gap-2 text-sm">
-                      <div className="w-1 h-1 rounded-full bg-current opacity-60"></div>
+                      <Check className="w-3 h-3 text-green-600 flex-shrink-0" />
                       {feature}
                     </li>
                   ))}
@@ -360,7 +393,7 @@ export function BillingSection() {
                     className="w-full"
                     size="sm"
                   >
-                    {subscription.tier === 'basic' ? 'Upgrade' : 'Switch'}
+                    {planData.buttonText}
                   </Button>
                 )}
               </div>
