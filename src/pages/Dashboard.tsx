@@ -9,6 +9,7 @@ import { Opportunity } from '@/types/dashboard';
 import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
 import UsageTracker from '@/components/dashboard/UsageTracker';
+import ProfileCompletionNotification from '@/components/dashboard/ProfileCompletionNotification';
 import { useAuth } from '@/hooks/useAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { Navigate } from 'react-router-dom';
@@ -26,6 +27,7 @@ import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
+  const [profileHubOpen, setProfileHubOpen] = useState(false);
   const { 
     grants, 
     loading: grantsLoading, 
@@ -222,17 +224,22 @@ const Dashboard = () => {
       
       <main className="max-w-7xl mx-auto px-6 py-8">
         <div className="space-y-6">
+          {/* Profile Completion Notification */}
+          <ProfileCompletionNotification 
+            onOpenProfile={() => setProfileHubOpen(true)} 
+          />
+
           {/* Main Dashboard Header */}
-              <div className="flex justify-between items-center">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
-                  <p className="text-gray-600">Manage your funding opportunities and profile</p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <ProfileHub />
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Funding Dashboard</h1>
+              <p className="text-gray-600">Manage your funding opportunities and profile</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <ProfileHub isOpen={profileHubOpen} onOpenChange={setProfileHubOpen} />
               <VirtualCFO />
-                </div>
-              </div>
+            </div>
+          </div>
 
 
 

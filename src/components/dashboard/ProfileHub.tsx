@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { 
   Sheet, 
   SheetContent, 
@@ -15,14 +17,31 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from '@/components/ui/sheet';
-import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot } from 'lucide-react';
+import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useDocuments } from '@/hooks/useDocuments';
 import { safeFormatDate } from '@/lib/dateUtils';
+import { 
+  calculateProfileCompletion, 
+  getUserDisplayInfo, 
+  getCompletionStatusDisplay,
+  getNextRecommendedField 
+} from '@/lib/profileUtils';
 
-const ProfileHub = () => {
-  const [isOpen, setIsOpen] = useState(false);
+interface ProfileHubProps {
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = {}) => {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Use external control if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsOpen = onOpenChange || setInternalIsOpen;
+  const { user } = useAuth();
   const { profile, loading, saveProfile } = useProfile();
   const {
     documents,
@@ -43,6 +62,12 @@ const ProfileHub = () => {
     solution_description: '',
     target_market: '',
     team_description: '',
+    company_description: '',
+    unique_value_proposition: '',
+    mission_vision: '',
+    elevator_pitch: '',
+    standard_abstract: '',
+    detailed_summary: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -56,6 +81,12 @@ const ProfileHub = () => {
         solution_description: profile.solution_description || '',
         target_market: profile.target_market || '',
         team_description: profile.team_description || '',
+        company_description: profile.company_description || '',
+        unique_value_proposition: profile.unique_value_proposition || '',
+        mission_vision: profile.mission_vision || '',
+        elevator_pitch: profile.elevator_pitch || '',
+        standard_abstract: profile.standard_abstract || '',
+        detailed_summary: profile.detailed_summary || '',
       });
     }
   }, [profile]);
@@ -178,27 +209,47 @@ const ProfileHub = () => {
     }
   };
 
+  // Calculate completion status
+  const completion = calculateProfileCompletion(profile);
+  const userDisplay = getUserDisplayInfo(user, profile);
+  const statusDisplay = getCompletionStatusDisplay(completion);
+  const nextField = getNextRecommendedField(completion.missingFields);
+
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button 
-          variant="outline" 
-          size="lg"
-          className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary"
-          disabled={loading}
-        >
-          {loading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Loading...
-            </>
-          ) : (
-            <>
-              <User className="w-4 h-4 mr-2" />
-              Profile & Autofill Hub
-            </>
+        <div className="relative">
+          <Button 
+            variant="outline" 
+            size="lg"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 border-primary pr-12"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Loading...
+              </>
+            ) : (
+              <>
+                <User className="w-4 h-4 mr-2" />
+                Profile & Autofill Hub
+              </>
+            )}
+          </Button>
+          {/* Completion Badge */}
+          {!loading && (
+            <div className="absolute -top-2 -right-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${
+                completion.percentage >= 90 ? 'bg-green-500' :
+                completion.percentage >= 70 ? 'bg-blue-500' :
+                completion.percentage >= 40 ? 'bg-amber-500' : 'bg-red-500'
+              }`}>
+                {completion.percentage}%
+              </div>
+            </div>
           )}
-        </Button>
+        </div>
       </SheetTrigger>
       <SheetContent side="right" className="w-full sm:max-w-4xl overflow-y-auto">
         <SheetHeader>
@@ -207,6 +258,64 @@ const ProfileHub = () => {
             Build your comprehensive profile to power intelligent autofill and AI analysis
           </SheetDescription>
         </SheetHeader>
+
+        {/* User Info & Completion Status Section */}
+        <div className="mt-6 mb-6">
+          <Card className={`${statusDisplay.bgColor} ${statusDisplay.borderColor} border-2`}>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{userDisplay.name}</h3>
+                    <p className="text-sm text-gray-600">{userDisplay.email}</p>
+                    {userDisplay.tagline && (
+                      <p className="text-sm text-gray-500 italic mt-1">"{userDisplay.tagline}"</p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusDisplay.color} ${statusDisplay.bgColor}`}>
+                    <span>{statusDisplay.icon}</span>
+                    {statusDisplay.message}
+                  </div>
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Profile Completion</span>
+                  <span className="font-medium">{completion.percentage}%</span>
+                </div>
+                <Progress value={completion.percentage} className="h-2" />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>{completion.completedFields} of {completion.totalFields} fields completed</span>
+                  {nextField && (
+                    <span>Next: {nextField}</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              {completion.percentage < 90 && (
+                <div className="mt-4 p-3 bg-white rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="w-4 h-4 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-900">
+                      Complete your profile to unlock full AI potential
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-600">
+                    A complete profile helps our AI provide better grant recommendations and autofill assistance.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
         
         <div className="mt-6">
           <Tabs defaultValue="onboarding" className="w-full">
@@ -334,41 +443,69 @@ const ProfileHub = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="tagline">Company Description (Tagline)</Label>
-                    <Input id="tagline" placeholder="One-sentence description (140 chars max)" maxLength={140} />
+                    <Label htmlFor="company-description">Company Description (Tagline)</Label>
+                    <Input 
+                      id="company-description" 
+                      placeholder="One-sentence description (140 chars max)" 
+                      maxLength={140}
+                      value={formData.company_description}
+                      onChange={(e) => setFormData(prev => ({ ...prev, company_description: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="problem">Problem You Solve</Label>
-                    <Textarea id="problem" placeholder="Detailed description of the pain point" rows={4} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="solution">How You Solve It</Label>
-                    <Textarea id="solution" placeholder="Detailed description of your product/service" rows={4} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="uvp">Unique Value Proposition</Label>
-                    <Textarea id="uvp" placeholder="What makes you different" rows={3} />
+                    <Label htmlFor="unique-value-proposition">Unique Value Proposition</Label>
+                    <Textarea 
+                      id="unique-value-proposition" 
+                      placeholder="What makes you different" 
+                      rows={3}
+                      value={formData.unique_value_proposition}
+                      onChange={(e) => setFormData(prev => ({ ...prev, unique_value_proposition: e.target.value }))}
+                    />
                   </div>
                   
                   <div className="space-y-4">
                     <h4 className="font-semibold">Project Summaries (Autofill Gold)</h4>
                     <div className="space-y-2">
                       <Label htmlFor="elevator-pitch">Elevator Pitch (50 Words)</Label>
-                      <Textarea id="elevator-pitch" placeholder="Very short summary" rows={2} />
+                      <Textarea 
+                        id="elevator-pitch" 
+                        placeholder="Very short summary" 
+                        rows={2}
+                        value={formData.elevator_pitch}
+                        onChange={(e) => setFormData(prev => ({ ...prev, elevator_pitch: e.target.value }))}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="standard-abstract">Standard Abstract (250 Words)</Label>
-                      <Textarea id="standard-abstract" placeholder="Most common length" rows={4} />
+                      <Textarea 
+                        id="standard-abstract" 
+                        placeholder="Most common length" 
+                        rows={4}
+                        value={formData.standard_abstract}
+                        onChange={(e) => setFormData(prev => ({ ...prev, standard_abstract: e.target.value }))}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="detailed-summary">Detailed Summary (500 Words)</Label>
-                      <Textarea id="detailed-summary" placeholder="For in-depth sections" rows={6} />
+                      <Textarea 
+                        id="detailed-summary" 
+                        placeholder="For in-depth sections" 
+                        rows={6}
+                        value={formData.detailed_summary}
+                        onChange={(e) => setFormData(prev => ({ ...prev, detailed_summary: e.target.value }))}
+                      />
                     </div>
                   </div>
                   
                   <div className="space-y-2">
                     <Label htmlFor="mission-vision">Mission & Vision</Label>
-                    <Textarea id="mission-vision" placeholder="Long-term view" rows={3} />
+                    <Textarea 
+                      id="mission-vision" 
+                      placeholder="Long-term view" 
+                      rows={3}
+                      value={formData.mission_vision}
+                      onChange={(e) => setFormData(prev => ({ ...prev, mission_vision: e.target.value }))}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="impact">Potential Impact</Label>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuth'
+import { calculateProfileCompletion } from '@/lib/profileUtils'
 
 export interface UserProfile {
   id: string
@@ -10,6 +11,14 @@ export interface UserProfile {
   solution_description?: string
   target_market?: string
   team_description?: string
+  company_description?: string
+  unique_value_proposition?: string
+  mission_vision?: string
+  pitch_deck_summary?: string
+  elevator_pitch?: string
+  standard_abstract?: string
+  detailed_summary?: string
+  completion_percentage?: number
   created_at: string
   updated_at: string
 }
@@ -49,6 +58,10 @@ export function useProfile() {
     if (!user) return { error: 'User not authenticated' }
 
     try {
+      // Calculate completion percentage for the updated profile
+      const tempProfile = { ...profile, ...profileData } as UserProfile
+      const completion = calculateProfileCompletion(tempProfile)
+      
       let result
 
       if (profile) {
@@ -57,6 +70,7 @@ export function useProfile() {
           .from('user_profiles')
           .update({
             ...profileData,
+            completion_percentage: completion.percentage,
             updated_at: new Date().toISOString(),
           })
           .eq('id', profile.id)
@@ -70,9 +84,11 @@ export function useProfile() {
         const { data, error } = await supabase
           .from('user_profiles')
           .insert({
-            user_id: user.id,
-            company_name: profileData.company_name || '',
+            id: user.id, // Use user.id as the primary key
             ...profileData,
+            completion_percentage: completion.percentage,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .select()
           .single()
