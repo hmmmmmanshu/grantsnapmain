@@ -36,32 +36,41 @@ const OpportunityPipeline = ({ opportunities }: OpportunityPipelineProps) => {
 
   return (
     <Card className="w-full">
-      <CardHeader className="pb-3">
+      <CardHeader>
         <CardTitle className="text-lg font-semibold text-foreground">
           Your Funding Pipeline
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Compact Metrics Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Total Found</p>
-            <p className="text-2xl font-bold text-foreground">
+      <CardContent className="space-y-6">
+        {/* Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Total Found</p>
+            <p className="text-3xl font-bold text-foreground">
               {formatCurrency(totalFundingFound)}
             </p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Total Applied</p>
-            <p className="text-2xl font-bold text-primary">
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground">Total Applied</p>
+            <p className="text-3xl font-bold text-primary">
               {formatCurrency(totalFundingApplied)}
             </p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Application Rate</p>
-            <div className="flex items-center gap-2">
-              <Progress value={applicationRate} className="h-2 flex-1" />
-              <span className="text-sm font-medium text-foreground min-w-[45px]">{applicationRate.toFixed(1)}%</span>
-            </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm text-muted-foreground">
+            <span>Application Progress</span>
+            <span>{applicationRate.toFixed(1)}%</span>
+          </div>
+          <Progress 
+            value={applicationRate} 
+            className="h-3"
+          />
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>$0</span>
+            <span>{formatCurrency(totalFundingFound)}</span>
           </div>
         </div>
       </CardContent>
