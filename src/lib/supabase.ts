@@ -28,6 +28,7 @@ try {
         // Cookie configuration for Chrome Extension compatibility
         cookieOptions: {
           // Set domain to .grantsnap.pro (with leading dot) for subdomain access
+          // This works for both grantsnap.pro and www.grantsnap.pro
           domain: '.grantsnap.pro',
           // Ensure cookies are NOT HttpOnly so extension can read them
           httpOnly: false,

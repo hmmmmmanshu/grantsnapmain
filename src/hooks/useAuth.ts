@@ -67,6 +67,21 @@ export function useAuth() {
         console.log('👤 User ID:', session.user?.id)
         console.log('📧 User Email:', session.user?.email)
         console.log('🔑 Access Token exists:', !!session.access_token)
+        
+        // Force cookie creation for Chrome Extension compatibility
+        if (session.access_token) {
+          const cookieName = 'sb-uurdubbsamdawncqkaoy-auth-token'
+          const cookieValue = JSON.stringify({
+            access_token: session.access_token,
+            token_type: 'bearer',
+            expires_in: session.expires_in,
+            refresh_token: session.refresh_token
+          })
+          
+          // Set cookie with proper domain for Chrome Extension access
+          document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; domain=.grantsnap.pro; path=/; secure; samesite=lax; max-age=${30 * 24 * 60 * 60}`
+          console.log('🍪 Manually set auth cookie for Chrome Extension compatibility')
+        }
       } else {
         console.log('⚠️ No session found, Chrome Extension may not be able to authenticate')
         console.log('🔍 Checking if Supabase client is properly configured...')
@@ -85,6 +100,21 @@ export function useAuth() {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      // Force cookie creation for Chrome Extension compatibility
+      if (session?.access_token) {
+        const cookieName = 'sb-uurdubbsamdawncqkaoy-auth-token'
+        const cookieValue = JSON.stringify({
+          access_token: session.access_token,
+          token_type: 'bearer',
+          expires_in: session.expires_in,
+          refresh_token: session.refresh_token
+        })
+        
+        // Set cookie with proper domain for Chrome Extension access
+        document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; domain=.grantsnap.pro; path=/; secure; samesite=lax; max-age=${30 * 24 * 60 * 60}`
+        console.log('🍪 Auth state change - manually set auth cookie for Chrome Extension compatibility')
+      }
     })
 
     return () => subscription.unsubscribe()

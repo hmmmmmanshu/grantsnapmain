@@ -28,6 +28,15 @@ export function debugCookieSetup(): void {
   const cookieExists = document.cookie.includes(expectedCookie);
   console.log(`🎯 Expected cookie (${expectedCookie}):`, cookieExists ? '✅ Found' : '❌ Not found');
   
+  // Also check for any Supabase auth cookies
+  const supabaseAuthCookies = allCookies.filter(cookie => 
+    cookie.includes('sb-uurdubbsamdawncqkaoy-auth-token')
+  );
+  console.log(`🔐 Supabase auth cookies found:`, supabaseAuthCookies.length);
+  if (supabaseAuthCookies.length > 0) {
+    console.log('📋 Auth cookies:', supabaseAuthCookies);
+  }
+  
   // Check domain configuration
   console.log('🌐 Extension expects cookie domain:', SUPABASE_CONFIG.cookieDomain);
   
