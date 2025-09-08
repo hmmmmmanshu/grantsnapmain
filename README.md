@@ -1,73 +1,89 @@
-# Welcome to your Lovable project
+# Grants Snap - Your Grant Application Launchpad
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/907e781d-2a1a-4293-b185-f1d5cee4eb52
+Grants Snap is a comprehensive platform for discovering, applying, and tracking grant opportunities. Built with modern web technologies, it provides an intuitive interface for managing grant applications and staying organized throughout the funding process.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Grant Discovery**: Find relevant grant opportunities based on your organization's needs
+- **Application Management**: Track and manage multiple grant applications
+- **Deadline Tracking**: Never miss important deadlines with built-in reminders
+- **Document Management**: Organize and store grant-related documents
+- **Progress Monitoring**: Track the status of your applications
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/907e781d-2a1a-4293-b185-f1d5cee4eb52) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js (v16 or higher)
+- npm or yarn package manager
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+1. Clone the repository:
+```bash
 git clone <YOUR_GIT_URL>
+cd grants-snap
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+2. Install dependencies:
+```bash
+npm install
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+# Edit .env.local with your configuration
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. Start the development server:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. Open [http://localhost:5173](http://localhost:5173) in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
+## Technology Stack
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- **Frontend**: React 18 with TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Backend**: Supabase
+- **Authentication**: Supabase Auth
+- **Database**: PostgreSQL (via Supabase)
 
-## How can I deploy this project?
+## Available Scripts
 
-Simply open [Lovable](https://lovable.dev/projects/907e781d-2a1a-4293-b185-f1d5cee4eb52) and click on Share -> Publish.
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## Can I connect a custom domain to my Lovable project?
+## Deployment
 
-Yes, you can!
+The application can be deployed to various platforms:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Vercel**: Connect your GitHub repository to Vercel for automatic deployments
+- **Netlify**: Use the build command `npm run build` and publish the `dist` folder
+- **Supabase**: Deploy directly from the Supabase dashboard
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, email support@grantsnap.pro or join our community discussions.
