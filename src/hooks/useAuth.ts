@@ -64,8 +64,14 @@ export function useAuth() {
       
       if (session) {
         console.log('✅ Session established, cookies should be accessible to Chrome Extension')
+        console.log('👤 User ID:', session.user?.id)
+        console.log('📧 User Email:', session.user?.email)
+        console.log('🔑 Access Token exists:', !!session.access_token)
       } else {
         console.log('⚠️ No session found, Chrome Extension may not be able to authenticate')
+        console.log('🔍 Checking if Supabase client is properly configured...')
+        console.log('🌐 Supabase URL available:', !!supabase?.supabaseUrl)
+        console.log('🔑 Supabase client type:', supabase?.auth ? 'Real client' : 'Mock client')
       }
     })
 

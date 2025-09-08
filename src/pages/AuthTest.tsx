@@ -4,11 +4,13 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { SUPABASE_CONFIG } from '@/config/supabase';
 import { debugCookieSetup, getAuthStatus, clearAuthCookies } from '@/utils/cookieDebug';
+import { testAuthentication, testChromeExtensionAccess } from '@/utils/authTest';
 
 const AuthTest: React.FC = () => {
   const { user, session, loading } = useAuth();
   const [cookieStatus, setCookieStatus] = useState<any>(null);
   const [testResults, setTestResults] = useState<string[]>([]);
+  const [authTestResults, setAuthTestResults] = useState<any>(null);
 
   useEffect(() => {
     // Check cookie status on component mount
@@ -59,6 +61,14 @@ const AuthTest: React.FC = () => {
     setTestResults(['All authentication cookies cleared']);
   };
 
+  const runAdvancedAuthTest = async () => {
+    const results = await testAuthentication();
+    setAuthTestResults(results);
+    
+    // Also run Chrome Extension access test
+    testChromeExtensionAccess();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -89,9 +99,12 @@ const AuthTest: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               <Button onClick={runCookieTests} variant="default">
                 🔍 Run Cookie Tests
+              </Button>
+              <Button onClick={runAdvancedAuthTest} variant="default">
+                🧪 Advanced Auth Test
               </Button>
               <Button onClick={updateCookieStatus} variant="outline">
                 🔄 Refresh Status
@@ -106,13 +119,56 @@ const AuthTest: React.FC = () => {
         {testResults.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Test Results</CardTitle>
+              <CardTitle>Basic Test Results</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="bg-gray-100 p-4 rounded-lg">
                 <pre className="text-sm whitespace-pre-wrap">
                   {testResults.join('\n')}
                 </pre>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {authTestResults && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Advanced Authentication Test Results</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className={`p-3 rounded-lg ${authTestResults.isAuthenticated ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <div className="font-semibold">Overall Status</div>
+                    <div>{authTestResults.isAuthenticated ? '✅ AUTHENTICATED' : '❌ NOT AUTHENTICATED'}</div>
+                  </div>
+                  <div className={`p-3 rounded-lg ${authTestResults.hasSession ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <div className="font-semibold">Session</div>
+                    <div>{authTestResults.hasSession ? '✅ ACTIVE' : '❌ NONE'}</div>
+                  </div>
+                  <div className={`p-3 rounded-lg ${authTestResults.hasUser ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <div className="font-semibold">User</div>
+                    <div>{authTestResults.hasUser ? '✅ FOUND' : '❌ NONE'}</div>
+                  </div>
+                  <div className={`p-3 rounded-lg ${authTestResults.hasCookies ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    <div className="font-semibold">Cookies</div>
+                    <div>{authTestResults.hasCookies ? '✅ FOUND' : '❌ NONE'}</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-100 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-2">Client Type: {authTestResults.clientType}</h4>
+                  <div className="text-sm space-y-2">
+                    <div><strong>Supabase URL:</strong> {authTestResults.details.supabaseUrl || 'Not available'}</div>
+                    <div><strong>User ID:</strong> {authTestResults.details.user?.id || 'N/A'}</div>
+                    <div><strong>User Email:</strong> {authTestResults.details.user?.email || 'N/A'}</div>
+                    <div><strong>Auth Cookies Found:</strong> {authTestResults.details.cookies.length}</div>
+                    {authTestResults.details.error && (
+                      <div className="text-red-600"><strong>Error:</strong> {authTestResults.details.error.message}</div>
+                    )}
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>

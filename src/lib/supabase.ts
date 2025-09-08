@@ -4,25 +4,26 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-// Check if environment variables are available
+// Fallback to production values if environment variables are missing
+const finalSupabaseUrl = supabaseUrl || 'https://uurdubbsamdawncqkaoy.supabase.co'
+const finalSupabaseAnonKey = supabaseAnonKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV1cmR1YmJzYW1kYXduY3FrYW95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwNDA2OTcsImV4cCI6MjA2ODYxNjY5N30.beDN_mt87tjlWC8j2t-JWeQRShfbdvxe3_nEBp51pXg'
+
+// Check if we're using fallback values
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Missing Supabase environment variables!')
-  console.warn('Please create a .env file with:')
+  console.warn('⚠️ Using fallback Supabase credentials!')
+  console.warn('For production, set environment variables:')
   console.warn('VITE_SUPABASE_URL=your_supabase_url')
   console.warn('VITE_SUPABASE_ANON_KEY=your_supabase_anon_key')
-  
-  // For development, you can use these fallback values (replace with your actual values)
-  // const fallbackUrl = 'https://uurdubbsamdawncqkaoy.supabase.co'
-  // const fallbackKey = 'your_actual_anon_key_here'
+  console.log('🔧 Using production Supabase project: uurdubbsamdawncqkaoy')
 }
 
 // Create Supabase client with Chrome Extension compatible cookie configuration
 let supabase: any = null
 
 try {
-  if (supabaseUrl && supabaseAnonKey) {
+  if (finalSupabaseUrl && finalSupabaseAnonKey) {
     // Configure Supabase client with Chrome Extension compatible settings
-    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+    supabase = createClient(finalSupabaseUrl, finalSupabaseAnonKey, {
       auth: {
         // Cookie configuration for Chrome Extension compatibility
         cookieOptions: {
@@ -52,6 +53,8 @@ try {
     console.log('✅ Supabase client initialized with Chrome Extension compatibility')
     console.log('🍪 Cookie domain set to: .grantsnap.pro')
     console.log('🔒 Cookie security configured for extension access')
+    console.log('🌐 Supabase URL:', finalSupabaseUrl)
+    console.log('🔑 Using credentials:', import.meta.env.VITE_SUPABASE_URL ? 'Environment variables' : 'Fallback values')
   } else {
     // Create a mock client for development when env vars are missing
     console.warn('🔄 Creating mock Supabase client for development')
