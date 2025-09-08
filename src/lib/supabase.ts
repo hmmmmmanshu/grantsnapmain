@@ -16,13 +16,42 @@ if (!supabaseUrl || !supabaseAnonKey) {
   // const fallbackKey = 'your_actual_anon_key_here'
 }
 
-// Create Supabase client with error handling
+// Create Supabase client with Chrome Extension compatible cookie configuration
 let supabase: any = null
 
 try {
   if (supabaseUrl && supabaseAnonKey) {
-    supabase = createClient(supabaseUrl, supabaseAnonKey)
-    console.log('✅ Supabase client initialized successfully')
+    // Configure Supabase client with Chrome Extension compatible settings
+    supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // Cookie configuration for Chrome Extension compatibility
+        cookieOptions: {
+          // Set domain to .grantsnap.pro (with leading dot) for subdomain access
+          domain: '.grantsnap.pro',
+          // Ensure cookies are NOT HttpOnly so extension can read them
+          httpOnly: false,
+          // Set SameSite to Lax for cross-origin compatibility
+          sameSite: 'Lax',
+          // Ensure Secure flag is set for HTTPS
+          secure: true,
+          // Set max age (30 days)
+          maxAge: 30 * 24 * 60 * 60,
+          // Cookie path
+          path: '/'
+        },
+        // Configure storage type for better extension compatibility
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        // Auto refresh token
+        autoRefreshToken: true,
+        // Persist session
+        persistSession: true,
+        // Detect session in URL
+        detectSessionInUrl: true
+      }
+    })
+    console.log('✅ Supabase client initialized with Chrome Extension compatibility')
+    console.log('🍪 Cookie domain set to: .grantsnap.pro')
+    console.log('🔒 Cookie security configured for extension access')
   } else {
     // Create a mock client for development when env vars are missing
     console.warn('🔄 Creating mock Supabase client for development')

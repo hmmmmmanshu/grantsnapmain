@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Settings from "./pages/Settings";
 import Pricing from "./pages/Pricing";
+import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -146,6 +147,7 @@ const App: React.FC = () => {
               </ProtectedRoute>
             } />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/auth-test" element={<AuthTest />} />
             {/* Legal and Information Pages */}
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/terms-and-conditions" element={<TermsAndConditions />} />

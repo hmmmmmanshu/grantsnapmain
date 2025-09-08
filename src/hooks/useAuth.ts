@@ -2,6 +2,21 @@ import { useState, useEffect } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 
+// Cookie debugging for Chrome Extension compatibility
+const debugCookies = () => {
+  if (import.meta.env.DEV) {
+    console.log('🍪 Cookie Debug - Current cookies:', document.cookie)
+    console.log('🌐 Current domain:', window.location.hostname)
+    
+    // Check for Supabase auth cookies
+    const cookies = document.cookie.split(';')
+    const authCookies = cookies.filter(cookie => 
+      cookie.includes('sb-') || cookie.includes('auth') || cookie.includes('supabase')
+    )
+    console.log('🔐 Auth-related cookies:', authCookies)
+  }
+}
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -43,6 +58,15 @@ export function useAuth() {
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      // Debug cookies for Chrome Extension compatibility
+      debugCookies()
+      
+      if (session) {
+        console.log('✅ Session established, cookies should be accessible to Chrome Extension')
+      } else {
+        console.log('⚠️ No session found, Chrome Extension may not be able to authenticate')
+      }
     })
 
     // Handle OAuth callback
