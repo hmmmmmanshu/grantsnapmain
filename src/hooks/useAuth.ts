@@ -70,17 +70,17 @@ export function useAuth() {
         
         // Force cookie creation for Chrome Extension compatibility
         if (session.access_token) {
-          const cookieName = 'sb-uurdubbsamdawncqkaoy-auth-token'
-          const cookieValue = JSON.stringify({
-            access_token: session.access_token,
-            token_type: 'bearer',
-            expires_in: session.expires_in,
-            refresh_token: session.refresh_token
-          })
+          // Set individual JWT tokens as separate cookies for Chrome Extension
+          const accessToken = session.access_token;
+          const refreshToken = session.refresh_token;
           
-          // Set cookie with proper domain for Chrome Extension access
-          document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; domain=.grantsnap.pro; path=/; secure; samesite=lax; max-age=${30 * 24 * 60 * 60}`
-          console.log('🍪 Manually set auth cookie for Chrome Extension compatibility')
+          // Set cookies with the exact names the Chrome extension expects
+          document.cookie = `sb-access-token=${accessToken}; domain=.grantsnap.pro; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+          document.cookie = `sb-refresh-token=${refreshToken}; domain=.grantsnap.pro; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+          
+          console.log('🍪 Set JWT cookies for Chrome Extension compatibility')
+          console.log('🔑 Access token set:', !!accessToken)
+          console.log('🔄 Refresh token set:', !!refreshToken)
         }
       } else {
         console.log('⚠️ No session found, Chrome Extension may not be able to authenticate')
@@ -103,17 +103,17 @@ export function useAuth() {
       
       // Force cookie creation for Chrome Extension compatibility
       if (session?.access_token) {
-        const cookieName = 'sb-uurdubbsamdawncqkaoy-auth-token'
-        const cookieValue = JSON.stringify({
-          access_token: session.access_token,
-          token_type: 'bearer',
-          expires_in: session.expires_in,
-          refresh_token: session.refresh_token
-        })
+        // Set individual JWT tokens as separate cookies for Chrome Extension
+        const accessToken = session.access_token;
+        const refreshToken = session.refresh_token;
         
-        // Set cookie with proper domain for Chrome Extension access
-        document.cookie = `${cookieName}=${encodeURIComponent(cookieValue)}; domain=.grantsnap.pro; path=/; secure; samesite=lax; max-age=${30 * 24 * 60 * 60}`
-        console.log('🍪 Auth state change - manually set auth cookie for Chrome Extension compatibility')
+        // Set cookies with the exact names the Chrome extension expects
+        document.cookie = `sb-access-token=${accessToken}; domain=.grantsnap.pro; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+        document.cookie = `sb-refresh-token=${refreshToken}; domain=.grantsnap.pro; path=/; secure; samesite=strict; max-age=${30 * 24 * 60 * 60}`;
+        
+        console.log('🍪 Auth state change - set JWT cookies for Chrome Extension compatibility')
+        console.log('🔑 Access token set:', !!accessToken)
+        console.log('🔄 Refresh token set:', !!refreshToken)
       }
     })
 
@@ -182,6 +182,11 @@ export function useAuth() {
 
   const signOut = async () => {
     try {
+      // Clear Chrome Extension cookies before signing out
+      document.cookie = 'sb-access-token=; domain=.grantsnap.pro; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      document.cookie = 'sb-refresh-token=; domain=.grantsnap.pro; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+      console.log('🍪 Cleared JWT cookies for Chrome Extension')
+      
       const { error } = await supabase.auth.signOut()
       return { error }
     } catch (error) {
