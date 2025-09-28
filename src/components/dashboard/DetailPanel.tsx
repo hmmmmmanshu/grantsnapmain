@@ -208,8 +208,8 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </div>
             )}
 
-            {/* AI Analysis Confidence Scores (Core Extension Feature) */}
-            {opportunity.page_context?.confidence_data && (
+      {/* AI Analysis Confidence Scores (Core Extension Feature) */}
+      {opportunity.page_context?.confidence_data && Object.keys(opportunity.page_context.confidence_data).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <CheckCircle className="w-5 h-5 text-green-600" />
@@ -292,8 +292,8 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
             )}
 
 
-            {/* Comprehensive Application Data & Metadata */}
-            {opportunity.page_context?.application_details && (
+      {/* Comprehensive Application Data & Metadata */}
+      {opportunity.page_context?.application_details && Object.keys(opportunity.page_context.application_details).length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
                   <Globe className="w-5 h-5 text-indigo-600" />
@@ -443,7 +443,38 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </div>
             )}
 
-            {/* Grant Status & Management */}
+            {/* Extension Analysis Status (when data exists but no rich content) */}
+      {opportunity.page_context?.is_free_feature && 
+       !opportunity.page_context?.opportunity_summary &&
+       (!opportunity.page_context?.confidence_data || Object.keys(opportunity.page_context.confidence_data).length === 0) &&
+       (!opportunity.page_context?.application_details || Object.keys(opportunity.page_context.application_details).length === 0) && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="w-5 h-5 text-blue-600" />
+            <h3 className="text-base font-semibold text-gray-900">Extension Analysis Status</h3>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+              ANALYZED
+            </span>
+          </div>
+          <div className="bg-blue-50 rounded-xl p-5 border border-blue-200">
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <div className="text-sm text-gray-800 space-y-2">
+                <p className="font-medium text-blue-900">✅ Grant Successfully Analyzed</p>
+                <p className="text-gray-700">
+                  The GrantSnap extension has processed this page and found it to be a valid grant opportunity, 
+                  but the page structure didn't contain detailed information for automatic extraction.
+                </p>
+                <p className="text-gray-600 text-xs">
+                  This is normal for simple application forms or pages with minimal content. 
+                  You can still track and manage this grant using the sections below.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Grant Status & Management */}
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="w-5 h-5 text-gray-600" />
