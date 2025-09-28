@@ -18,6 +18,17 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
   const [isAnalysisConfidenceExpanded, setIsAnalysisConfidenceExpanded] = React.useState(false);
   const [isPageContextExpanded, setIsPageContextExpanded] = React.useState(false);
 
+  // Debug logging to see what data DetailPanel is receiving
+  React.useEffect(() => {
+    console.log('🔍 DetailPanel Debug - Opportunity:', opportunity.page_title);
+    console.log('- page_context:', opportunity.page_context);
+    console.log('- enhanced_analysis:', opportunity.enhanced_analysis);
+    console.log('- opportunity_summary:', opportunity.page_context?.opportunity_summary?.substring(0, 100));
+    console.log('- confidence_data:', opportunity.page_context?.confidence_data);
+    console.log('- application_details:', opportunity.page_context?.application_details);
+    console.log('- is_free_feature:', opportunity.page_context?.is_free_feature);
+  }, [opportunity]);
+
   return (
     <>
       {/* Backdrop */}

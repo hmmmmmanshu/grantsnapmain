@@ -180,6 +180,14 @@ const Dashboard = () => {
           // Mark as free feature (not enhanced analysis)
           is_free_feature: true
         };
+        
+        // Debug logging to see what data we have
+        console.log('🔍 Debug Grant Data for:', grant.grant_name);
+        console.log('- opportunity_crux:', grant.opportunity_crux?.substring(0, 100) + '...');
+        console.log('- confidence_scores:', grant.confidence_scores);
+        console.log('- application_data:', grant.application_data);
+        console.log('- eligibility_criteria:', grant.eligibility_criteria?.substring(0, 100) + '...');
+        console.log('- Mapped page_context:', opportunity.page_context);
       }
       
       return opportunity;
