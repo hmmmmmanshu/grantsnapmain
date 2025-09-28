@@ -165,17 +165,18 @@ const Dashboard = () => {
       };
       
       // Add captured extension data as free features in page_context if no enhanced analysis
-      if (!grant.enhanced_analysis && grant.opportunity_crux) {
+      if (!grant.enhanced_analysis) {
         // Create a synthetic page_context for free features using captured extension data
+        // Always show available data, even if opportunity_crux is empty
         opportunity.page_context = {
-          // Store the opportunity crux in a free-access format
-          opportunity_summary: grant.opportunity_crux,
-          // Store confidence scores
+          // Store the opportunity crux in a free-access format (only if it has content)
+          opportunity_summary: grant.opportunity_crux && grant.opportunity_crux.trim() !== '' ? grant.opportunity_crux : null,
+          // Store confidence scores (always show if available)
           confidence_data: grant.confidence_scores,
-          // Store application data
+          // Store application data (always show if available)
           application_details: grant.application_data,
-          // Store eligibility criteria
-          eligibility_info: grant.eligibility_criteria,
+          // Store eligibility criteria (only if it has content)
+          eligibility_info: grant.eligibility_criteria && grant.eligibility_criteria.trim() !== '' ? grant.eligibility_criteria : null,
           // Mark as free feature (not enhanced analysis)
           is_free_feature: true
         };

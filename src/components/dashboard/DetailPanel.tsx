@@ -132,6 +132,33 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </div>
             )}
 
+            {/* Extension Analysis Status (FREE - shows when extension was used) */}
+            {opportunity.page_context?.is_free_feature && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-4 h-4 text-green-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Extension Analysis</h3>
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-700">
+                    ✅ This grant was analyzed by the Chrome Extension on {opportunity.page_context.application_details?.analysis_timestamp ? new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleDateString() : 'recently'}.
+                    <br/><br/>
+                    <strong>Captured Data:</strong>
+                    <ul className="mt-2 space-y-1">
+                      {opportunity.page_context.opportunity_summary && <li>• Rich opportunity summary</li>}
+                      {opportunity.page_context.confidence_data && <li>• Analysis confidence scores</li>}
+                      {opportunity.page_context.application_details && <li>• Application details and source URL</li>}
+                      {opportunity.page_context.eligibility_info && <li>• Eligibility criteria</li>}
+                      {!opportunity.page_context.opportunity_summary && !opportunity.page_context.confidence_data && <li>• Basic page analysis (limited content detected)</li>}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Confidence Scores (FREE - captured by extension) */}
             {opportunity.page_context?.confidence_data && (
               <div>
