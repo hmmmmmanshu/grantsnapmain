@@ -20,6 +20,7 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
 
   // Debug logging to see what data DetailPanel is receiving
   React.useEffect(() => {
+    console.log('🚀 NEW DETAILPANEL CODE LOADED!', opportunity.page_title);
     console.log('🔍 DetailPanel Debug - Opportunity:', opportunity.page_title);
     console.log('- page_context:', opportunity.page_context);
     console.log('- enhanced_analysis:', opportunity.enhanced_analysis);
