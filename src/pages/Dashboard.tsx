@@ -132,6 +132,11 @@ const Dashboard = () => {
   }
 
   // Transform tracked grants to match Opportunity interface for existing components
+  console.log('🔍 Dashboard Debug - Raw grants from useTrackedGrants:', grants.length);
+  if (grants.length > 0) {
+    console.log('🔍 First raw grant:', grants[0]);
+  }
+
   const transformedOpportunities: Opportunity[] = grants.map(grant => {
     try {
       // Ensure we have valid dates for required fields

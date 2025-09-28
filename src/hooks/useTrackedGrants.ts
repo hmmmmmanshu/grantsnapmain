@@ -53,6 +53,10 @@ export function useTrackedGrants() {
 
       if (error) throw error
 
+      console.log('🔍 useTrackedGrants Debug - Fetched grants:', data?.length || 0);
+      console.log('🔍 First grant data:', data?.[0]);
+      console.log('🔍 User ID:', user.id);
+
       setGrants(data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch tracked grants')
