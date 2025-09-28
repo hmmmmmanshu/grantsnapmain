@@ -114,78 +114,32 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </p>
             </div>
 
-            {/* Opportunity Summary (FREE - captured by extension) */}
+            {/* AI-Generated Opportunity Summary (KEY FIELD - opportunity_crux) */}
             {opportunity.page_context?.opportunity_summary && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Opportunity Summary</h3>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    FREE
+                <div className="flex items-center gap-2 mb-3">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  <h3 className="text-base font-semibold text-gray-900">AI-Generated Opportunity Summary</h3>
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full font-medium">
+                    ⭐ KEY FIELD
                   </span>
                 </div>
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {opportunity.page_context.opportunity_summary}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Extension Analysis Status (FREE - shows when extension was used) */}
-            {opportunity.page_context?.is_free_feature && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-green-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Extension Analysis</h3>
-                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
-                    FREE
-                  </span>
-                </div>
-                <div className="bg-green-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-700">
-                    ✅ This grant was analyzed by the Chrome Extension on {opportunity.page_context.application_details?.analysis_timestamp ? new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleDateString() : 'recently'}.
-                    <br/><br/>
-                    <strong>Captured Data:</strong>
-                    <ul className="mt-2 space-y-1">
-                      {opportunity.page_context.opportunity_summary && <li>• Rich opportunity summary</li>}
-                      {opportunity.page_context.confidence_data && <li>• Analysis confidence scores</li>}
-                      {opportunity.page_context.application_details && <li>• Application details and source URL</li>}
-                      {opportunity.page_context.eligibility_info && <li>• Eligibility criteria</li>}
-                      {!opportunity.page_context.opportunity_summary && !opportunity.page_context.confidence_data && <li>• Basic page analysis (limited content detected)</li>}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Confidence Scores (FREE - captured by extension) */}
-            {opportunity.page_context?.confidence_data && (
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="w-4 h-4 text-blue-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Analysis Confidence</h3>
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                    FREE
-                  </span>
-                </div>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    {Object.entries(opportunity.page_context.confidence_data).map(([field, score]) => (
-                      <div key={field} className="flex items-center justify-between">
-                        <span className="text-gray-700 capitalize">{field.replace(/_/g, ' ')}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-900">{score}%</span>
-                          <div className="w-12 bg-blue-200 rounded-full h-1.5">
-                            <div 
-                              className={`h-1.5 rounded-full transition-all duration-300 ${
-                                score >= 80 ? 'bg-green-500' : 
-                                score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
-                              }`}
-                              style={{ width: `${score}%` }}
-                            ></div>
-                          </div>
-                        </div>
+                <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-green-50 rounded-xl p-5 border border-purple-200">
+                  <div className="text-sm text-gray-800 leading-relaxed space-y-3">
+                    {/* Parse and format the opportunity_crux content */}
+                    {opportunity.page_context.opportunity_summary.split('\n\n').map((paragraph, index) => (
+                      <div key={index}>
+                        {paragraph.includes('**') ? (
+                          // Format text with bold markers
+                          <div dangerouslySetInnerHTML={{
+                            __html: paragraph
+                              .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-gray-900">$1</strong>')
+                              .replace(/◉/g, '•')
+                              .replace(/\n/g, '<br/>')
+                          }} />
+                        ) : (
+                          <p className="text-gray-700">{paragraph}</p>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -193,78 +147,344 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </div>
             )}
 
-            {/* Your Notes */}
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <FileText className="w-4 h-4 text-gray-500" />
-                <h3 className="text-sm font-medium text-gray-900">Your Notes</h3>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                  {opportunity.user_notes}
-                </p>
-              </div>
-            </div>
-
-            {/* Application Details (FREE - captured by extension) */}
-            {opportunity.page_context?.application_details && (
+            {/* Grant Analytics & Metadata */}
+            {opportunity.page_context?.is_free_feature && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-purple-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Application Details</h3>
-                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
-                    FREE
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Grant Analytics</h3>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                    CAPTURED DATA
                   </span>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4 space-y-2">
-                  {opportunity.page_context.application_details.page_title && (
-                    <div>
-                      <span className="text-xs font-medium text-purple-800">Page Title:</span>
-                      <p className="text-sm text-gray-700">{opportunity.page_context.application_details.page_title}</p>
+                <div className="bg-blue-50 rounded-xl p-5 border border-blue-200 space-y-4">
+                  {/* Funding Information */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="text-xs font-medium text-blue-800 mb-1">FUNDING AMOUNT</div>
+                      <div className="text-lg font-bold text-gray-900">
+                        {opportunity.funding_amount ? 
+                          `${opportunity.page_context.application_details?.currency || 'USD'} ${opportunity.funding_amount.toLocaleString()}` : 
+                          'Amount not specified'
+                        }
+                      </div>
                     </div>
-                  )}
-                  {opportunity.page_context.application_details.page_url && (
-                    <div>
-                      <span className="text-xs font-medium text-purple-800">Source URL:</span>
-                      <a 
-                        href={opportunity.page_context.application_details.page_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-800 block truncate"
-                      >
-                        {opportunity.page_context.application_details.page_url}
-                      </a>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="text-xs font-medium text-blue-800 mb-1">FUNDING TYPE</div>
+                      <div className="text-lg font-bold text-gray-900 capitalize">
+                        {opportunity.type || 'Grant'}
+                      </div>
                     </div>
-                  )}
-                  {opportunity.page_context.application_details.analysis_timestamp && (
-                    <div>
-                      <span className="text-xs font-medium text-purple-800">Analyzed:</span>
-                      <p className="text-sm text-gray-700">
-                        {new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleDateString()}
-                      </p>
+                  </div>
+
+                  {/* Analysis Timestamp */}
+                  {opportunity.page_context.application_details?.analysis_timestamp && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="text-xs font-medium text-blue-800 mb-1">ANALYZED BY EXTENSION</div>
+                      <div className="text-sm text-gray-700">
+                        📅 {new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long', 
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>
               </div>
             )}
 
-            {/* Eligibility Information (FREE - captured by extension) */}
-            {opportunity.page_context?.eligibility_info && (
+            {/* AI Analysis Confidence Scores (Core Extension Feature) */}
+            {opportunity.page_context?.confidence_data && (
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle className="w-4 h-4 text-orange-500" />
-                  <h3 className="text-sm font-medium text-gray-900">Eligibility Information</h3>
-                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
-                    FREE
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <h3 className="text-base font-semibold text-gray-900">AI Analysis Confidence</h3>
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full font-medium">
+                    QUALITY SCORES
                   </span>
                 </div>
-                <div className="bg-orange-50 rounded-lg p-4">
-                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
-                    {opportunity.page_context.eligibility_info}
+                <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-4">
+                  {/* Overall Confidence Score */}
+                  {opportunity.page_context.confidence_data.overall && (
+                    <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm font-medium text-gray-900">Overall Analysis Confidence</div>
+                        <div className={`text-xl font-bold px-3 py-1 rounded-full ${
+                          opportunity.page_context.confidence_data.overall >= 80 ? 'bg-green-100 text-green-800' :
+                          opportunity.page_context.confidence_data.overall >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {opportunity.page_context.confidence_data.overall}%
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full transition-all duration-500 ${
+                            opportunity.page_context.confidence_data.overall >= 80 ? 'bg-gradient-to-r from-green-400 to-green-600' :
+                            opportunity.page_context.confidence_data.overall >= 60 ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' :
+                            'bg-gradient-to-r from-red-400 to-red-600'
+                          }`}
+                          style={{ width: `${opportunity.page_context.confidence_data.overall}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Individual Field Confidence Scores */}
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-900 mb-3">Field-by-Field Analysis</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {Object.entries(opportunity.page_context.confidence_data)
+                        .filter(([field]) => field !== 'overall')
+                        .map(([field, score]) => (
+                        <div key={field} className="bg-white rounded-lg p-3 border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium text-gray-800 capitalize">
+                                {field === 'crux' ? 'Opportunity Summary' : field.replace(/_/g, ' ')}
+                              </span>
+                              {field === 'crux' && <span className="text-xs text-purple-600">⭐ Key Field</span>}
+                            </div>
+                            <div className={`text-sm font-bold px-2 py-1 rounded-md ${
+                              score >= 80 ? 'bg-green-100 text-green-800' :
+                              score >= 60 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {score}%
+                            </div>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div 
+                              className={`h-2 rounded-full transition-all duration-300 ${
+                                score >= 80 ? 'bg-green-500' :
+                                score >= 60 ? 'bg-yellow-500' :
+                                'bg-red-500'
+                              }`}
+                              style={{ width: `${score}%` }}
+                            ></div>
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {score >= 80 ? '✅ High confidence - reliable data' :
+                             score >= 60 ? '⚠️ Medium confidence - review recommended' :
+                             '⚠️ Low confidence - manual verification needed'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+
+
+            {/* Comprehensive Application Data & Metadata */}
+            {opportunity.page_context?.application_details && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <Globe className="w-5 h-5 text-indigo-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Source Analysis & Metadata</h3>
+                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full font-medium">
+                    EXTENSION DATA
+                  </span>
+                </div>
+                <div className="bg-indigo-50 rounded-xl p-5 border border-indigo-200 space-y-4">
+                  {/* Source Information */}
+                  <div className="bg-white rounded-lg p-4 border border-indigo-100">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Source Information</h4>
+                    <div className="space-y-3">
+                      {opportunity.page_context.application_details.page_title && (
+                        <div>
+                          <div className="text-xs font-medium text-indigo-800 mb-1">PAGE TITLE</div>
+                          <div className="text-sm text-gray-900 font-medium">
+                            {opportunity.page_context.application_details.page_title}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {opportunity.page_context.application_details.page_url && (
+                        <div>
+                          <div className="text-xs font-medium text-indigo-800 mb-1">SOURCE URL</div>
+                          <div className="flex items-center gap-2">
+                            <a 
+                              href={opportunity.page_context.application_details.page_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-sm text-blue-600 hover:text-blue-800 underline truncate flex-1"
+                            >
+                              {opportunity.page_context.application_details.page_url}
+                            </a>
+                            <ExternalLink className="w-4 h-4 text-blue-600" />
+                          </div>
+                        </div>
+                      )}
+                      
+                      {opportunity.page_context.application_details.analysis_timestamp && (
+                        <div>
+                          <div className="text-xs font-medium text-indigo-800 mb-1">ANALYSIS TIMESTAMP</div>
+                          <div className="text-sm text-gray-700">
+                            🕒 {new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleString('en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              timeZoneName: 'short'
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Extracted Keywords */}
+                  {opportunity.page_context.application_details.extracted_keywords && 
+                   opportunity.page_context.application_details.extracted_keywords.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-indigo-100">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">AI-Extracted Keywords</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {opportunity.page_context.application_details.extracted_keywords.map((keyword, index) => (
+                          <span 
+                            key={index}
+                            className="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs rounded-full font-medium"
+                          >
+                            #{keyword}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Grant URL Actions */}
+                  <div className="bg-white rounded-lg p-4 border border-indigo-100">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Quick Actions</h4>
+                    <div className="flex gap-3">
+                      <a
+                        href={opportunity.page_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        Visit Grant Page
+                      </a>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await sendCommandToExtension({
+                              action: 'open_url',
+                              url: opportunity.page_url,
+                              title: opportunity.page_title,
+                              type: 'grant_opportunity'
+                            });
+                          } catch (error) {
+                            handleExtensionError(
+                              error,
+                              () => promptExtensionInstallation('Extension required for enhanced features'),
+                              () => window.open(opportunity.page_url, '_blank')
+                            );
+                          }
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Globe className="w-4 h-4" />
+                        Open with Extension
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Eligibility & Requirements Analysis */}
+            {opportunity.page_context?.eligibility_info && (
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertCircle className="w-5 h-5 text-orange-600" />
+                  <h3 className="text-base font-semibold text-gray-900">Eligibility & Requirements</h3>
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full font-medium">
+                    CAPTURED CRITERIA
+                  </span>
+                </div>
+                <div className="bg-orange-50 rounded-xl p-5 border border-orange-200">
+                  <div className="bg-white rounded-lg p-4 border border-orange-100">
+                    <div className="text-sm text-gray-800 leading-relaxed space-y-3">
+                      {opportunity.page_context.eligibility_info.split('\n\n').map((section, index) => (
+                        <div key={index}>
+                          {section.includes('**') ? (
+                            <div dangerouslySetInnerHTML={{
+                              __html: section
+                                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-orange-900">$1</strong>')
+                                .replace(/◉/g, '•')
+                                .replace(/\n/g, '<br/>')
+                            }} />
+                          ) : (
+                            <p className="text-gray-700">{section}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Grant Status & Management */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-5 h-5 text-gray-600" />
+                <h3 className="text-base font-semibold text-gray-900">Grant Management</h3>
+                <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-full font-medium">
+                  USER DATA
+                </span>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 space-y-4">
+                {/* Current Status */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-sm font-medium text-gray-900">Current Status</div>
+                    <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      opportunity.status === 'Applied' ? 'bg-green-100 text-green-800' :
+                      opportunity.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                      opportunity.status === 'To Review' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {opportunity.status}
+                    </div>
+                  </div>
+                  
+                  {/* Quick Status Actions */}
+                  <div className="flex gap-2 mt-3">
+                    {['To Review', 'In Progress', 'Applied'].map((status) => (
+                      <button
+                        key={status}
+                        className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                          opportunity.status === status 
+                            ? 'bg-blue-600 text-white' 
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        onClick={() => {
+                          // This would call an update function - placeholder for now
+                          console.log(`Update status to: ${status}`);
+                        }}
+                      >
+                        {status}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Personal Notes */}
+                <div className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="text-sm font-medium text-gray-900 mb-2">Your Notes</div>
+                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {opportunity.user_notes || 'No notes added yet. Click to add your thoughts about this grant opportunity.'}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Contacts Found */}
             <div>
