@@ -14,6 +14,21 @@ export interface TrackedGrant {
   eligibility_criteria: string | null;
   created_at: string | null;
   updated_at: string | null;
+  
+  // Enhanced fields captured by extension (FREE features)
+  opportunity_crux: string | null;
+  application_data: any | null;
+  confidence_scores: any | null;
+  currency: string | null;
+  funding_type: string | null;
+  
+  // Enhanced Analysis v2.0 fields (PREMIUM features)
+  page_context: any | null;
+  analysis_results: any | null;
+  crux_summary: any | null;
+  enhanced_analysis: boolean | null;
+  analysis_version: string | null;
+  data_quality_score: number | null;
 }
 
 export function useTrackedGrants() {

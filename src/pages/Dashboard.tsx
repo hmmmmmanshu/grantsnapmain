@@ -138,19 +138,50 @@ const Dashboard = () => {
       const safeDeadline = grant.application_deadline || getDefaultDate();
       const safeCreatedAt = grant.created_at || getDefaultDate();
       
-      return {
+      // Extract page title from application_data if available
+      const pageTitle = grant.application_data?.page_title || grant.grant_name || 'Untitled Grant';
+      
+      // Create base opportunity with rich extension data
+      const opportunity: Opportunity = {
         id: grant.id,
         status: (grant.status as 'To Review' | 'In Progress' | 'Applied') || 'To Review',
-        page_title: grant.grant_name || 'Untitled Grant',
+        page_title: pageTitle,
         funder_name: 'Grant Opportunity',
         page_url: grant.grant_url || '',
         application_deadline: safeDeadline,
         date_saved: safeCreatedAt,
         user_notes: grant.notes || '',
         extracted_emails: [],
-        type: 'grant' as const,
+        type: (grant.funding_type as 'grant' | 'investor') || 'grant',
         funding_amount: grant.funding_amount || undefined,
+        
+        // Enhanced Analysis v2.0 fields (Premium features)
+        page_context: grant.page_context,
+        analysis_results: grant.analysis_results,
+        crux_summary: grant.crux_summary,
+        enhanced_analysis: grant.enhanced_analysis || false,
+        analysis_version: grant.analysis_version || '1.0',
+        data_quality_score: grant.data_quality_score || 0,
       };
+      
+      // Add captured extension data as free features in page_context if no enhanced analysis
+      if (!grant.enhanced_analysis && grant.opportunity_crux) {
+        // Create a synthetic page_context for free features using captured extension data
+        opportunity.page_context = {
+          // Store the opportunity crux in a free-access format
+          opportunity_summary: grant.opportunity_crux,
+          // Store confidence scores
+          confidence_data: grant.confidence_scores,
+          // Store application data
+          application_details: grant.application_data,
+          // Store eligibility criteria
+          eligibility_info: grant.eligibility_criteria,
+          // Mark as free feature (not enhanced analysis)
+          is_free_feature: true
+        };
+      }
+      
+      return opportunity;
     } catch (error) {
       console.error('Error transforming grant:', grant, error);
       // Return a safe fallback opportunity

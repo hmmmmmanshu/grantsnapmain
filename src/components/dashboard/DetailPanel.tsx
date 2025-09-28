@@ -114,6 +114,58 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
               </p>
             </div>
 
+            {/* Opportunity Summary (FREE - captured by extension) */}
+            {opportunity.page_context?.opportunity_summary && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-4 h-4 text-green-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Opportunity Summary</h3>
+                  <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {opportunity.page_context.opportunity_summary}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Confidence Scores (FREE - captured by extension) */}
+            {opportunity.page_context?.confidence_data && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="w-4 h-4 text-blue-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Analysis Confidence</h3>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    {Object.entries(opportunity.page_context.confidence_data).map(([field, score]) => (
+                      <div key={field} className="flex items-center justify-between">
+                        <span className="text-gray-700 capitalize">{field.replace(/_/g, ' ')}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-900">{score}%</span>
+                          <div className="w-12 bg-blue-200 rounded-full h-1.5">
+                            <div 
+                              className={`h-1.5 rounded-full transition-all duration-300 ${
+                                score >= 80 ? 'bg-green-500' : 
+                                score >= 60 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}
+                              style={{ width: `${score}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Your Notes */}
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -126,6 +178,66 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
                 </p>
               </div>
             </div>
+
+            {/* Application Details (FREE - captured by extension) */}
+            {opportunity.page_context?.application_details && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Info className="w-4 h-4 text-purple-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Application Details</h3>
+                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
+                <div className="bg-purple-50 rounded-lg p-4 space-y-2">
+                  {opportunity.page_context.application_details.page_title && (
+                    <div>
+                      <span className="text-xs font-medium text-purple-800">Page Title:</span>
+                      <p className="text-sm text-gray-700">{opportunity.page_context.application_details.page_title}</p>
+                    </div>
+                  )}
+                  {opportunity.page_context.application_details.page_url && (
+                    <div>
+                      <span className="text-xs font-medium text-purple-800">Source URL:</span>
+                      <a 
+                        href={opportunity.page_context.application_details.page_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-800 block truncate"
+                      >
+                        {opportunity.page_context.application_details.page_url}
+                      </a>
+                    </div>
+                  )}
+                  {opportunity.page_context.application_details.analysis_timestamp && (
+                    <div>
+                      <span className="text-xs font-medium text-purple-800">Analyzed:</span>
+                      <p className="text-sm text-gray-700">
+                        {new Date(opportunity.page_context.application_details.analysis_timestamp).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Eligibility Information (FREE - captured by extension) */}
+            {opportunity.page_context?.eligibility_info && (
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="w-4 h-4 text-orange-500" />
+                  <h3 className="text-sm font-medium text-gray-900">Eligibility Information</h3>
+                  <span className="text-xs bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full">
+                    FREE
+                  </span>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-4">
+                  <div className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {opportunity.page_context.eligibility_info}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Contacts Found */}
             <div>
