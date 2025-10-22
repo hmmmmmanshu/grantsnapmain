@@ -161,12 +161,29 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY environment variable is not set')
     }
 
+    // Create a summarized version of the context for the AI (to avoid token limits)
+    const summarizedContext = {
+      startup_name: profileData?.startup_name || 'Not provided',
+      one_line_pitch: profileData?.one_line_pitch || 'Not provided',
+      problem_statement: profileData?.problem_statement || 'Not provided',
+      solution_description: profileData?.solution_description || 'Not provided',
+      target_market: profileData?.target_market || 'Not provided',
+      industry: profileData?.industry || 'Not provided',
+      funding_stage: profileData?.funding_stage || 'Not provided',
+      team_size: profileData?.team_size || 'Not provided',
+      pitch_deck_summary: profileData?.pitch_deck_summary ? 'Available' : 'Not provided',
+      founders_count: foundersData?.length || 0,
+      documents_count: documentsData?.length || 0,
+      grants_tracked: grantsData?.length || 0,
+      completion_percentage: profileData?.completion_percentage || 0
+    }
+
     // Create a comprehensive prompt for Gemini
     const prompt = `You are an AI assistant helping to create a comprehensive context summary for a startup user. 
 Analyze the following user data and generate a concise, professional summary that captures the essence of their startup, goals, and current status.
 
 **USER DATA:**
-${JSON.stringify(aggregatedContext, null, 2)}
+${JSON.stringify(summarizedContext, null, 2)}
 
 **INSTRUCTIONS:**
 Generate a structured summary in the following format (output as JSON):
