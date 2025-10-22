@@ -10,8 +10,9 @@ import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
 import UsageTracker from '@/components/dashboard/UsageTracker';
 import ProfileCompletionNotification from '@/components/dashboard/ProfileCompletionNotification';
-import { useAuth } from '@/hooks/useAuth';
+import { useSmartAuth } from '@/hooks/useSmartAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
+import { usePersistentComponent } from '@/hooks/usePersistentComponent';
 import { Navigate } from 'react-router-dom';
 import { getDefaultDate, safeGetTimestamp } from '@/lib/dateUtils';
 import DebugInfo from '@/components/DebugInfo';
@@ -26,8 +27,21 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 
 const Dashboard = () => {
-  const { user, loading: authLoading } = useAuth();
-  const [profileHubOpen, setProfileHubOpen] = useState(false);
+  const { user, loading: authLoading } = useSmartAuth();
+  
+  // Persistent dashboard state - survives tab switches
+  const [dashboardState, setDashboardState] = usePersistentComponent('dashboard', {
+    profileHubOpen: false,
+    selectedView: 'all' as 'all' | 'grants' | 'investors',
+    searchTerm: '',
+    statusFilter: '',
+    sortBy: 'deadline' as 'deadline' | 'saved',
+    selectedOpportunity: null as Opportunity | null,
+    extensionAvailable: null as boolean | null,
+    extensionStatus: 'checking' as 'checking' | 'connected' | 'disconnected' | 'error',
+    lastAuthBroadcast: null as Date | null
+  });
+
   const { 
     grants, 
     loading: grantsLoading, 
@@ -35,15 +49,6 @@ const Dashboard = () => {
     updateStatus,
     deleteGrant
   } = useTrackedGrants();
-  
-  const [selectedView, setSelectedView] = useState<'all' | 'grants' | 'investors'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
-  const [sortBy, setSortBy] = useState<'deadline' | 'saved'>('deadline');
-  const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
-  const [extensionAvailable, setExtensionAvailable] = useState<boolean | null>(null);
-  const [extensionStatus, setExtensionStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking');
-  const [lastAuthBroadcast, setLastAuthBroadcast] = useState<Date | null>(null);
 
   // Check extension availability and broadcast authentication on component mount
   useEffect(() => {
@@ -51,7 +56,7 @@ const Dashboard = () => {
       try {
         // Check if extension is available
         const available = await isExtensionAvailable();
-        setExtensionAvailable(available);
+        setDashboardState(prev => ({ ...prev, extensionAvailable: available }));
         
         if (available && user) {
           // 🚀 PHASE 1 IMPLEMENTATION: Broadcast authentication to extension
@@ -59,21 +64,27 @@ const Dashboard = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
               await broadcastUserAuthenticated(user, session);
-              setExtensionStatus('connected');
-              setLastAuthBroadcast(new Date());
+              setDashboardState(prev => ({ 
+                ...prev, 
+                extensionStatus: 'connected',
+                lastAuthBroadcast: new Date()
+              }));
               console.log('✅ Dashboard: Authentication broadcasted to extension');
             }
           } catch (broadcastError) {
             console.log('⚠️ Dashboard: Extension broadcast failed:', broadcastError.message);
-            setExtensionStatus('error');
+            setDashboardState(prev => ({ ...prev, extensionStatus: 'error' }));
           }
         } else if (!available) {
-          setExtensionStatus('disconnected');
+          setDashboardState(prev => ({ ...prev, extensionStatus: 'disconnected' }));
         }
       } catch (error) {
         console.log('Dashboard: Extension check failed:', error);
-        setExtensionStatus('error');
-        setExtensionAvailable(false);
+        setDashboardState(prev => ({ 
+          ...prev, 
+          extensionStatus: 'error',
+          extensionAvailable: false
+        }));
       }
     };
     
@@ -84,45 +95,48 @@ const Dashboard = () => {
 
   // Monitor extension status periodically
   useEffect(() => {
-    if (!user || !extensionAvailable) return;
+    if (!user || !dashboardState.extensionAvailable) return;
 
     const checkExtensionStatus = async () => {
       try {
         const available = await isExtensionAvailable();
         if (available) {
-          setExtensionStatus('connected');
+          setDashboardState(prev => ({ ...prev, extensionStatus: 'connected' }));
         } else {
-          setExtensionStatus('disconnected');
+          setDashboardState(prev => ({ ...prev, extensionStatus: 'disconnected' }));
         }
       } catch (error) {
-        setExtensionStatus('error');
+        setDashboardState(prev => ({ ...prev, extensionStatus: 'error' }));
       }
     };
 
     // Check every 30 seconds
     const interval = setInterval(checkExtensionStatus, 30000);
     return () => clearInterval(interval);
-  }, [user, extensionAvailable]);
+  }, [user, dashboardState.extensionAvailable]);
 
   // Manual extension status refresh
   const refreshExtensionStatus = async () => {
-    setExtensionStatus('checking');
+    setDashboardState(prev => ({ ...prev, extensionStatus: 'checking' }));
     try {
       const available = await isExtensionAvailable();
-      setExtensionAvailable(available);
+      setDashboardState(prev => ({ ...prev, extensionAvailable: available }));
       
       if (available && user) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           await broadcastUserAuthenticated(user, session);
-          setExtensionStatus('connected');
-          setLastAuthBroadcast(new Date());
+          setDashboardState(prev => ({ 
+            ...prev, 
+            extensionStatus: 'connected',
+            lastAuthBroadcast: new Date()
+          }));
         }
       } else {
-        setExtensionStatus('disconnected');
+        setDashboardState(prev => ({ ...prev, extensionStatus: 'disconnected' }));
       }
     } catch (error) {
-      setExtensionStatus('error');
+      setDashboardState(prev => ({ ...prev, extensionStatus: 'error' }));
     }
   };
 
@@ -217,14 +231,14 @@ const Dashboard = () => {
 
   // Filter opportunities based on selected view and filters
   const filteredOpportunities = transformedOpportunities.filter(opp => {
-    const matchesView = selectedView === 'all' || 
-      (selectedView === 'grants' && opp.type === 'grant') ||
-      (selectedView === 'investors' && opp.type === 'investor');
+    const matchesView = dashboardState.selectedView === 'all' || 
+      (dashboardState.selectedView === 'grants' && opp.type === 'grant') ||
+      (dashboardState.selectedView === 'investors' && opp.type === 'investor');
     
-    const matchesSearch = opp.page_title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      opp.funder_name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = opp.page_title.toLowerCase().includes(dashboardState.searchTerm.toLowerCase()) ||
+      opp.funder_name.toLowerCase().includes(dashboardState.searchTerm.toLowerCase());
     
-    const matchesStatus = !statusFilter || opp.status === statusFilter;
+    const matchesStatus = !dashboardState.statusFilter || opp.status === dashboardState.statusFilter;
     
     return matchesView && matchesSearch && matchesStatus;
   });
@@ -232,7 +246,7 @@ const Dashboard = () => {
   // Sort opportunities
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
     try {
-    if (sortBy === 'deadline') {
+    if (dashboardState.sortBy === 'deadline') {
         const timestampA = safeGetTimestamp(a.application_deadline);
         const timestampB = safeGetTimestamp(b.application_deadline);
         // Handle invalid dates by treating them as far future dates
@@ -271,7 +285,7 @@ const Dashboard = () => {
         <div className="space-y-6">
           {/* Profile Completion Notification */}
           <ProfileCompletionNotification 
-            onOpenProfile={() => setProfileHubOpen(true)} 
+            onOpenProfile={() => setDashboardState(prev => ({ ...prev, profileHubOpen: true }))} 
           />
 
           {/* Main Dashboard Header */}
@@ -281,7 +295,10 @@ const Dashboard = () => {
               <p className="text-gray-600">Manage your funding opportunities and profile</p>
             </div>
             <div className="flex items-center gap-4">
-              <ProfileHub isOpen={profileHubOpen} onOpenChange={setProfileHubOpen} />
+              <ProfileHub 
+                isOpen={dashboardState.profileHubOpen} 
+                onOpenChange={(open) => setDashboardState(prev => ({ ...prev, profileHubOpen: open }))} 
+              />
               <VirtualCFO />
             </div>
           </div>
@@ -298,17 +315,17 @@ const Dashboard = () => {
             <OpportunityPipeline opportunities={transformedOpportunities} />
               
               <ViewToggle 
-                selectedView={selectedView} 
-                onViewChange={setSelectedView} 
+                selectedView={dashboardState.selectedView} 
+                onViewChange={(view) => setDashboardState(prev => ({ ...prev, selectedView: view }))} 
               />
               
               <ControlBar
-                searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
-                statusFilter={statusFilter}
-                onStatusFilterChange={setStatusFilter}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
+                searchTerm={dashboardState.searchTerm}
+                onSearchChange={(term) => setDashboardState(prev => ({ ...prev, searchTerm: term }))}
+                statusFilter={dashboardState.statusFilter}
+                onStatusFilterChange={(filter) => setDashboardState(prev => ({ ...prev, statusFilter: filter }))}
+                sortBy={dashboardState.sortBy}
+                onSortChange={(sort) => setDashboardState(prev => ({ ...prev, sortBy: sort }))}
               />
               
             {grantsLoading ? (
@@ -372,7 +389,7 @@ const Dashboard = () => {
               ) : (
                 <OpportunityTable
                   opportunities={sortedOpportunities}
-                  onOpportunityClick={setSelectedOpportunity}
+                  onOpportunityClick={(opportunity) => setDashboardState(prev => ({ ...prev, selectedOpportunity: opportunity }))}
                 onStatusUpdate={handleStatusUpdate}
                 onDelete={handleGrantDelete}
               />
@@ -508,10 +525,10 @@ const Dashboard = () => {
         </div>
       </main>
 
-      {selectedOpportunity && (
+      {dashboardState.selectedOpportunity && (
         <DetailPanel
-          opportunity={selectedOpportunity}
-          onClose={() => setSelectedOpportunity(null)}
+          opportunity={dashboardState.selectedOpportunity}
+          onClose={() => setDashboardState(prev => ({ ...prev, selectedOpportunity: null }))}
         />
       )}
       
