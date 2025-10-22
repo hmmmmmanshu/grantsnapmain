@@ -407,25 +407,25 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Status Indicator */}
-                  {extensionStatus === 'checking' && (
+                  {dashboardState.extensionStatus === 'checking' && (
                     <div className="flex items-center gap-2 px-2 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
                       <RefreshCw className="w-3 h-3 animate-spin" />
                       Checking...
                     </div>
                   )}
-                  {extensionStatus === 'connected' && (
+                  {dashboardState.extensionStatus === 'connected' && (
                     <div className="flex items-center gap-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
                       <CheckCircle className="w-3 h-3" />
                       Connected
                     </div>
                   )}
-                  {extensionStatus === 'disconnected' && (
+                  {dashboardState.extensionStatus === 'disconnected' && (
                     <div className="flex items-center gap-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">
                       <AlertCircle className="w-3 h-3" />
                       Disconnected
                     </div>
                   )}
-                  {extensionStatus === 'error' && (
+                  {dashboardState.extensionStatus === 'error' && (
                     <div className="flex items-center gap-2 px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                       <AlertCircle className="w-3 h-3" />
                       Error
@@ -444,7 +444,7 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {extensionStatus === 'connected' ? (
+              {dashboardState.extensionStatus === 'connected' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">
                     Your extension is active and ready to capture grant opportunities from any website.
@@ -453,13 +453,13 @@ const Dashboard = () => {
                     <span className="w-2 h-2 bg-green-500 rounded-full"></span>
                     Seamlessly integrated with your dashboard
                   </div>
-                  {lastAuthBroadcast && (
+                  {dashboardState.lastAuthBroadcast && (
                     <div className="text-xs text-gray-500">
-                      Last synced: {lastAuthBroadcast.toLocaleTimeString()}
+                      Last synced: {dashboardState.lastAuthBroadcast?.toLocaleTimeString()}
                     </div>
                   )}
                 </div>
-              ) : extensionStatus === 'disconnected' ? (
+              ) : dashboardState.extensionStatus === 'disconnected' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">
                     Install the Grants Snap Chrome extension to capture opportunities directly from grant websites.
@@ -473,7 +473,7 @@ const Dashboard = () => {
                     Install Extension
                   </Button>
                 </div>
-              ) : extensionStatus === 'error' ? (
+              ) : dashboardState.extensionStatus === 'error' ? (
                 <div className="space-y-3">
                   <p className="text-sm text-gray-600">
                     There was an issue connecting to your extension. Try refreshing or reinstalling.
