@@ -240,7 +240,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   }, {
     key: 'profileHub.formData',
     debounceMs: 300,
-        version: 4
+        version: 5
   });
 
   const { 
@@ -327,7 +327,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           substack_url: profile.substack_url || '',
           personal_website: profile.personal_website || '',
           
-          // Company Details & Legal
+          // Company Details & Legal (Enhanced for International Support)
           company_website: profile.company_website || '',
           business_registration_number: profile.business_registration_number || '',
           year_founded: profile.year_founded || 0,
@@ -338,6 +338,42 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           incorporation_date: profile.incorporation_date || '',
           tax_id: profile.tax_id || '',
           business_license: profile.business_license || '',
+          
+          // International Incorporation Details
+          incorporation_type: profile.incorporation_type || '',
+          incorporation_state: profile.incorporation_state || '',
+          incorporation_city: profile.incorporation_city || '',
+          business_type: profile.business_type || '',
+          registration_authority: profile.registration_authority || '',
+          registration_number: profile.registration_number || '',
+          pan_number: profile.pan_number || '',
+          gst_number: profile.gst_number || '',
+          cin_number: profile.cin_number || '',
+          llp_number: profile.llp_number || '',
+          partnership_deed_number: profile.partnership_deed_number || '',
+          sole_proprietorship_number: profile.sole_proprietorship_number || '',
+          foreign_registration_number: profile.foreign_registration_number || '',
+          foreign_registration_country: profile.foreign_registration_country || '',
+          foreign_registration_date: profile.foreign_registration_date || '',
+          foreign_tax_id: profile.foreign_tax_id || '',
+          foreign_business_license: profile.foreign_business_license || '',
+          compliance_status: profile.compliance_status || '',
+          regulatory_approvals: profile.regulatory_approvals || '',
+          industry_licenses: profile.industry_licenses || '',
+          export_import_license: profile.export_import_license || '',
+          fssai_license: profile.fssai_license || '',
+          drug_license: profile.drug_license || '',
+          telecom_license: profile.telecom_license || '',
+          financial_services_license: profile.financial_services_license || '',
+          insurance_license: profile.insurance_license || '',
+          real_estate_license: profile.real_estate_license || '',
+          education_license: profile.education_license || '',
+          healthcare_license: profile.healthcare_license || '',
+          technology_license: profile.technology_license || '',
+          manufacturing_license: profile.manufacturing_license || '',
+          retail_license: profile.retail_license || '',
+          service_license: profile.service_license || '',
+          other_licenses: profile.other_licenses || '',
           
           // Financial Information
           annual_revenue: profile.annual_revenue || '',
@@ -1803,9 +1839,9 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building className="w-5 h-5" />
-                    Company Information
+                    Company Information & Legal Structure
                   </CardTitle>
-                  <p className="text-sm text-gray-600">Legal, financial, and business details</p>
+                  <p className="text-sm text-gray-600">Legal, financial, and international business details</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* Basic Company Info */}
@@ -1853,9 +1889,9 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     </div>
                   </div>
 
-                  {/* Legal Information */}
+                  {/* Legal Structure & Incorporation */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Legal Information</h4>
+                    <h4 className="font-semibold text-gray-900">Legal Structure & Incorporation</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="legal-structure">Legal Structure</Label>
@@ -1864,130 +1900,456 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                             <SelectValue placeholder="Select legal structure" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="llc">LLC</SelectItem>
-                            <SelectItem value="corporation">Corporation</SelectItem>
-                            <SelectItem value="c-corp">C-Corp</SelectItem>
-                            <SelectItem value="s-corp">S-Corp</SelectItem>
+                            <SelectItem value="private-limited">Private Limited Company</SelectItem>
+                            <SelectItem value="llp">Limited Liability Partnership (LLP)</SelectItem>
                             <SelectItem value="partnership">Partnership</SelectItem>
                             <SelectItem value="sole-proprietorship">Sole Proprietorship</SelectItem>
-                            <SelectItem value="nonprofit">Nonprofit</SelectItem>
+                            <SelectItem value="public-limited">Public Limited Company</SelectItem>
+                            <SelectItem value="corporation">Corporation</SelectItem>
+                            <SelectItem value="llc">Limited Liability Company (LLC)</SelectItem>
+                            <SelectItem value="c-corp">C-Corporation</SelectItem>
+                            <SelectItem value="s-corp">S-Corporation</SelectItem>
+                            <SelectItem value="b-corp">B-Corporation</SelectItem>
+                            <SelectItem value="non-profit">Non-Profit Organization</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="incorporation-type">Incorporation Type</Label>
+                        <Select value={persistedFormData.incorporation_type} onValueChange={(value) => updateFormData(prev => ({ ...prev, incorporation_type: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select incorporation type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="domestic">Domestic</SelectItem>
+                            <SelectItem value="foreign">Foreign</SelectItem>
+                            <SelectItem value="subsidiary">Subsidiary</SelectItem>
+                            <SelectItem value="branch-office">Branch Office</SelectItem>
+                            <SelectItem value="liaison-office">Liaison Office</SelectItem>
+                            <SelectItem value="project-office">Project Office</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="incorporation-country">Incorporation Country</Label>
+                        <Select value={persistedFormData.incorporation_country} onValueChange={(value) => updateFormData(prev => ({ ...prev, incorporation_country: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="india">India</SelectItem>
+                            <SelectItem value="usa">United States</SelectItem>
+                            <SelectItem value="uk">United Kingdom</SelectItem>
+                            <SelectItem value="singapore">Singapore</SelectItem>
+                            <SelectItem value="uae">United Arab Emirates</SelectItem>
+                            <SelectItem value="germany">Germany</SelectItem>
+                            <SelectItem value="france">France</SelectItem>
+                            <SelectItem value="canada">Canada</SelectItem>
+                            <SelectItem value="australia">Australia</SelectItem>
+                            <SelectItem value="japan">Japan</SelectItem>
+                            <SelectItem value="china">China</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="incorporation-date">Incorporation Date</Label>
                         <Input
-                          id="incorporation-country"
-                          placeholder="United States"
-                          value={persistedFormData.incorporation_country}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, incorporation_country: e.target.value }))}
+                          id="incorporation-date"
+                          type="date"
+                          value={persistedFormData.incorporation_date}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, incorporation_date: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="incorporation-state">State/Province</Label>
+                        <Input
+                          id="incorporation-state"
+                          placeholder="California, Maharashtra, etc."
+                          value={persistedFormData.incorporation_state}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, incorporation_state: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="incorporation-city">City</Label>
+                        <Input
+                          id="incorporation-city"
+                          placeholder="San Francisco, Mumbai, etc."
+                          value={persistedFormData.incorporation_city}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, incorporation_city: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Business Registration Details */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Business Registration Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="business-type">Business Type</Label>
+                        <Select value={persistedFormData.business_type} onValueChange={(value) => updateFormData(prev => ({ ...prev, business_type: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select business type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="manufacturing">Manufacturing</SelectItem>
+                            <SelectItem value="services">Services</SelectItem>
+                            <SelectItem value="trading">Trading</SelectItem>
+                            <SelectItem value="technology">Technology</SelectItem>
+                            <SelectItem value="healthcare">Healthcare</SelectItem>
+                            <SelectItem value="education">Education</SelectItem>
+                            <SelectItem value="finance">Finance</SelectItem>
+                            <SelectItem value="retail">Retail</SelectItem>
+                            <SelectItem value="agriculture">Agriculture</SelectItem>
+                            <SelectItem value="construction">Construction</SelectItem>
+                            <SelectItem value="consulting">Consulting</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="registration-authority">Registration Authority</Label>
+                        <Input
+                          id="registration-authority"
+                          placeholder="MCA, SEC, Companies House, etc."
+                          value={persistedFormData.registration_authority}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, registration_authority: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="registration-number">Registration Number</Label>
+                        <Input
+                          id="registration-number"
+                          placeholder="U12345MH2024PTC123456"
+                          value={persistedFormData.registration_number}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, registration_number: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="business-registration-number">Business Registration Number</Label>
                         <Input
                           id="business-registration-number"
-                          placeholder="Registration number"
+                          placeholder="BRN123456789"
                           value={persistedFormData.business_registration_number}
                           onChange={(e) => updateFormData(prev => ({ ...prev, business_registration_number: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="tax-id">Tax ID</Label>
-                        <Input
-                          id="tax-id"
-                          placeholder="EIN or Tax ID"
-                          value={persistedFormData.tax_id}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, tax_id: e.target.value }))}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Financial Information */}
+                  {/* India-Specific Registration */}
+                  {persistedFormData.incorporation_country === 'india' && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-900">India-Specific Registration</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="pan-number">PAN Number</Label>
+                          <Input
+                            id="pan-number"
+                            placeholder="ABCDE1234F"
+                            value={persistedFormData.pan_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, pan_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="gst-number">GST Number</Label>
+                          <Input
+                            id="gst-number"
+                            placeholder="27ABCDE1234F1Z5"
+                            value={persistedFormData.gst_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, gst_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="cin-number">CIN Number</Label>
+                          <Input
+                            id="cin-number"
+                            placeholder="U12345MH2024PTC123456"
+                            value={persistedFormData.cin_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, cin_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="llp-number">LLP Number</Label>
+                          <Input
+                            id="llp-number"
+                            placeholder="LLP123456789"
+                            value={persistedFormData.llp_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, llp_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="partnership-deed-number">Partnership Deed Number</Label>
+                          <Input
+                            id="partnership-deed-number"
+                            placeholder="PD123456789"
+                            value={persistedFormData.partnership_deed_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, partnership_deed_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="sole-proprietorship-number">Sole Proprietorship Number</Label>
+                          <Input
+                            id="sole-proprietorship-number"
+                            placeholder="SP123456789"
+                            value={persistedFormData.sole_proprietorship_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, sole_proprietorship_number: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Foreign Registration */}
+                  {persistedFormData.incorporation_type === 'foreign' && (
+                    <div className="space-y-4">
+                      <h4 className="font-semibold text-gray-900">Foreign Registration Details</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="foreign-registration-number">Foreign Registration Number</Label>
+                          <Input
+                            id="foreign-registration-number"
+                            placeholder="Foreign registration number"
+                            value={persistedFormData.foreign_registration_number}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, foreign_registration_number: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="foreign-registration-country">Foreign Registration Country</Label>
+                          <Input
+                            id="foreign-registration-country"
+                            placeholder="Country of foreign registration"
+                            value={persistedFormData.foreign_registration_country}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, foreign_registration_country: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="foreign-registration-date">Foreign Registration Date</Label>
+                          <Input
+                            id="foreign-registration-date"
+                            type="date"
+                            value={persistedFormData.foreign_registration_date}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, foreign_registration_date: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="foreign-tax-id">Foreign Tax ID</Label>
+                          <Input
+                            id="foreign-tax-id"
+                            placeholder="Foreign tax identification number"
+                            value={persistedFormData.foreign_tax_id}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, foreign_tax_id: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="foreign-business-license">Foreign Business License</Label>
+                          <Input
+                            id="foreign-business-license"
+                            placeholder="Foreign business license number"
+                            value={persistedFormData.foreign_business_license}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, foreign_business_license: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tax Information */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Financial Information</h4>
+                    <h4 className="font-semibold text-gray-900">Tax Information</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="annual-revenue">Annual Revenue</Label>
+                        <Label htmlFor="tax-id">Tax ID</Label>
                         <Input
-                          id="annual-revenue"
-                          placeholder="$100,000"
-                          value={persistedFormData.annual_revenue}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, annual_revenue: e.target.value }))}
+                          id="tax-id"
+                          placeholder="Tax identification number"
+                          value={persistedFormData.tax_id}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, tax_id: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="monthly-revenue">Monthly Revenue</Label>
+                        <Label htmlFor="business-license">Business License</Label>
                         <Input
-                          id="monthly-revenue"
-                          placeholder="$8,333"
-                          value={persistedFormData.monthly_revenue}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, monthly_revenue: e.target.value }))}
+                          id="business-license"
+                          placeholder="Business license number"
+                          value={persistedFormData.business_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, business_license: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compliance & Regulatory */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Compliance & Regulatory</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="compliance-status">Compliance Status</Label>
+                        <Select value={persistedFormData.compliance_status} onValueChange={(value) => updateFormData(prev => ({ ...prev, compliance_status: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select compliance status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="compliant">Compliant</SelectItem>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="non-compliant">Non-Compliant</SelectItem>
+                            <SelectItem value="under-review">Under Review</SelectItem>
+                            <SelectItem value="exempt">Exempt</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="regulatory-approvals">Regulatory Approvals</Label>
+                        <Textarea
+                          id="regulatory-approvals"
+                          placeholder="List regulatory approvals received"
+                          rows={3}
+                          value={persistedFormData.regulatory_approvals}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, regulatory_approvals: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Industry-Specific Licenses */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Industry-Specific Licenses</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fssai-license">FSSAI License (Food)</Label>
+                        <Input
+                          id="fssai-license"
+                          placeholder="FSSAI license number"
+                          value={persistedFormData.fssai_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, fssai_license: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="burn-rate">Monthly Burn Rate</Label>
+                        <Label htmlFor="drug-license">Drug License</Label>
                         <Input
-                          id="burn-rate"
-                          placeholder="$5,000"
-                          value={persistedFormData.burn_rate}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, burn_rate: e.target.value }))}
+                          id="drug-license"
+                          placeholder="Drug license number"
+                          value={persistedFormData.drug_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, drug_license: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="runway-months">Runway (Months)</Label>
+                        <Label htmlFor="telecom-license">Telecom License</Label>
                         <Input
-                          id="runway-months"
-                          type="number"
-                          placeholder="18"
-                          value={persistedFormData.runway_months || ''}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, runway_months: parseInt(e.target.value) || 0 }))}
+                          id="telecom-license"
+                          placeholder="Telecom license number"
+                          value={persistedFormData.telecom_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, telecom_license: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="total-funding-raised">Total Funding Raised</Label>
+                        <Label htmlFor="financial-services-license">Financial Services License</Label>
                         <Input
-                          id="total-funding-raised"
-                          placeholder="$500,000"
-                          value={persistedFormData.total_funding_raised}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, total_funding_raised: e.target.value }))}
+                          id="financial-services-license"
+                          placeholder="Financial services license"
+                          value={persistedFormData.financial_services_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, financial_services_license: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="last-valuation">Last Valuation</Label>
+                        <Label htmlFor="insurance-license">Insurance License</Label>
                         <Input
-                          id="last-valuation"
-                          placeholder="$2,000,000"
-                          value={persistedFormData.last_valuation}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, last_valuation: e.target.value }))}
+                          id="insurance-license"
+                          placeholder="Insurance license number"
+                          value={persistedFormData.insurance_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, insurance_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="real-estate-license">Real Estate License</Label>
+                        <Input
+                          id="real-estate-license"
+                          placeholder="Real estate license number"
+                          value={persistedFormData.real_estate_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, real_estate_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="education-license">Education License</Label>
+                        <Input
+                          id="education-license"
+                          placeholder="Education license number"
+                          value={persistedFormData.education_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, education_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="healthcare-license">Healthcare License</Label>
+                        <Input
+                          id="healthcare-license"
+                          placeholder="Healthcare license number"
+                          value={persistedFormData.healthcare_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, healthcare_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="technology-license">Technology License</Label>
+                        <Input
+                          id="technology-license"
+                          placeholder="Technology license number"
+                          value={persistedFormData.technology_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, technology_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="manufacturing-license">Manufacturing License</Label>
+                        <Input
+                          id="manufacturing-license"
+                          placeholder="Manufacturing license number"
+                          value={persistedFormData.manufacturing_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, manufacturing_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="retail-license">Retail License</Label>
+                        <Input
+                          id="retail-license"
+                          placeholder="Retail license number"
+                          value={persistedFormData.retail_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, retail_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="service-license">Service License</Label>
+                        <Input
+                          id="service-license"
+                          placeholder="Service license number"
+                          value={persistedFormData.service_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, service_license: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="export-import-license">Export/Import License</Label>
+                        <Input
+                          id="export-import-license"
+                          placeholder="Export/import license number"
+                          value={persistedFormData.export_import_license}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, export_import_license: e.target.value }))}
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="revenue-model">Revenue Model</Label>
+                      <Label htmlFor="other-licenses">Other Licenses</Label>
                       <Textarea
-                        id="revenue-model"
-                        placeholder="Describe how your company generates revenue"
+                        id="other-licenses"
+                        placeholder="List any other licenses or certifications"
                         rows={3}
-                        value={persistedFormData.revenue_model}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, revenue_model: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="pricing-strategy">Pricing Strategy</Label>
-                      <Textarea
-                        id="pricing-strategy"
-                        placeholder="Describe your pricing strategy and model"
-                        rows={3}
-                        value={persistedFormData.pricing_strategy}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, pricing_strategy: e.target.value }))}
+                        value={persistedFormData.other_licenses}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, other_licenses: e.target.value }))}
                       />
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
+
 
             {/* Product Tab */}
             <TabsContent value="product" className="space-y-6">
