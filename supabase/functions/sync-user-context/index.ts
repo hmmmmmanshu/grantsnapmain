@@ -207,8 +207,9 @@ Focus on:
 Be professional, constructive, and insightful. If information is missing, mention what would strengthen their profile.`
 
     console.log('Calling Gemini API for context analysis...')
+    // Use Gemini 2.0 Flash Experimental (Free tier) for simple context generation
     const geminiResponse = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${geminiApiKey}`,
       {
         method: 'POST',
         headers: {
