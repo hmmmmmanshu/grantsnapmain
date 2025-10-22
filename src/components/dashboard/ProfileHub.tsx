@@ -30,6 +30,8 @@ import {
   getCompletionStatusDisplay,
   getNextRecommendedField 
 } from '@/lib/profileUtils';
+import { useTabVisibility } from '@/hooks/useTabVisibility';
+import { usePersistedState } from '@/hooks/usePersistedState';
 
 interface ProfileHubProps {
   isOpen?: boolean;
@@ -37,30 +39,18 @@ interface ProfileHubProps {
 }
 
 const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = {}) => {
-  const [internalIsOpen, setInternalIsOpen] = useState(() => {
-    const saved = localStorage.getItem('profileHub.isOpen');
-    return saved ? saved === 'true' : false;
-  });
-  
-  // Use external control if provided, otherwise use internal state
-  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
-  const setIsOpen = onOpenChange || setInternalIsOpen;
   const { user } = useAuth();
   const navigate = useNavigate();
   const { profile, loading, saveProfile } = useProfile();
-  const {
-    documents,
-    loading: docsLoading,
-    error: docsError,
-    uploadDocument,
-    deleteDocument,
-    getDocumentUrl,
-    refetch: refetchDocuments,
-  } = useDocuments();
-  const [uploading, setUploading] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadError, setUploadError] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const { isVisible } = useTabVisibility();
+  
+  // Enterprise state management
+  const { 
+    state: persistedFormData, 
+    updateState: updateFormData, 
+    forceSave: forceSaveFormData,
+    clearState: clearFormData 
+  } = usePersistedState({
     startup_name: '',
     one_line_pitch: '',
     problem_statement: '',
@@ -73,40 +63,52 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     elevator_pitch: '',
     standard_abstract: '',
     detailed_summary: '',
+  }, {
+    key: 'profileHub.formData',
+    debounceMs: 300,
+    version: 2
   });
+
+  const { 
+    state: persistedUIState, 
+    updateState: updateUIState 
+  } = usePersistedState({
+    isOpen: false,
+    activeTab: 'onboarding'
+  }, {
+    key: 'profileHub.uiState',
+    debounceMs: 100,
+    version: 1
+  });
+
+  // Use external control if provided, otherwise use persisted state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : persistedUIState.isOpen;
+  const setIsOpen = onOpenChange || ((open: boolean) => updateUIState(prev => ({ ...prev, isOpen: open })));
+  
+  const {
+    documents,
+    loading: docsLoading,
+    error: docsError,
+    uploadDocument,
+    deleteDocument,
+    getDocumentUrl,
+    refetch: refetchDocuments,
+  } = useDocuments();
+  
+  const [uploading, setUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>(() => localStorage.getItem('profileHub.activeTab') || 'onboarding');
 
-  // Persist open state
+  // Sync profile data with persisted form data
   useEffect(() => {
-    localStorage.setItem('profileHub.isOpen', String(isOpen));
-  }, [isOpen]);
-
-  // Persist active tab
-  useEffect(() => {
-    if (activeTab) {
-      localStorage.setItem('profileHub.activeTab', activeTab);
-    }
-  }, [activeTab]);
-
-  // Load any locally saved unsent form data first
-  useEffect(() => {
-    const savedForm = localStorage.getItem('profileHub.formData');
-    if (savedForm) {
-      try {
-        const parsed = JSON.parse(savedForm);
-        setFormData(prev => ({ ...prev, ...parsed }));
-      } catch {}
-    }
-  }, []);
-
-  // Update form data when profile loads
-  React.useEffect(() => {
-    if (profile) {
-      // Only override with profile if there isn't newer local unsaved data
-      const localTimestamp = localStorage.getItem('profileHub.formData.updatedAt');
-      if (!localTimestamp) {
-        setFormData({
+    if (profile && isVisible) {
+      // Only update if we don't have newer local data
+      const localTimestamp = localStorage.getItem('profileHub.formData.timestamp');
+      const profileTimestamp = profile.updated_at ? new Date(profile.updated_at).getTime() : 0;
+      
+      if (!localTimestamp || parseInt(localTimestamp) < profileTimestamp) {
+        updateFormData({
           startup_name: profile.startup_name || '',
           one_line_pitch: profile.one_line_pitch || '',
           problem_statement: profile.problem_statement || '',
@@ -122,18 +124,24 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         });
       }
     }
-  }, [profile]);
+  }, [profile, isVisible, updateFormData]);
 
-  // Auto-save form data locally
+  // Handle tab visibility changes
   useEffect(() => {
-    localStorage.setItem('profileHub.formData', JSON.stringify(formData));
-    localStorage.setItem('profileHub.formData.updatedAt', String(Date.now()));
-  }, [formData]);
+    if (isVisible && isOpen) {
+      console.log('🔄 ProfileHub: Tab became visible, restoring state');
+      // Force save current state when tab becomes visible
+      forceSaveFormData();
+    }
+  }, [isVisible, isOpen, forceSaveFormData]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const { error } = await saveProfile(formData);
+      // Force save current form data before sending to server
+      forceSaveFormData();
+      
+      const { error } = await saveProfile(persistedFormData);
       if (error) {
         toast({
           title: "Error",
@@ -146,8 +154,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           description: "Profile updated successfully!",
         });
         // Clear local draft after successful save
-        localStorage.removeItem('profileHub.formData');
-        localStorage.removeItem('profileHub.formData.updatedAt');
+        clearFormData();
       }
     } catch (error) {
       toast({
@@ -354,7 +361,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         </div>
         
         <div className="mt-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={persistedUIState.activeTab} onValueChange={(tab) => updateUIState(prev => ({ ...prev, activeTab: tab }))} className="w-full">
                       <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="onboarding" className="flex items-center gap-1">
               <User className="w-3 h-3" />
@@ -433,8 +440,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       <Input 
                         id="startup-name" 
                         placeholder="Enter your startup name"
-                        value={formData.startup_name}
-                        onChange={(e) => setFormData(prev => ({ ...prev, startup_name: e.target.value }))}
+                        value={persistedFormData.startup_name}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, startup_name: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
@@ -442,8 +449,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       <Input 
                         id="one-line-pitch" 
                         placeholder="Brief description of your startup"
-                        value={formData.one_line_pitch}
-                        onChange={(e) => setFormData(prev => ({ ...prev, one_line_pitch: e.target.value }))}
+                        value={persistedFormData.one_line_pitch}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, one_line_pitch: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -452,8 +459,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     <Textarea 
                       id="problem-statement" 
                       placeholder="Describe the problem your startup solves"
-                      value={formData.problem_statement}
-                      onChange={(e) => setFormData(prev => ({ ...prev, problem_statement: e.target.value }))}
+                      value={persistedFormData.problem_statement}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, problem_statement: e.target.value }))}
                       rows={4}
                     />
                   </div>
@@ -462,8 +469,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     <Textarea 
                       id="solution-description" 
                       placeholder="Describe your solution and how it works"
-                      value={formData.solution_description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, solution_description: e.target.value }))}
+                      value={persistedFormData.solution_description}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, solution_description: e.target.value }))}
                       rows={4}
                     />
                   </div>
@@ -484,8 +491,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       id="company-description" 
                       placeholder="One-sentence description (140 chars max)" 
                       maxLength={140}
-                      value={formData.company_description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, company_description: e.target.value }))}
+                      value={persistedFormData.company_description}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, company_description: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -494,8 +501,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       id="unique-value-proposition" 
                       placeholder="What makes you different" 
                       rows={3}
-                      value={formData.unique_value_proposition}
-                      onChange={(e) => setFormData(prev => ({ ...prev, unique_value_proposition: e.target.value }))}
+                      value={persistedFormData.unique_value_proposition}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, unique_value_proposition: e.target.value }))}
                     />
                   </div>
                   
@@ -507,8 +514,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                         id="elevator-pitch" 
                         placeholder="Very short summary" 
                         rows={2}
-                        value={formData.elevator_pitch}
-                        onChange={(e) => setFormData(prev => ({ ...prev, elevator_pitch: e.target.value }))}
+                        value={persistedFormData.elevator_pitch}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, elevator_pitch: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
@@ -517,8 +524,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                         id="standard-abstract" 
                         placeholder="Most common length" 
                         rows={4}
-                        value={formData.standard_abstract}
-                        onChange={(e) => setFormData(prev => ({ ...prev, standard_abstract: e.target.value }))}
+                        value={persistedFormData.standard_abstract}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, standard_abstract: e.target.value }))}
                       />
                     </div>
                     <div className="space-y-2">
@@ -527,8 +534,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                         id="detailed-summary" 
                         placeholder="For in-depth sections" 
                         rows={6}
-                        value={formData.detailed_summary}
-                        onChange={(e) => setFormData(prev => ({ ...prev, detailed_summary: e.target.value }))}
+                        value={persistedFormData.detailed_summary}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, detailed_summary: e.target.value }))}
                       />
                     </div>
                   </div>
@@ -539,8 +546,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       id="mission-vision" 
                       placeholder="Long-term view" 
                       rows={3}
-                      value={formData.mission_vision}
-                      onChange={(e) => setFormData(prev => ({ ...prev, mission_vision: e.target.value }))}
+                      value={persistedFormData.mission_vision}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, mission_vision: e.target.value }))}
                     />
                   </div>
                   <div className="space-y-2">
@@ -690,8 +697,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     <Textarea 
                       id="target-market" 
                       placeholder="Ideal customer profile" 
-                      value={formData.target_market}
-                      onChange={(e) => setFormData(prev => ({ ...prev, target_market: e.target.value }))}
+                      value={persistedFormData.target_market}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, target_market: e.target.value }))}
                       rows={3} 
                     />
                   </div>
@@ -752,8 +759,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     <Textarea 
                       id="team-description" 
                       placeholder="Brief bios for key members and team information" 
-                      value={formData.team_description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, team_description: e.target.value }))}
+                      value={persistedFormData.team_description}
+                      onChange={(e) => updateFormData(prev => ({ ...prev, team_description: e.target.value }))}
                       rows={6} 
                     />
                   </div>

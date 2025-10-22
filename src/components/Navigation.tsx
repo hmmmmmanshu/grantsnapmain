@@ -2,12 +2,23 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Chrome, Menu, X } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavigation = (section: string) => {
+    // For same-page navigation, scroll to section
+    const element = document.getElementById(section);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMenuOpen(false);
   };
 
   return (
@@ -23,18 +34,30 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#features" className="text-gray-700 hover:text-black transition-colors font-medium">
+            <button 
+              onClick={() => handleNavigation('features')} 
+              className="text-gray-700 hover:text-black transition-colors font-medium"
+            >
               Features
-            </a>
-            <a href="#how-it-works" className="text-gray-700 hover:text-black transition-colors font-medium">
+            </button>
+            <button 
+              onClick={() => handleNavigation('how-it-works')} 
+              className="text-gray-700 hover:text-black transition-colors font-medium"
+            >
               How it Works
-            </a>
-            <a href="#pricing" className="text-gray-700 hover:text-black transition-colors font-medium">
+            </button>
+            <button 
+              onClick={() => handleNavigation('pricing')} 
+              className="text-gray-700 hover:text-black transition-colors font-medium"
+            >
               Pricing
-            </a>
-            <a href="#faq" className="text-gray-700 hover:text-black transition-colors font-medium">
+            </button>
+            <button 
+              onClick={() => handleNavigation('faq')} 
+              className="text-gray-700 hover:text-black transition-colors font-medium"
+            >
               FAQ
-            </a>
+            </button>
           </div>
 
           {/* CTA Button */}
@@ -60,34 +83,30 @@ const Navigation = () => {
         {isMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <a 
-                href="#features" 
-                className="block px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
-                onClick={toggleMenu}
+              <button 
+                onClick={() => handleNavigation('features')} 
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
               >
                 Features
-              </a>
-              <a 
-                href="#how-it-works" 
-                className="block px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
-                onClick={toggleMenu}
+              </button>
+              <button 
+                onClick={() => handleNavigation('how-it-works')} 
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
               >
                 How it Works
-              </a>
-              <a 
-                href="#pricing" 
-                className="block px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
-                onClick={toggleMenu}
+              </button>
+              <button 
+                onClick={() => handleNavigation('pricing')} 
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
               >
                 Pricing
-              </a>
-              <a 
-                href="#faq" 
-                className="block px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
-                onClick={toggleMenu}
+              </button>
+              <button 
+                onClick={() => handleNavigation('faq')} 
+                className="block w-full text-left px-3 py-2 text-gray-700 hover:text-black transition-colors font-medium"
               >
                 FAQ
-              </a>
+              </button>
               <div className="px-3 py-2">
                 <Button className="w-full bg-black hover:bg-gray-800 text-white font-semibold">
                   <Chrome className="mr-2 h-4 w-4" />

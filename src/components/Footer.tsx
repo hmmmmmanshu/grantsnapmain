@@ -4,6 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
+  const handleNavigation = (section: string) => {
+    // For same-page navigation, scroll to section
+    const element = document.getElementById(section);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <footer className="bg-gray-100 border-t border-gray-200">
       <div className="max-w-7xl mx-auto px-4 py-16">
@@ -29,10 +37,10 @@ const Footer = () => {
           <div>
             <h4 className="text-black font-semibold mb-4">Product</h4>
             <ul className="space-y-2 text-gray-600">
-              <li><a href="#features" className="hover:text-black transition-colors">Features</a></li>
-              <li><a href="#how-it-works" className="hover:text-black transition-colors">How it Works</a></li>
-              <li><a href="#pricing" className="hover:text-black transition-colors">Pricing</a></li>
-              <li><a href="#" className="hover:text-black transition-colors">Demo</a></li>
+              <li><button onClick={() => handleNavigation('features')} className="hover:text-black transition-colors">Features</button></li>
+              <li><button onClick={() => handleNavigation('how-it-works')} className="hover:text-black transition-colors">How it Works</button></li>
+              <li><button onClick={() => handleNavigation('pricing')} className="hover:text-black transition-colors">Pricing</button></li>
+              <li><button onClick={() => handleNavigation('demo')} className="hover:text-black transition-colors">Demo</button></li>
             </ul>
           </div>
 
