@@ -22,6 +22,7 @@ import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot, C
 import { useProfile, Founder } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase';
 import { useDocuments } from '@/hooks/useDocuments';
 import { safeFormatDate } from '@/lib/dateUtils';
 import { 
@@ -41,7 +42,7 @@ interface ProfileHubProps {
 const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = {}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { profile, founders, loading, saveProfile, saveFounder, deleteFounder } = useProfile();
+  const { profile, founders, loading, saveProfile, saveFounder, deleteFounder, refetch: refetchProfile } = useProfile();
   const { isVisible } = useTabVisibility();
   
   // Enterprise state management
@@ -281,6 +282,86 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   const [saving, setSaving] = useState(false);
   const [activeFounderTab, setActiveFounderTab] = useState('founder-1');
   const [founderData, setFounderData] = useState<Record<string, Partial<Founder>>>({});
+  
+  // AI Context Sync state
+  const [syncingContext, setSyncingContext] = useState(false);
+  const [contextSummary, setContextSummary] = useState<any>(null);
+
+  // Load AI context summary when profile loads
+  useEffect(() => {
+    if (profile?.ai_context_summary) {
+      try {
+        const parsed = JSON.parse(profile.ai_context_summary);
+        setContextSummary(parsed);
+      } catch (error) {
+        console.error('Failed to parse AI context summary:', error);
+        setContextSummary(null);
+      }
+    } else {
+      setContextSummary(null);
+    }
+  }, [profile?.ai_context_summary]);
+
+  // Handler for syncing user context
+  const handleSyncContext = async () => {
+    if (!user) {
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to sync context',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    setSyncingContext(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sync-user-context`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to sync context');
+      }
+
+      const result = await response.json();
+      
+      // Update the context summary immediately
+      if (result.data?.ai_summary) {
+        setContextSummary(result.data.ai_summary);
+      }
+
+      // Refetch profile to get the updated context
+      await refetchProfile();
+
+      toast({
+        title: 'Success!',
+        description: 'Your AI context has been synchronized successfully',
+        duration: 5000
+      });
+    } catch (error) {
+      console.error('Context sync error:', error);
+      toast({
+        title: 'Sync Failed',
+        description: error instanceof Error ? error.message : 'Failed to sync context',
+        variant: 'destructive'
+      });
+    } finally {
+      setSyncingContext(false);
+    }
+  };
 
   // Sync profile data with persisted form data
   useEffect(() => {
@@ -892,33 +973,150 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
             </TabsTrigger>
           </TabsList>
 
-            {/* Content Tab */}
+            {/* Content Tab - AI Context Summary */}
             <TabsContent value="onboarding" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Complete Your Onboarding
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <User className="w-8 h-8 text-blue-600" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      Welcome to Grants Snap!
-                    </h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                      Complete your onboarding to unlock personalized grant recommendations, AI-powered insights, and advanced features.
-                    </p>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <Bot className="w-5 h-5" />
+                      AI Context Summary
+                    </CardTitle>
                     <Button 
-                      onClick={() => navigate('/onboarding')}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      onClick={handleSyncContext}
+                      disabled={syncingContext}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                     >
-                      Start Onboarding
+                      {syncingContext ? (
+                        <>
+                          <TrendingUp className="w-4 h-4 mr-2 animate-spin" />
+                          Syncing...
+                        </>
+                      ) : (
+                        <>
+                          <TrendingUp className="w-4 h-4 mr-2" />
+                          Update Context
+                        </>
+                      )}
                     </Button>
                   </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    AI-generated comprehensive view of your startup profile, combining all your data for RAG-powered grant matching
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {contextSummary ? (
+                    <>
+                      {/* Executive Summary */}
+                      <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 border border-blue-100">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <Bot className="w-5 h-5 text-blue-600" />
+                          Executive Summary
+                        </h3>
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                          {contextSummary.executive_summary}
+                        </p>
+                      </div>
+
+                      {/* Key Strengths */}
+                      <div>
+                        <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          Key Strengths
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {contextSummary.key_strengths?.map((strength: string, index: number) => (
+                            <div key={index} className="bg-green-50 rounded-lg p-4 border border-green-100">
+                              <p className="text-sm text-gray-700">{strength}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Funding Readiness */}
+                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                        <h3 className="text-md font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <TrendingUp className="w-5 h-5 text-yellow-600" />
+                          Funding Readiness
+                        </h3>
+                        <p className="text-sm text-gray-700">{contextSummary.funding_readiness}</p>
+                      </div>
+
+                      {/* Recommended Actions */}
+                      <div>
+                        <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <Target className="w-5 h-5 text-blue-600" />
+                          Recommended Actions
+                        </h3>
+                        <div className="space-y-2">
+                          {contextSummary.recommended_actions?.map((action: string, index: number) => (
+                            <div key={index} className="flex items-start gap-3 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                              <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                                {index + 1}
+                              </div>
+                              <p className="text-sm text-gray-700 flex-1">{action}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Profile Completeness */}
+                      <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h3 className="text-md font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-gray-600" />
+                          Profile Completeness
+                        </h3>
+                        <p className="text-sm text-gray-700 mb-3">{contextSummary.profile_completeness}</p>
+                        <Progress value={completionInfo.percentage} className="h-2" />
+                        <p className="text-xs text-gray-500 mt-1">
+                          {completionInfo.completed} of {completionInfo.total} sections completed
+                        </p>
+                      </div>
+
+                      {/* AI Insights */}
+                      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-6 border border-purple-100">
+                        <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <Bot className="w-5 h-5 text-purple-600" />
+                          AI Insights
+                        </h3>
+                        <p className="text-gray-700 leading-relaxed">{contextSummary.ai_insights}</p>
+                      </div>
+
+                      {/* Last Updated */}
+                      <div className="text-center text-xs text-gray-500">
+                        Last updated: {profile?.context_last_updated ? safeFormatDate(profile.context_last_updated) : 'Never'}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-12">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Bot className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        AI Context Not Generated Yet
+                      </h3>
+                      <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                        Click "Update Context" to generate an AI-powered summary of your startup profile. This will aggregate all your information for better grant matching and personalized recommendations.
+                      </p>
+                      <Button 
+                        onClick={handleSyncContext}
+                        disabled={syncingContext}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
+                      >
+                        {syncingContext ? (
+                          <>
+                            <TrendingUp className="w-4 h-4 mr-2 animate-spin" />
+                            Generating Context...
+                          </>
+                        ) : (
+                          <>
+                            <Bot className="w-4 h-4 mr-2" />
+                            Generate AI Context
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

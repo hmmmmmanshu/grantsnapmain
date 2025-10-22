@@ -219,6 +219,10 @@ export interface UserProfile {
   blog_posts?: string
   podcast_appearances?: string
   
+  // AI Context Summary Fields
+  ai_context_summary?: string
+  context_last_updated?: string
+  
   completion_percentage?: number
   created_at: string
   updated_at: string

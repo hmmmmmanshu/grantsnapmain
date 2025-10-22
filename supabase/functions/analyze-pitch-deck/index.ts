@@ -19,49 +19,27 @@ interface PitchDeckSummary {
   key_metrics_and_traction: string
   funding_ask: string
 }
-// Function to extract text from PDF using pdf-parse
-async function extractTextFromPDF(pdfBuffer: ArrayBuffer): Promise<string> {
+// Function to convert file to base64 for Gemini Vision API
+async function convertFileToBase64(fileBuffer: ArrayBuffer, mimeType: string): Promise<string> {
   try {
-    // For now, we will use a mock implementation
-    // In production, you would use pdf-parse or similar library
-    // const pdfParse = await import("pdf-parse");
-    // const data = await pdfParse.default(Buffer.from(pdfBuffer));
-    // return data.text;
-    // Mock text extraction for demonstration
-    return `This is a mock text extraction from the PDF. 
-    In a real implementation, this would contain the actual text content 
-    extracted from the uploaded pitch deck document. The text would include 
-    all the slides, bullet points, and narrative content that describes 
-    the startup business model, market opportunity, and funding needs.`;
+    const bytes = new Uint8Array(fileBuffer)
+    let binary = ''
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const base64 = btoa(binary)
+    return `data:${mimeType};base64,${base64}`
   } catch (error) {
-    throw new Error(`PDF text extraction failed: ${error.message}`)
-  }
-}
-// Function to extract text from PowerPoint files
-async function extractTextFromPPTX(pptxBuffer: ArrayBuffer): Promise<string> {
-  try {
-    // For now, we will use a mock implementation
-    // In production, you would use a library like mammoth or similar
-    // const mammoth = await import("mammoth");
-    // const result = await mammoth.extractRawText({ buffer: Buffer.from(pptxBuffer) });
-    // return result.value;
-    // Mock text extraction for demonstration
-    return `This is a mock text extraction from the PowerPoint presentation. 
-    In a real implementation, this would contain the actual text content 
-    extracted from all slides, including titles, bullet points, and 
-    narrative text that describes the startup pitch deck content.`;
-  } catch (error) {
-    throw new Error(`PowerPoint text extraction failed: ${error.message}`)
+    throw new Error(`File conversion to base64 failed: ${error.message}`)
   }
 }
 // Function to generate AI prompt for pitch deck analysis
-function generateAnalysisPrompt(extractedText: string): string {
+function generateAnalysisPrompt(): string {
   return `You are a startup analyst and grant writing expert with 15+ years of experience. 
-Read the following text extracted from a pitch deck and generate a concise, structured summary in JSON format.
-**EXTRACTED TEXT FROM PITCH DECK:**
-${extractedText}
+Analyze the provided pitch deck document (PDF or PowerPoint) and generate a concise, structured summary in JSON format.
+
 **ANALYSIS REQUIREMENTS:**
-Analyze the text and extract the following key information:
+Analyze the document and extract the following key information:
 1. **problem_statement**: What problem is the startup solving? (2-3 sentences)
 2. **solution_overview**: What is their solution/product? (2-3 sentences)
 3. **target_market**: Who is their target market/customer? (2-3 sentences)
@@ -69,6 +47,7 @@ Analyze the text and extract the following key information:
 5. **team_strengths**: What are the key team strengths/credentials? (2-3 sentences)
 6. **key_metrics_and_traction**: What traction, metrics, or progress have they shown? (2-3 sentences)
 7. **funding_ask**: What funding are they seeking and for what purpose? (2-3 sentences)
+
 **IMPORTANT INSTRUCTIONS:**
 - Provide ONLY the JSON response with the exact keys specified above
 - Keep each field concise but informative (2-3 sentences max)
@@ -76,6 +55,7 @@ Analyze the text and extract the following key information:
 - Ensure the JSON is valid and properly formatted
 - Focus on extracting factual information, not making assumptions
 - Use clear, professional language suitable for grant applications
+
 **OUTPUT FORMAT:**
 Your response must be ONLY valid JSON with the exact structure:
 {
@@ -88,53 +68,63 @@ Your response must be ONLY valid JSON with the exact structure:
   "funding_ask": "..."
 }`
 }
-// Function to call OpenAI API for pitch deck analysis
-async function callAIModel(prompt: string): Promise<string> {
+// Function to call Gemini Vision API for pitch deck analysis
+async function callGeminiVisionAPI(fileData: string, prompt: string): Promise<string> {
   try {
-    const openaiApiKey = Deno.env.get("OPENAI_API_KEY")
-    if (!openaiApiKey) {
-      throw new Error("OPENAI_API_KEY environment variable is not set")
+    const geminiApiKey = Deno.env.get("GEMINI_API_KEY")
+    if (!geminiApiKey) {
+      throw new Error("GEMINI_API_KEY environment variable is not set")
     }
-    console.log("Calling OpenAI API...")
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    
+    console.log("Calling Gemini Vision API...")
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${openaiApiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "gpt-4",
-        messages: [
+        contents: [
           {
-            role: "system",
-            content: "You are an expert startup analyst and grant writing specialist. Always respond with valid JSON only."
-          },
-          {
-            role: "user",
-            content: prompt
+            parts: [
+              {
+                text: prompt
+              },
+              {
+                inline_data: {
+                  mime_type: fileData.startsWith('data:application/pdf') ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                  data: fileData.split(',')[1] // Remove the data:mime_type;base64, prefix
+                }
+              }
+            ]
           }
         ],
-        max_tokens: 1500,
-        temperature: 0.3,
-        response_format: { type: "json_object" }
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 1500,
+          responseMimeType: "application/json"
+        }
       }),
     })
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
-      throw new Error(`OpenAI API error: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`)
+      throw new Error(`Gemini API error: ${response.status} ${response.statusText} - ${errorData.error?.message || "Unknown error"}`)
     }
+    
     const data = await response.json()
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error("Invalid response format from OpenAI API")
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      throw new Error("Invalid response format from Gemini API")
     }
-    const aiResponse = data.choices[0].message.content
+    
+    const aiResponse = data.candidates[0].content.parts[0].text
     if (!aiResponse) {
-      throw new Error("Empty response from OpenAI API")
+      throw new Error("Empty response from Gemini API")
     }
-    console.log("OpenAI API call successful")
+    
+    console.log("Gemini Vision API call successful")
     return aiResponse
   } catch (error) {
-    console.error("OpenAI API call failed:", error)
+    console.error("Gemini API call failed:", error)
     throw new Error(`AI model call failed: ${error.message}`)
   }
 }
@@ -328,13 +318,17 @@ serve(async (req) => {
         }
       )
     }
-    // Extract text based on file type
-    console.log("Extracting text from document...")
-    let extractedText: string
+    // Convert file to base64 for Gemini Vision API
+    console.log("Converting file to base64 for Gemini Vision API...")
+    let fileBase64: string
+    let mimeType: string
+    
     if (requestBody.file_name.toLowerCase().endsWith(".pdf")) {
-      extractedText = await extractTextFromPDF(await fileData.arrayBuffer())
+      mimeType = "application/pdf"
+      fileBase64 = await convertFileToBase64(await fileData.arrayBuffer(), mimeType)
     } else if (requestBody.file_name.toLowerCase().match(/\.(pptx?|ppt)$/)) {
-      extractedText = await extractTextFromPPTX(await fileData.arrayBuffer())
+      mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      fileBase64 = await convertFileToBase64(await fileData.arrayBuffer(), mimeType)
     } else {
       return new Response(
         JSON.stringify({ 
@@ -347,14 +341,16 @@ serve(async (req) => {
         }
       )
     }
-    console.log(`Text extraction complete. Extracted ${extractedText.length} characters`)
+    console.log(`File conversion complete. Base64 length: ${fileBase64.length}`)
+
     // Generate AI prompt
     console.log("Generating AI analysis prompt...")
-    const aiPrompt = generateAnalysisPrompt(extractedText)
-    // Call AI model
-    console.log("Calling OpenAI API for analysis...")
-    const aiResponse = await callAIModel(aiPrompt)
-    console.log("OpenAI analysis complete")
+    const aiPrompt = generateAnalysisPrompt()
+
+    // Call Gemini Vision API
+    console.log("Calling Gemini Vision API for analysis...")
+    const aiResponse = await callGeminiVisionAPI(fileBase64, aiPrompt)
+    console.log("Gemini Vision analysis complete")
     // Parse AI response
     console.log("Parsing AI response...")
     const summary = parseAIResponse(aiResponse)
@@ -387,7 +383,7 @@ serve(async (req) => {
     // Success response
     const responseData = {
       success: true,
-      message: "Pitch deck analyzed successfully using OpenAI",
+      message: "Pitch deck analyzed successfully using Gemini Vision",
       data: {
         file_name: requestBody.file_name,
         file_size: requestBody.file_size,
@@ -395,7 +391,7 @@ serve(async (req) => {
         summary: summary,
         summary_length: summaryJson.length,
         user_id: user.id,
-        ai_provider: "OpenAI GPT-4"
+        ai_provider: "Gemini 1.5 Flash Vision"
       }
     }
     return new Response(
