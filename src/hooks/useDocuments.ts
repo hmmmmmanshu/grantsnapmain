@@ -7,6 +7,7 @@ export interface UserDocument {
   user_id: string;
   document_name: string;
   storage_path: string;
+  document_type?: string;
   uploaded_at: string;
 }
 
@@ -35,7 +36,7 @@ export function useDocuments() {
     }
   };
 
-  const uploadDocument = async (file: File) => {
+  const uploadDocument = async (file: File, documentType?: string) => {
     if (!user) return { error: 'User not authenticated' };
     setLoading(true);
     setError(null);
@@ -83,6 +84,7 @@ export function useDocuments() {
           user_id: user.id,
           document_name: file.name,
           storage_path: storagePath,
+          document_type: documentType,
         })
         .select()
         .single();

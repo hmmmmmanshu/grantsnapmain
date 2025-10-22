@@ -272,6 +272,12 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  
+  // Separate state for Resources tab document upload
+  const [resourcesUploading, setResourcesUploading] = useState(false);
+  const [selectedResourceFile, setSelectedResourceFile] = useState<File | null>(null);
+  const [resourcesUploadError, setResourcesUploadError] = useState<string | null>(null);
+  const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [saving, setSaving] = useState(false);
   const [activeFounderTab, setActiveFounderTab] = useState('founder-1');
   const [founderData, setFounderData] = useState<Record<string, Partial<Founder>>>({});
@@ -637,7 +643,34 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
       refetchDocuments();
     }
     setUploading(false);
-    setSelectedFile(null);
+  };
+
+  // Resources Tab document upload handler
+  const handleResourcesDocUpload = async () => {
+    if (!selectedResourceFile || !selectedDocumentType) return;
+    
+    setResourcesUploading(true);
+    setResourcesUploadError(null);
+    
+    const { error, success } = await uploadDocument(selectedResourceFile, selectedDocumentType);
+    if (error) {
+      setResourcesUploadError(error);
+      toast({
+        title: "Upload Failed",
+        description: error,
+        variant: "destructive",
+      });
+    } else if (success) {
+      setSelectedResourceFile(null);
+      setSelectedDocumentType('');
+      toast({
+        title: "Upload Successful",
+        description: `${selectedResourceFile.name} uploaded successfully!`,
+      });
+      refetchDocuments();
+    }
+    
+    setResourcesUploading(false);
   };
 
   // Pitch Deck upload and analysis handler
@@ -670,6 +703,22 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
+      // Get the public URL for the uploaded file
+      const { data: { publicUrl } } = supabase.storage
+        .from('pitch-decks')
+        .getPublicUrl(filePath);
+
+      // Save the pitch deck URL to user profile
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .update({ pitch_deck_url: publicUrl })
+        .eq('id', user.id);
+
+      if (profileError) {
+        console.error('Failed to save pitch deck URL to profile:', profileError);
+        // Don't throw here as the upload was successful
+      }
+
       // Call the analyze-pitch-deck Edge Function
       const { data: analysisData, error: analysisError } = await supabase.functions.invoke('analyze-pitch-deck', {
         body: {
@@ -686,10 +735,11 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
       // Show success message
       toast({
         title: "Success!",
-        description: "Your pitch deck is now being analyzed by our AI. This may take a minute.",
+        description: "Your pitch deck has been uploaded and is being analyzed by our AI. This may take a minute.",
       });
 
-      // Ideally refetch profile here; for now, we avoid full-page reloads
+      // Refetch profile to show updated data
+      await refetch();
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
@@ -3010,84 +3060,150 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
 
                   {/* File Upload Section */}
                   <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">File Upload</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="supporting-docs">Upload Document</Label>
-                      <Input
-                        id="supporting-docs"
-                        type="file"
-                        onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-                        disabled={uploading}
-                      />
-                      <Button onClick={handleDocUpload} disabled={!selectedFile || uploading} className="mt-2">
-                        {uploading ? 'Uploading...' : 'Upload'}
+                    <h4 className="font-semibold text-gray-900">Upload Document</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="document-file">Select File</Label>
+                        <Input
+                          id="document-file"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                          onChange={e => setSelectedResourceFile(e.target.files?.[0] || null)}
+                          disabled={resourcesUploading}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Supported formats: PDF, Word, Excel, PowerPoint, Images, Text files. Max size: 50MB
+                        </p>
+                      </div>
+                      
+                      {selectedResourceFile && (
+                        <div className="space-y-2">
+                          <Label htmlFor="document-type">Document Type</Label>
+                          <Select onValueChange={setSelectedDocumentType}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select document type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="pitch-deck">Pitch Deck</SelectItem>
+                              <SelectItem value="business-plan">Business Plan</SelectItem>
+                              <SelectItem value="financial-model">Financial Model</SelectItem>
+                              <SelectItem value="market-research">Market Research</SelectItem>
+                              <SelectItem value="legal-documents">Legal Documents</SelectItem>
+                              <SelectItem value="press-kit">Press Kit</SelectItem>
+                              <SelectItem value="case-studies">Case Studies</SelectItem>
+                              <SelectItem value="testimonials">Testimonials</SelectItem>
+                              <SelectItem value="product-demo">Product Demo</SelectItem>
+                              <SelectItem value="investor-deck">Investor Deck</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      <Button 
+                        onClick={handleResourcesDocUpload} 
+                        disabled={!selectedResourceFile || !selectedDocumentType || resourcesUploading} 
+                        className="w-full"
+                      >
+                        {resourcesUploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Uploading...
+                          </>
+                        ) : (
+                          'Upload Document'
+                        )}
                       </Button>
-                      {uploadError && <div className="text-red-600 text-xs mt-1">{uploadError}</div>}
+                      
+                      {resourcesUploadError && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="text-red-800 text-sm">{resourcesUploadError}</div>
+                        </div>
+                      )}
                     </div>
+                  </div>
                     
                     {/* File List Section */}
                     <div className="mt-6">
-                      <h4 className="font-semibold mb-2">Your Uploaded Documents</h4>
+                      <h4 className="font-semibold mb-2">Your Documents</h4>
                       {docsLoading ? (
-                        <div>Loading documents...</div>
+                        <div className="text-center py-4">Loading documents...</div>
                       ) : docsError ? (
-                        <div className="text-red-600">{docsError}</div>
+                        <div className="text-red-600 text-center py-4">{docsError}</div>
                       ) : documents.length === 0 ? (
-                        <div className="text-gray-500">No documents uploaded yet.</div>
+                        <div className="text-gray-500 text-center py-8">No documents uploaded yet.</div>
                       ) : (
-                        <div className="space-y-2">
-                          {documents.map(doc => (
-                            <div key={doc.id} className="flex items-center justify-between border rounded px-3 py-2 bg-gray-50">
-                              <div>
-                                <div className="font-medium">{doc.document_name}</div>
-                                <div className="text-xs text-gray-500">Uploaded: {safeFormatDate(
-                                  doc.uploaded_at,
-                                  (date) => date.toLocaleDateString(),
-                                  'Unknown date'
-                                )}</div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  title="Download"
-                                  onClick={async () => {
-                                    const url = await getDocumentUrl(doc.storage_path);
-                                    if (url) {
-                                      window.open(url, '_blank');
-                                    } else {
-                                      toast({
-                                        title: "Download Failed",
-                                        description: "Could not generate download URL",
-                                        variant: "destructive",
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <Download className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  title="Delete"
-                                  onClick={async () => {
-                                    const { error, success } = await deleteDocument(doc.id, doc.storage_path);
-                                    if (error) {
-                                      toast({
-                                        title: "Delete Failed",
-                                        description: error,
-                                        variant: "destructive",
-                                      });
-                                    } else if (success) {
-                                      toast({
-                                        title: "Document Deleted",
-                                        description: `${doc.document_name} deleted successfully!`,
-                                      });
-                                    }
-                                  }}
-                                >
-                                  <Trash2 className="w-4 h-4 text-red-600" />
-                                </Button>
+                        <div className="space-y-4">
+                          {Object.entries(
+                            documents.reduce((acc, doc) => {
+                              const type = doc.document_type || 'other';
+                              if (!acc[type]) acc[type] = [];
+                              acc[type].push(doc);
+                              return acc;
+                            }, {} as Record<string, typeof documents>)
+                          ).map(([type, docs]) => (
+                            <div key={type} className="space-y-2">
+                              <h5 className="font-medium text-sm text-gray-700 capitalize">
+                                {type.replace('-', ' ')} ({docs.length})
+                              </h5>
+                              <div className="space-y-2">
+                                {docs.map(doc => (
+                                  <div key={doc.id} className="flex items-center justify-between border rounded px-3 py-2 bg-gray-50">
+                                    <div className="flex-1">
+                                      <div className="font-medium text-sm">{doc.document_name}</div>
+                                      <div className="text-xs text-gray-500">
+                                        Uploaded: {safeFormatDate(
+                                          doc.uploaded_at,
+                                          (date) => date.toLocaleDateString(),
+                                          'Unknown date'
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        title="Download"
+                                        onClick={async () => {
+                                          const url = await getDocumentUrl(doc.storage_path);
+                                          if (url) {
+                                            window.open(url, '_blank');
+                                          } else {
+                                            toast({
+                                              title: "Download Failed",
+                                              description: "Could not generate download URL",
+                                              variant: "destructive",
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <Download className="w-4 h-4" />
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        title="Delete"
+                                        onClick={async () => {
+                                          const { error, success } = await deleteDocument(doc.id, doc.storage_path);
+                                          if (error) {
+                                            toast({
+                                              title: "Delete Failed",
+                                              description: error,
+                                              variant: "destructive",
+                                            });
+                                          } else if (success) {
+                                            toast({
+                                              title: "Document Deleted",
+                                              description: "Document has been successfully deleted",
+                                            });
+                                          }
+                                        }}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                             </div>
                           ))}
