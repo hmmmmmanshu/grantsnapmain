@@ -1,245 +1,133 @@
-# GrantSnap: User Stories
+# GrantSnap: User Stories & Acceptance Criteria
 
-This document breaks down our development tasks into user-centric stories. User is everything.
+This document outlines user stories for the GrantSnap Dashboard integration with the new AI agent infrastructure.
 
-## Epic 1: A Streamlined, Stable Web App
+## Epic 1: RAG Vectorization Integration
 
-### Story 1: Simplify My Dashboard
-**As a user,**
-I want to see a simpler dashboard focused on my funding pipeline,
-so that I am not overwhelmed by features I don't need yet.
+### Story 1: Profile Vectorization After Save
+**As a** user updating my startup profile  
+**I want** my profile to be automatically processed for AI analysis  
+**So that** I can get personalized answers when using AI autofill features
 
-**Acceptance Criteria**: 
-- The Team Management and AI Teammate sections are replaced by a "Virtual CFO - Coming Soon" placeholder.
-- The dashboard focuses on core funding pipeline functionality.
-- Navigation is streamlined and intuitive.
+**Acceptance Criteria:**
+- [ ] When I save my profile in the Profile Hub, a loading state appears: "Preparing profile for AI..."
+- [ ] After successful vectorization, I see a success message: "✅ Profile ready for AI autofill!"
+- [ ] If vectorization fails, I see an error message with retry option
+- [ ] My profile data is converted into 6 semantic chunks and stored as embeddings
+- [ ] The process happens automatically without requiring additional user action
 
-**Technical Notes**:
-- Remove Team Management, Skill Matrix, and AI Recommendations tabs
-- Add styled placeholder for "Your Virtual CFO" section
-- Clean up unused components and routes
+### Story 2: Pitch Deck Vectorization After Upload
+**As a** user uploading my pitch deck  
+**I want** my pitch deck to be automatically analyzed and processed for AI  
+**So that** AI can use my pitch deck content to generate better application answers
 
-### Story 2: Fix Onboarding Data Loss
-**As a new user,**
-I want the information I enter during onboarding to be saved if I switch browser tabs,
-so that I don't lose my work and get frustrated.
+**Acceptance Criteria:**
+- [ ] When I upload a pitch deck, I see a processing message: "Analyzing pitch deck... (may take 30-60 seconds)"
+- [ ] The system extracts text from PDF, PPTX, and DOCX files
+- [ ] Text is chunked by slide/section for better retrieval
+- [ ] Embeddings are generated and stored with metadata (slide number, section title)
+- [ ] I receive confirmation when processing is complete
+- [ ] Large files (>10MB) are handled gracefully with progress indicators
 
-**Acceptance Criteria**: 
-- localStorage auto-save is implemented in the onboarding form.
-- Form data persists across browser sessions.
-- Users can resume onboarding from where they left off.
+## Epic 2: Usage Tracking Updates
 
-**Technical Notes**:
-- Implement useEffect with react-hook-form watch function
-- Save form data to localStorage on every change
-- Load saved data when component mounts
-- Clear saved data after successful submission
+### Story 3: Enhanced Usage Display
+**As a** user with a subscription  
+**I want** to see my usage of both Deep Scans and AI Autofills  
+**So that** I can track my AI feature usage and know when I need to upgrade
 
-### Story 3: Enable Onboarding Skip
-**As a new user in a hurry,**
-I want the "Skip for now" button to work,
-so that I can explore the dashboard immediately.
+**Acceptance Criteria:**
+- [ ] I see both "Deep Scans" and "AI Autofills" metrics in my dashboard
+- [ ] Progress bars show my usage vs limits (e.g., "15/50 Deep Scans")
+- [ ] Different subscription tiers show correct limits (Starter: 50/30, Pro: 150/100)
+- [ ] When I approach my limits, I see upgrade prompts
+- [ ] Usage resets monthly and I can see my current month's usage
+- [ ] Free users see "0/0" with upgrade prompts
 
-**Acceptance Criteria**: 
-- The "Skip" button correctly redirects to `/dashboard`.
-- Users can access the dashboard without completing onboarding.
-- Onboarding can be completed later from the dashboard.
+### Story 4: Grant Detail Enhancement
+**As a** user viewing a grant that was analyzed by AI  
+**I want** to see the AI analysis results and autofill session data  
+**So that** I can understand what the AI discovered and how it filled out the application
 
-**Technical Notes**:
-- Add working onClick handler to skip button
-- Use react-router-dom navigation
-- Ensure proper route protection
+**Acceptance Criteria:**
+- [ ] Grants with Deep Scan data show a "🔍 Deep Scan Analysis" section
+- [ ] I can see confidence score, funder mission, eligibility criteria, key themes
+- [ ] Grants with autofill sessions show "✨ AI Autofill Session" section
+- [ ] I can see fields filled, pages navigated, and completion status
+- [ ] I can view agent screenshots for audit trail
+- [ ] I can expand to see full analysis details
+- [ ] Grants without AI data still display normally
 
-## Epic 2: The Seamless Extension Experience
+## Epic 3: User Experience Enhancements
 
-### Story 4: Log In Once
-**As a user,**
-I want the GrantSnap extension to automatically know I'm logged in after I've logged in on the website,
-so that I don't have to enter my password twice.
+### Story 5: Profile Completion Nudges
+**As a** user with an incomplete profile  
+**I want** to be reminded to complete my profile  
+**So that** I can get better AI-generated answers
 
-**Acceptance Criteria**: 
-- The extension's background.js successfully reads the session cookie from grantsnap.pro and authenticates.
-- Users remain logged in across browser sessions.
-- Authentication is seamless and secure.
+**Acceptance Criteria:**
+- [ ] If my profile is <50% complete, I see a yellow warning banner
+- [ ] The banner shows my completion percentage and explains the benefit
+- [ ] I can click to go directly to the Profile Hub
+- [ ] The banner disappears when my profile is complete
 
-**Technical Notes**:
-- Implement secure cookie bridge between web app and extension
-- Use httpOnly cookies for session management
-- Implement session hydration in extension background script
-- Handle authentication state changes gracefully
+### Story 6: Pitch Deck Upload Reminder
+**As a** user without a pitch deck  
+**I want** to be reminded to upload my pitch deck  
+**So that** I can get 10x better AI answers
 
-### Story 5: Get Instant Insights
-**As a user who just found a grant,**
-I want to click "Suggest Notes" in the extension,
-so that I can get an instant AI-powered summary and have it automatically saved to my dashboard.
+**Acceptance Criteria:**
+- [ ] If I haven't uploaded a pitch deck, I see a blue info banner
+- [ ] The banner explains the benefit of uploading a pitch deck
+- [ ] I can click to go directly to the document upload page
+- [ ] The banner disappears after I upload a pitch deck
 
-**Acceptance Criteria**: 
-- The extension calls the suggest-and-save-notes Edge Function.
-- New grant with AI notes appears in the OpportunityTable in real-time.
-- AI-generated summaries are accurate and actionable.
+### Story 7: RAG Status Indicator
+**As a** user  
+**I want** to see if my profile and pitch deck are ready for AI  
+**So that** I know when AI features will work optimally
 
-**Technical Notes**:
-- Implement Gemini AI integration via Edge Functions
-- Use Firecrawl for content scraping
-- Implement real-time Supabase subscriptions
-- Handle AI processing errors gracefully
+**Acceptance Criteria:**
+- [ ] I see a status indicator showing if my profile is vectorized
+- [ ] I see a status indicator showing if my pitch deck is vectorized
+- [ ] Green checkmark means ready for AI
+- [ ] Yellow spinner means processing
+- [ ] Red X means failed - with retry option
 
-### Story 6: Use the AI Co-pilot
-**As a Pro user,**
-I want to click "Analyze & Answer" in the extension,
-so that I can get AI-generated answers to the application's questions.
+## Epic 4: Technical Requirements
 
-**Acceptance Criteria**: 
-- The extension UI transitions to "Co-pilot Mode".
-- Displays a list of questions and answers returned from the get-grant-answers Edge Function.
-- Users can refine and edit AI-generated responses.
+### Story 8: Error Handling & Resilience
+**As a** user  
+**I want** the system to handle errors gracefully  
+**So that** I have a smooth experience even when things go wrong
 
-**Technical Notes**:
-- Implement two-mode UI (Quick Capture and Co-pilot)
-- Use Gemini API for Q&A generation
-- Implement answer refinement functionality
-- Sync refined answers back to dashboard
+**Acceptance Criteria:**
+- [ ] If vectorization fails, I see a clear error message with retry option
+- [ ] If file upload fails, I see specific error messages (file too large, unsupported format)
+- [ ] Network errors show "Please check your connection" messages
+- [ ] All error states have recovery options
+- [ ] Loading states are shown for all async operations
 
-## Epic 3: Core Dashboard Functionality
+### Story 9: Performance & Reliability
+**As a** user  
+**I want** the dashboard to be fast and reliable  
+**So that** I can work efficiently without interruptions
 
-### Story 7: Manage My Funding Pipeline
-**As a user,**
-I want to see all my tracked grants in one organized view,
-so that I can manage my funding opportunities effectively.
+**Acceptance Criteria:**
+- [ ] Dashboard loads in <2 seconds
+- [ ] Profile saves complete in <3 seconds
+- [ ] Vectorization completes in <30 seconds for profiles, <60 seconds for pitch decks
+- [ ] All operations work across different browsers and devices
+- [ ] Real-time updates work without page refresh
 
-**Acceptance Criteria**: 
-- All captured grants appear in the OpportunityTable.
-- Users can update grant status and add notes.
-- Real-time updates when grants are captured via extension.
+## Summary
 
-**Technical Notes**:
-- Connect OpportunityTable to real Supabase data
-- Implement real-time subscriptions
-- Handle CRUD operations for tracked grants
-- Implement proper error handling and loading states
+These user stories focus on integrating the Dashboard with the new AI agent infrastructure, ensuring users can:
 
-### Story 8: Build My Profile
-**As a user,**
-I want to create and update my startup profile,
-so that the AI can generate better grant application responses.
+1. **Vectorize their profiles and pitch decks** for RAG-powered AI features
+2. **Track their AI feature usage** with clear metrics and limits
+3. **View AI analysis results** in their grant details
+4. **Get helpful nudges** to complete their profile and upload documents
+5. **Experience reliable performance** with proper error handling
 
-**Acceptance Criteria**: 
-- Profile information is saved and persisted to Supabase.
-- Users can upload and manage documents.
-- Profile data is used to personalize AI responses.
-
-**Technical Notes**:
-- Connect ProfileHub to user_profiles table
-- Implement document upload to Supabase storage
-- Use profile data in AI prompt generation
-- Implement profile validation and error handling
-
-### Story 9: Get Notified About Deadlines
-**As a user,**
-I want to receive timely reminders about grant deadlines,
-so that I never miss an important opportunity.
-
-**Acceptance Criteria**: 
-- Users can configure notification preferences.
-- Deadline reminders are sent at appropriate times.
-- Notification settings are respected (quiet hours, frequency).
-
-**Technical Notes**:
-- Implement notification preferences management
-- Use Supabase Edge Functions for scheduled notifications
-- Respect user notification settings
-- Implement quiet hours functionality
-
-## Epic 4: Performance and Reliability
-
-### Story 10: Fast and Responsive Experience
-**As a user,**
-I want the dashboard to load quickly and respond instantly to my actions,
-so that I can work efficiently without waiting.
-
-**Acceptance Criteria**: 
-- Dashboard loads in under 2 seconds.
-- Real-time updates happen instantly.
-- UI interactions are smooth and responsive.
-
-**Technical Notes**:
-- Optimize bundle size and loading
-- Implement efficient data fetching
-- Use React.memo and useMemo for performance
-- Implement proper loading states and skeleton screens
-
-### Story 11: Reliable Data Sync
-**As a user,**
-I want my data to always be in sync between the extension and dashboard,
-so that I can trust the information I see.
-
-**Acceptance Criteria**: 
-- Data captured in extension appears instantly in dashboard.
-- Changes made in dashboard are reflected everywhere.
-- No data loss or duplication occurs.
-
-**Technical Notes**:
-- Implement robust real-time subscriptions
-- Handle network interruptions gracefully
-- Implement conflict resolution for concurrent updates
-- Use optimistic updates for better UX
-
-## Epic 5: User Experience and Onboarding
-
-### Story 12: Intuitive First-Time Experience
-**As a new user,**
-I want to understand how to use GrantSnap quickly,
-so that I can start capturing grants immediately.
-
-**Acceptance Criteria**: 
-- Clear onboarding flow guides users through setup.
-- Extension installation instructions are clear.
-- First-time users can capture their first grant within 5 minutes.
-
-**Technical Notes**:
-- Implement step-by-step onboarding flow
-- Provide clear extension installation guidance
-- Include interactive tutorials and tooltips
-- Track onboarding completion rates
-
-### Story 13: Seamless Extension Installation
-**As a user,**
-I want to easily install the GrantSnap extension,
-so that I can start using it immediately.
-
-**Acceptance Criteria**: 
-- Extension is available on Chrome Web Store.
-- Installation process is straightforward.
-- Extension works immediately after installation.
-
-**Technical Notes**:
-- Prepare Chrome Web Store submission
-- Implement proper extension permissions
-- Test installation flow thoroughly
-- Provide clear usage instructions
-
-## Success Metrics and KPIs
-
-### User Engagement
-- **Onboarding Completion Rate**: Target 95%+
-- **Extension Installation Rate**: Target 80%+
-- **Daily Active Users**: Track user engagement patterns
-- **Session Duration**: Measure time spent in dashboard
-
-### Feature Adoption
-- **Grant Capture Rate**: Percentage of users who capture grants
-- **AI Feature Usage**: Percentage of users who use AI features
-- **Profile Completion Rate**: Percentage of users with complete profiles
-- **Document Upload Rate**: Percentage of users who upload documents
-
-### Technical Performance
-- **Page Load Time**: Target under 2 seconds
-- **Real-time Sync Latency**: Target under 500ms
-- **Error Rate**: Target under 1%
-- **API Response Time**: Target under 200ms
-
-### Business Metrics
-- **User Retention**: 60%+ monthly active user retention
-- **Conversion Rate**: Percentage of free users who upgrade
-- **Customer Satisfaction**: NPS score target 50+
-- **Support Ticket Volume**: Track user issues and feedback 
+The stories prioritize the critical integration points while maintaining a focus on user experience and technical reliability.

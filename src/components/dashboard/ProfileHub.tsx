@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +17,7 @@ import {
   SheetTitle, 
   SheetTrigger 
 } from '@/components/ui/sheet';
+import { useNavigate } from 'react-router-dom';
 import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
@@ -36,12 +37,16 @@ interface ProfileHubProps {
 }
 
 const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = {}) => {
-  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(() => {
+    const saved = localStorage.getItem('profileHub.isOpen');
+    return saved ? saved === 'true' : false;
+  });
   
   // Use external control if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
   const setIsOpen = onOpenChange || setInternalIsOpen;
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { profile, loading, saveProfile } = useProfile();
   const {
     documents,
@@ -70,26 +75,60 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     detailed_summary: '',
   });
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(() => localStorage.getItem('profileHub.activeTab') || 'onboarding');
+
+  // Persist open state
+  useEffect(() => {
+    localStorage.setItem('profileHub.isOpen', String(isOpen));
+  }, [isOpen]);
+
+  // Persist active tab
+  useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('profileHub.activeTab', activeTab);
+    }
+  }, [activeTab]);
+
+  // Load any locally saved unsent form data first
+  useEffect(() => {
+    const savedForm = localStorage.getItem('profileHub.formData');
+    if (savedForm) {
+      try {
+        const parsed = JSON.parse(savedForm);
+        setFormData(prev => ({ ...prev, ...parsed }));
+      } catch {}
+    }
+  }, []);
 
   // Update form data when profile loads
   React.useEffect(() => {
     if (profile) {
-      setFormData({
-        startup_name: profile.startup_name || '',
-        one_line_pitch: profile.one_line_pitch || '',
-        problem_statement: profile.problem_statement || '',
-        solution_description: profile.solution_description || '',
-        target_market: profile.target_market || '',
-        team_description: profile.team_description || '',
-        company_description: profile.company_description || '',
-        unique_value_proposition: profile.unique_value_proposition || '',
-        mission_vision: profile.mission_vision || '',
-        elevator_pitch: profile.elevator_pitch || '',
-        standard_abstract: profile.standard_abstract || '',
-        detailed_summary: profile.detailed_summary || '',
-      });
+      // Only override with profile if there isn't newer local unsaved data
+      const localTimestamp = localStorage.getItem('profileHub.formData.updatedAt');
+      if (!localTimestamp) {
+        setFormData({
+          startup_name: profile.startup_name || '',
+          one_line_pitch: profile.one_line_pitch || '',
+          problem_statement: profile.problem_statement || '',
+          solution_description: profile.solution_description || '',
+          target_market: profile.target_market || '',
+          team_description: profile.team_description || '',
+          company_description: profile.company_description || '',
+          unique_value_proposition: profile.unique_value_proposition || '',
+          mission_vision: profile.mission_vision || '',
+          elevator_pitch: profile.elevator_pitch || '',
+          standard_abstract: profile.standard_abstract || '',
+          detailed_summary: profile.detailed_summary || '',
+        });
+      }
     }
   }, [profile]);
+
+  // Auto-save form data locally
+  useEffect(() => {
+    localStorage.setItem('profileHub.formData', JSON.stringify(formData));
+    localStorage.setItem('profileHub.formData.updatedAt', String(Date.now()));
+  }, [formData]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -106,6 +145,9 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           title: "Success",
           description: "Profile updated successfully!",
         });
+        // Clear local draft after successful save
+        localStorage.removeItem('profileHub.formData');
+        localStorage.removeItem('profileHub.formData.updatedAt');
       }
     } catch (error) {
       toast({
@@ -191,9 +233,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         description: "Your pitch deck is now being analyzed by our AI. This may take a minute.",
       });
 
-      // Refresh profile to show the new summary
-      // You'll need to implement a refetch function for the profile
-      window.location.reload(); // Temporary solution
+      // Ideally refetch profile here; for now, we avoid full-page reloads
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
@@ -314,7 +354,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         </div>
         
         <div className="mt-6">
-          <Tabs defaultValue="onboarding" className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                       <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="onboarding" className="flex items-center gap-1">
               <User className="w-3 h-3" />
@@ -367,7 +407,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       Complete your onboarding to unlock personalized grant recommendations, AI-powered insights, and advanced features.
                     </p>
                     <Button 
-                      onClick={() => window.location.href = '/onboarding'}
+                      onClick={() => navigate('/onboarding')}
                       className="bg-blue-600 hover:bg-blue-700 text-white"
                     >
                       Start Onboarding

@@ -23,7 +23,10 @@ interface OnboardingData {
 }
 
 const OnboardingFlow: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState<number>(() => {
+    const saved = localStorage.getItem('onboarding.currentStep');
+    return saved ? parseInt(saved, 10) || 1 : 1;
+  });
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
@@ -88,19 +91,24 @@ const OnboardingFlow: React.FC = () => {
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
+      const next = currentStep + 1;
+      setCurrentStep(next);
+      localStorage.setItem('onboarding.currentStep', String(next));
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
+      const prev = currentStep - 1;
+      setCurrentStep(prev);
+      localStorage.setItem('onboarding.currentStep', String(prev));
     }
   };
 
   const handleSkip = () => {
     // Clear saved data when skipping
     localStorage.removeItem('onboardingFormData');
+    localStorage.removeItem('onboarding.currentStep');
     console.log('🗑️ Cleared onboarding data from localStorage (skip)');
     navigate('/dashboard');
   };
@@ -129,6 +137,7 @@ const OnboardingFlow: React.FC = () => {
 
       // Clear saved data from localStorage on successful completion
       localStorage.removeItem('onboardingFormData');
+      localStorage.removeItem('onboarding.currentStep');
       console.log('🗑️ Cleared onboarding data from localStorage (completion)');
 
       toast.success('Profile setup complete! Welcome to GrantSnap.');
