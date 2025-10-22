@@ -201,6 +201,16 @@ export function useProfile() {
       const tempProfile = { ...profile, ...profileData } as UserProfile
       const completion = calculateProfileCompletion(tempProfile)
       
+      // Clean the data to ensure only valid fields are sent
+      const cleanedData = Object.fromEntries(
+        Object.entries(profileData).filter(([key, value]) => {
+          // Only include fields that have actual values and are not undefined
+          return value !== undefined && value !== null && value !== ''
+        })
+      )
+      
+      console.log('🔍 Saving profile data:', cleanedData)
+      
       let result
 
       if (profile) {
@@ -208,7 +218,7 @@ export function useProfile() {
         const { data, error } = await supabase
           .from('user_profiles')
           .update({
-            ...profileData,
+            ...cleanedData,
             completion_percentage: completion.percentage,
             updated_at: new Date().toISOString(),
           })
@@ -216,7 +226,10 @@ export function useProfile() {
           .select()
           .single()
 
-        if (error) throw error
+        if (error) {
+          console.error('❌ Profile update error:', error)
+          throw error
+        }
         result = data
       } else {
         // Create new profile
@@ -224,7 +237,7 @@ export function useProfile() {
           .from('user_profiles')
           .insert({
             id: user.id, // Use user.id as the primary key
-            ...profileData,
+            ...cleanedData,
             completion_percentage: completion.percentage,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -232,7 +245,10 @@ export function useProfile() {
           .select()
           .single()
 
-        if (error) throw error
+        if (error) {
+          console.error('❌ Profile creation error:', error)
+          throw error
+        }
         result = data
       }
 
@@ -240,6 +256,7 @@ export function useProfile() {
       return { data: result }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save profile'
+      console.error('❌ Profile save error:', err)
       setError(errorMessage)
       return { error: errorMessage }
     }

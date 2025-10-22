@@ -412,10 +412,22 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   useEffect(() => {
     if (isVisible && isOpen) {
       console.log('🔄 ProfileHub: Tab became visible, restoring state');
-      // Force save current state when tab becomes visible
-      forceSaveFormData();
+      // Only force save if there are actual changes to save
+      // This prevents excessive API calls
+      const hasChanges = Object.values(persistedFormData).some(value => 
+        value !== '' && value !== null && value !== undefined
+      );
+      
+      if (hasChanges) {
+        // Debounce the force save to prevent excessive calls
+        const timeoutId = setTimeout(() => {
+          forceSaveFormData();
+        }, 1000); // 1 second delay
+        
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [isVisible, isOpen, forceSaveFormData]);
+  }, [isVisible, isOpen, forceSaveFormData, persistedFormData]);
 
   const handleSave = async () => {
     setSaving(true);

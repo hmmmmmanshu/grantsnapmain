@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Enterprise-grade tab visibility management
@@ -7,14 +7,23 @@ import { useState, useEffect } from 'react';
 export function useTabVisibility() {
   const [isVisible, setIsVisible] = useState(!document.hidden);
   const [lastActiveTime, setLastActiveTime] = useState(Date.now());
+  const lastVisibilityChange = useRef(Date.now());
 
   useEffect(() => {
     const handleVisibilityChange = () => {
+      const now = Date.now();
       const visible = !document.hidden;
+      
+      // Debounce visibility changes to prevent excessive triggers
+      if (now - lastVisibilityChange.current < 500) {
+        return; // Ignore changes within 500ms
+      }
+      
+      lastVisibilityChange.current = now;
       setIsVisible(visible);
       
       if (visible) {
-        setLastActiveTime(Date.now());
+        setLastActiveTime(now);
         // Restore any suspended operations when tab becomes visible
         console.log('🔄 Tab became visible - restoring state');
       } else {
@@ -23,8 +32,12 @@ export function useTabVisibility() {
     };
 
     const handleFocus = () => {
-      setIsVisible(true);
-      setLastActiveTime(Date.now());
+      const now = Date.now();
+      if (now - lastVisibilityChange.current > 500) {
+        setIsVisible(true);
+        setLastActiveTime(now);
+        lastVisibilityChange.current = now;
+      }
     };
 
     const handleBlur = () => {
