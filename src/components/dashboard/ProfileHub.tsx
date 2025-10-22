@@ -3210,7 +3210,6 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                         </div>
                       )}
                     </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
