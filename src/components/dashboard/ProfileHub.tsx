@@ -19,7 +19,7 @@ import {
 } from '@/components/ui/sheet';
 import { useNavigate } from 'react-router-dom';
 import { User, Building, Target, Users, FileText, Save, Download, Trash2, Bot, CheckCircle, AlertCircle, TrendingUp } from 'lucide-react';
-import { useProfile } from '@/hooks/useProfile';
+import { useProfile, Founder } from '@/hooks/useProfile';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 import { useDocuments } from '@/hooks/useDocuments';
@@ -41,11 +41,11 @@ interface ProfileHubProps {
 const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = {}) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { profile, loading, saveProfile } = useProfile();
+  const { profile, founders, loading, saveProfile, saveFounder, deleteFounder } = useProfile();
   const { isVisible } = useTabVisibility();
   
   // Enterprise state management
-  const {
+  const { 
     state: persistedFormData, 
     updateState: updateFormData, 
     forceSave: forceSaveFormData,
@@ -89,7 +89,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     substack_url: '',
     personal_website: '',
     
-    // Company Details & Legal
+    // Company Details & Legal (Enhanced for International Support)
     company_website: '',
     business_registration_number: '',
     year_founded: 0,
@@ -100,6 +100,42 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     incorporation_date: '',
     tax_id: '',
     business_license: '',
+    
+    // International Incorporation Details
+    incorporation_type: '',
+    incorporation_state: '',
+    incorporation_city: '',
+    business_type: '',
+    registration_authority: '',
+    registration_number: '',
+    pan_number: '',
+    gst_number: '',
+    cin_number: '',
+    llp_number: '',
+    partnership_deed_number: '',
+    sole_proprietorship_number: '',
+    foreign_registration_number: '',
+    foreign_registration_country: '',
+    foreign_registration_date: '',
+    foreign_tax_id: '',
+    foreign_business_license: '',
+    compliance_status: '',
+    regulatory_approvals: '',
+    industry_licenses: '',
+    export_import_license: '',
+    fssai_license: '',
+    drug_license: '',
+    telecom_license: '',
+    financial_services_license: '',
+    insurance_license: '',
+    real_estate_license: '',
+    education_license: '',
+    healthcare_license: '',
+    technology_license: '',
+    manufacturing_license: '',
+    retail_license: '',
+    service_license: '',
+    other_licenses: '',
     
     // Financial Information
     annual_revenue: '',
@@ -204,7 +240,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   }, {
     key: 'profileHub.formData',
     debounceMs: 300,
-    version: 3
+        version: 4
   });
 
   const { 
@@ -237,6 +273,8 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [activeFounderTab, setActiveFounderTab] = useState('founder-1');
+  const [founderData, setFounderData] = useState<Record<string, Partial<Founder>>>({});
 
   // Sync profile data with persisted form data
   useEffect(() => {
@@ -428,6 +466,87 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
       }
     }
   }, [isVisible, isOpen, forceSaveFormData, persistedFormData]);
+
+  // Handle founder management
+  const handleAddFounder = () => {
+    const founderCount = Object.keys(founderData).length + 1;
+    const newFounderKey = `founder-${founderCount}`;
+    setFounderData(prev => ({
+      ...prev,
+      [newFounderKey]: {
+        founder_order: founderCount,
+        is_primary_founder: founderCount === 1
+      }
+    }));
+    setActiveFounderTab(newFounderKey);
+  };
+
+  const handleSaveFounder = async (founderKey: string) => {
+    const founder = founderData[founderKey];
+    if (!founder) return;
+
+    try {
+      const { error } = await saveFounder(founder);
+      if (error) {
+        toast({
+          title: "Error",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Founder information saved successfully!",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to save founder information",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteFounder = async (founderKey: string) => {
+    const founder = founderData[founderKey];
+    if (!founder?.id) {
+      // Remove from local state if not saved yet
+      setFounderData(prev => {
+        const newData = { ...prev };
+        delete newData[founderKey];
+        return newData;
+      });
+      return;
+    }
+
+    try {
+      const { error } = await deleteFounder(founder.id);
+      if (error) {
+        toast({
+          title: "Error",
+          description: error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Founder removed successfully!",
+        });
+        setFounderData(prev => {
+          const newData = { ...prev };
+          delete newData[founderKey];
+          return newData;
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete founder",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -1216,243 +1335,467 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
             <TabsContent value="founder" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    Founder Information
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-5 h-5" />
+                      Founders & Leadership Team
+                    </div>
+                    <Button onClick={handleAddFounder} size="sm" variant="outline">
+                      <User className="w-4 h-4 mr-2" />
+                      Add Founder
+                    </Button>
                   </CardTitle>
-                  <p className="text-sm text-gray-600">Complete your personal and professional background</p>
+                  <p className="text-sm text-gray-600">Manage multiple founders and their information</p>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Basic Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="founder-full-name">Full Name</Label>
-                      <Input
-                        id="founder-full-name"
-                        placeholder="Your full name"
-                        value={persistedFormData.founder_full_name}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_full_name: e.target.value }))}
-                      />
+                <CardContent>
+                  {Object.keys(founderData).length === 0 && founders.length === 0 ? (
+                    <div className="text-center py-8">
+                      <User className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">No Founders Added Yet</h3>
+                      <p className="text-gray-600 mb-4">Add your first founder to get started</p>
+                      <Button onClick={handleAddFounder}>
+                        <User className="w-4 h-4 mr-2" />
+                        Add First Founder
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="founder-title">Title/Position</Label>
-                      <Input
-                        id="founder-title"
-                        placeholder="CEO, Founder, etc."
-                        value={persistedFormData.founder_title}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_title: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="founder-email">Email</Label>
-                      <Input
-                        id="founder-email"
-                        type="email"
-                        placeholder="your@email.com"
-                        value={persistedFormData.founder_email}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_email: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="founder-phone">Phone Number</Label>
-                      <Input
-                        id="founder-phone"
-                        placeholder="+1 (555) 123-4567"
-                        value={persistedFormData.founder_phone}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_phone: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+                  ) : (
+                    <Tabs value={activeFounderTab} onValueChange={setActiveFounderTab} className="w-full">
+                      <TabsList className="grid w-full grid-cols-3">
+                        {Object.keys(founderData).map((key, index) => (
+                          <TabsTrigger key={key} value={key} className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            <span className="hidden sm:inline">Founder {index + 1}</span>
+                          </TabsTrigger>
+                        ))}
+                        {founders.map((founder, index) => (
+                          <TabsTrigger key={founder.id} value={`saved-${founder.id}`} className="flex items-center gap-1">
+                            <User className="w-3 h-3" />
+                            <span className="hidden sm:inline">{founder.full_name || `Founder ${index + 1}`}</span>
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                      
+                      {/* Dynamic Founder Tabs */}
+                      {Object.entries(founderData).map(([key, founder]) => (
+                        <TabsContent key={key} value={key} className="space-y-6 mt-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-5 h-5" />
+                                  Founder {founder.founder_order}
+                                  {founder.is_primary_founder && (
+                                    <Badge variant="default" className="ml-2">Primary</Badge>
+                                  )}
+                                </div>
+                                <Button 
+                                  onClick={() => handleDeleteFounder(key)} 
+                                  size="sm" 
+                                  variant="destructive"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                              {/* Basic Information */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-full-name`}>Full Name</Label>
+                                  <Input
+                                    id={`${key}-full-name`}
+                                    placeholder="Full name"
+                                    value={founder.full_name || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], full_name: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-title`}>Title/Position</Label>
+                                  <Input
+                                    id={`${key}-title`}
+                                    placeholder="CEO, CTO, etc."
+                                    value={founder.title || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], title: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-email`}>Email</Label>
+                                  <Input
+                                    id={`${key}-email`}
+                                    type="email"
+                                    placeholder="email@example.com"
+                                    value={founder.email || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], email: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-phone`}>Phone</Label>
+                                  <Input
+                                    id={`${key}-phone`}
+                                    placeholder="+1 (555) 123-4567"
+                                    value={founder.phone || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], phone: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-equity`}>Equity Percentage</Label>
+                                  <Input
+                                    id={`${key}-equity`}
+                                    type="number"
+                                    placeholder="25"
+                                    value={founder.equity_percentage || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], equity_percentage: parseFloat(e.target.value) || 0 }
+                                    }))}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-primary`}>Primary Founder</Label>
+                                  <Select 
+                                    value={founder.is_primary_founder ? 'true' : 'false'} 
+                                    onValueChange={(value) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], is_primary_founder: value === 'true' }
+                                    }))}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="true">Yes</SelectItem>
+                                      <SelectItem value="false">No</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
 
-                  {/* Social Media */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Social Media & Online Presence</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="founder-linkedin">LinkedIn Profile</Label>
-                        <Input
-                          id="founder-linkedin"
-                          placeholder="https://linkedin.com/in/yourname"
-                          value={persistedFormData.founder_linkedin}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_linkedin: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="founder-twitter">Twitter Handle</Label>
-                        <Input
-                          id="founder-twitter"
-                          placeholder="@yourhandle"
-                          value={persistedFormData.founder_twitter}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_twitter: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="personal-website">Personal Website</Label>
-                        <Input
-                          id="personal-website"
-                          placeholder="https://yourname.com"
-                          value={persistedFormData.personal_website}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, personal_website: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="github-url">GitHub Profile</Label>
-                        <Input
-                          id="github-url"
-                          placeholder="https://github.com/yourname"
-                          value={persistedFormData.github_url}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, github_url: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                              {/* Social Media */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Social Media & Online Presence</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-linkedin`}>LinkedIn Profile</Label>
+                                    <Input
+                                      id={`${key}-linkedin`}
+                                      placeholder="https://linkedin.com/in/username"
+                                      value={founder.linkedin_url || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], linkedin_url: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-twitter`}>Twitter Handle</Label>
+                                    <Input
+                                      id={`${key}-twitter`}
+                                      placeholder="@username"
+                                      value={founder.twitter_handle || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], twitter_handle: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-website`}>Personal Website</Label>
+                                    <Input
+                                      id={`${key}-website`}
+                                      placeholder="https://personalwebsite.com"
+                                      value={founder.personal_website || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], personal_website: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-github`}>GitHub Profile</Label>
+                                    <Input
+                                      id={`${key}-github`}
+                                      placeholder="https://github.com/username"
+                                      value={founder.github_url || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], github_url: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
 
-                  {/* Background & Experience */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Background & Experience</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="founder-background">Professional Background</Label>
-                        <Textarea
-                          id="founder-background"
-                          placeholder="Describe your professional background, key achievements, and relevant experience"
-                          rows={4}
-                          value={persistedFormData.founder_background}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_background: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="work-experience">Work Experience</Label>
-                        <Textarea
-                          id="work-experience"
-                          placeholder="Previous companies, roles, and key responsibilities"
-                          rows={3}
-                          value={persistedFormData.work_experience}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, work_experience: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="previous-startups">Previous Startups</Label>
-                        <Textarea
-                          id="previous-startups"
-                          placeholder="List any previous startups you've founded or co-founded"
-                          rows={3}
-                          value={persistedFormData.previous_startups}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, previous_startups: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                              {/* Background & Experience */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Background & Experience</h4>
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-background`}>Professional Background</Label>
+                                    <Textarea
+                                      id={`${key}-background`}
+                                      placeholder="Describe your professional background and key achievements"
+                                      rows={4}
+                                      value={founder.background || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], background: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-experience`}>Work Experience</Label>
+                                    <Textarea
+                                      id={`${key}-experience`}
+                                      placeholder="Previous companies, roles, and responsibilities"
+                                      rows={3}
+                                      value={founder.work_experience || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], work_experience: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-startups`}>Previous Startups</Label>
+                                    <Textarea
+                                      id={`${key}-startups`}
+                                      placeholder="List any previous startups you've founded or co-founded"
+                                      rows={3}
+                                      value={founder.previous_startups || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], previous_startups: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
 
-                  {/* Education & Skills */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Education & Skills</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="education-background">Education Background</Label>
-                        <Textarea
-                          id="education-background"
-                          placeholder="Universities, degrees, certifications"
-                          rows={3}
-                          value={persistedFormData.education_background}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, education_background: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="certifications">Certifications</Label>
-                        <Textarea
-                          id="certifications"
-                          placeholder="Professional certifications, licenses"
-                          rows={3}
-                          value={persistedFormData.certifications}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, certifications: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="languages-spoken">Languages Spoken</Label>
-                      <Input
-                        id="languages-spoken"
-                        placeholder="English, Spanish, French, etc."
-                        value={persistedFormData.languages_spoken}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, languages_spoken: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+                              {/* Education & Skills */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Education & Skills</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-education`}>Education Background</Label>
+                                    <Textarea
+                                      id={`${key}-education`}
+                                      placeholder="Universities, degrees, certifications"
+                                      rows={3}
+                                      value={founder.education_background || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], education_background: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-certifications`}>Certifications</Label>
+                                    <Textarea
+                                      id={`${key}-certifications`}
+                                      placeholder="Professional certifications and licenses"
+                                      rows={3}
+                                      value={founder.certifications || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], certifications: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-languages`}>Languages Spoken</Label>
+                                  <Input
+                                    id={`${key}-languages`}
+                                    placeholder="English, Spanish, French, etc."
+                                    value={founder.languages_spoken || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], languages_spoken: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                              </div>
 
-                  {/* Personal Information */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Personal Information</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="founder-bio">Personal Bio</Label>
-                        <Textarea
-                          id="founder-bio"
-                          placeholder="Tell us about yourself, your passions, and what drives you"
-                          rows={4}
-                          value={persistedFormData.founder_bio}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_bio: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="personal-interests">Personal Interests</Label>
-                        <Textarea
-                          id="personal-interests"
-                          placeholder="Hobbies, interests, activities outside of work"
-                          rows={3}
-                          value={persistedFormData.personal_interests}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, personal_interests: e.target.value }))}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="time-commitment">Time Commitment</Label>
-                        <Select value={persistedFormData.time_commitment} onValueChange={(value) => updateFormData(prev => ({ ...prev, time_commitment: value }))}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select time commitment" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="full-time">Full-time (40+ hours/week)</SelectItem>
-                            <SelectItem value="part-time">Part-time (20-40 hours/week)</SelectItem>
-                            <SelectItem value="weekend">Weekend warrior</SelectItem>
-                            <SelectItem value="evening">Evening hours</SelectItem>
-                            <SelectItem value="flexible">Flexible schedule</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
+                              {/* Personal Information */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Personal Information</h4>
+                                <div className="space-y-4">
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-bio`}>Personal Bio</Label>
+                                    <Textarea
+                                      id={`${key}-bio`}
+                                      placeholder="Tell us about yourself, your passions, and what drives you"
+                                      rows={4}
+                                      value={founder.bio || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], bio: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-interests`}>Personal Interests</Label>
+                                    <Textarea
+                                      id={`${key}-interests`}
+                                      placeholder="Hobbies, interests, activities outside of work"
+                                      rows={3}
+                                      value={founder.personal_interests || ''}
+                                      onChange={(e) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], personal_interests: e.target.value }
+                                      }))}
+                                    />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label htmlFor={`${key}-commitment`}>Time Commitment</Label>
+                                    <Select 
+                                      value={founder.time_commitment || ''} 
+                                      onValueChange={(value) => setFounderData(prev => ({
+                                        ...prev,
+                                        [key]: { ...prev[key], time_commitment: value }
+                                      }))}
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select time commitment" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="full-time">Full-time (40+ hours/week)</SelectItem>
+                                        <SelectItem value="part-time">Part-time (20-40 hours/week)</SelectItem>
+                                        <SelectItem value="weekend">Weekend warrior</SelectItem>
+                                        <SelectItem value="evening">Evening hours</SelectItem>
+                                        <SelectItem value="flexible">Flexible schedule</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                              </div>
 
-                  {/* Awards & Recognition */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Awards & Recognition</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="awards-recognition">Awards & Recognition</Label>
-                      <Textarea
-                        id="awards-recognition"
-                        placeholder="Industry awards, recognition, honors, publications"
-                        rows={3}
-                        value={persistedFormData.awards_recognition}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, awards_recognition: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+                              {/* Awards & Recognition */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Awards & Recognition</h4>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-awards`}>Awards & Recognition</Label>
+                                  <Textarea
+                                    id={`${key}-awards`}
+                                    placeholder="Industry awards, recognition, honors, publications"
+                                    rows={3}
+                                    value={founder.awards_recognition || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], awards_recognition: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                              </div>
 
-                  {/* CV Upload */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Resume/CV</h4>
-                    <div className="space-y-2">
-                      <Label htmlFor="cv-url">CV/Resume URL</Label>
-                      <Input
-                        id="cv-url"
-                        placeholder="https://yourname.com/resume.pdf"
-                        value={persistedFormData.cv_url}
-                        onChange={(e) => updateFormData(prev => ({ ...prev, cv_url: e.target.value }))}
-                      />
-                    </div>
-                  </div>
+                              {/* CV Upload */}
+                              <div className="space-y-4">
+                                <h4 className="font-semibold text-gray-900">Resume/CV</h4>
+                                <div className="space-y-2">
+                                  <Label htmlFor={`${key}-cv`}>CV/Resume URL</Label>
+                                  <Input
+                                    id={`${key}-cv`}
+                                    placeholder="https://example.com/resume.pdf"
+                                    value={founder.cv_url || ''}
+                                    onChange={(e) => setFounderData(prev => ({
+                                      ...prev,
+                                      [key]: { ...prev[key], cv_url: e.target.value }
+                                    }))}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Save Button */}
+                              <div className="flex justify-end pt-4 border-t">
+                                <Button onClick={() => handleSaveFounder(key)}>
+                                  <Save className="w-4 h-4 mr-2" />
+                                  Save Founder
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+                      ))}
+                      
+                      {/* Saved Founders */}
+                      {founders.map((founder) => (
+                        <TabsContent key={founder.id} value={`saved-${founder.id}`} className="space-y-6 mt-6">
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-5 h-5" />
+                                  {founder.full_name || `Founder ${founder.founder_order}`}
+                                  {founder.is_primary_founder && (
+                                    <Badge variant="default" className="ml-2">Primary</Badge>
+                                  )}
+                                </div>
+                                <Button 
+                                  onClick={() => handleDeleteFounder(`saved-${founder.id}`)} 
+                                  size="sm" 
+                                  variant="destructive"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="font-medium">Title:</span> {founder.title || 'Not specified'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Email:</span> {founder.email || 'Not specified'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Phone:</span> {founder.phone || 'Not specified'}
+                                </div>
+                                <div>
+                                  <span className="font-medium">Equity:</span> {founder.equity_percentage || 0}%
+                                </div>
+                              </div>
+                              {founder.background && (
+                                <div>
+                                  <span className="font-medium">Background:</span>
+                                  <p className="text-sm text-gray-600 mt-1">{founder.background}</p>
+                                </div>
+                              )}
+                              <div className="flex justify-end pt-4 border-t">
+                                <Button 
+                                  onClick={() => {
+                                    setFounderData(prev => ({
+                                      ...prev,
+                                      [`edit-${founder.id}`]: founder
+                                    }));
+                                    setActiveFounderTab(`edit-${founder.id}`);
+                                  }}
+                                  variant="outline"
+                                >
+                                  Edit Founder
+                                </Button>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </TabsContent>
+                      ))}
+                    </Tabs>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
+
 
             {/* Company Tab */}
             <TabsContent value="company" className="space-y-6">

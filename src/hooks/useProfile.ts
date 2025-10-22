@@ -3,6 +3,32 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from './useAuth'
 import { calculateProfileCompletion } from '@/lib/profileUtils'
 
+export interface Founder {
+  id?: string
+  founder_order: number
+  full_name?: string
+  title?: string
+  email?: string
+  phone?: string
+  linkedin_url?: string
+  twitter_handle?: string
+  personal_website?: string
+  github_url?: string
+  background?: string
+  work_experience?: string
+  previous_startups?: string
+  education_background?: string
+  certifications?: string
+  awards_recognition?: string
+  cv_url?: string
+  bio?: string
+  personal_interests?: string
+  languages_spoken?: string
+  time_commitment?: string
+  equity_percentage?: number
+  is_primary_founder?: boolean
+}
+
 export interface UserProfile {
   id: string
   startup_name?: string
@@ -44,7 +70,7 @@ export interface UserProfile {
   substack_url?: string
   personal_website?: string
   
-  // Company Details & Legal
+  // Company Details & Legal (Enhanced for International Support)
   company_website?: string
   business_registration_number?: string
   year_founded?: number
@@ -55,6 +81,42 @@ export interface UserProfile {
   incorporation_date?: string
   tax_id?: string
   business_license?: string
+  
+  // International Incorporation Details
+  incorporation_type?: string
+  incorporation_state?: string
+  incorporation_city?: string
+  business_type?: string
+  registration_authority?: string
+  registration_number?: string
+  pan_number?: string
+  gst_number?: string
+  cin_number?: string
+  llp_number?: string
+  partnership_deed_number?: string
+  sole_proprietorship_number?: string
+  foreign_registration_number?: string
+  foreign_registration_country?: string
+  foreign_registration_date?: string
+  foreign_tax_id?: string
+  foreign_business_license?: string
+  compliance_status?: string
+  regulatory_approvals?: string
+  industry_licenses?: string
+  export_import_license?: string
+  fssai_license?: string
+  drug_license?: string
+  telecom_license?: string
+  financial_services_license?: string
+  insurance_license?: string
+  real_estate_license?: string
+  education_license?: string
+  healthcare_license?: string
+  technology_license?: string
+  manufacturing_license?: string
+  retail_license?: string
+  service_license?: string
+  other_licenses?: string
   
   // Financial Information
   annual_revenue?: string
@@ -164,6 +226,7 @@ export interface UserProfile {
 
 export function useProfile() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [founders, setFounders] = useState<Founder[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
@@ -189,6 +252,95 @@ export function useProfile() {
       setError(err instanceof Error ? err.message : 'Failed to fetch profile')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Fetch founders
+  const fetchFounders = async () => {
+    if (!user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('founders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('founder_order', { ascending: true })
+
+      if (error) throw error
+      setFounders(data || [])
+    } catch (err) {
+      console.error('Failed to fetch founders:', err)
+      setFounders([])
+    }
+  }
+
+  // Save founder
+  const saveFounder = async (founderData: Partial<Founder>) => {
+    if (!user) return { error: 'User not authenticated' }
+
+    try {
+      let result
+
+      if (founderData.id) {
+        // Update existing founder
+        const { data, error } = await supabase
+          .from('founders')
+          .update({
+            ...founderData,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', founderData.id)
+          .eq('user_id', user.id)
+          .select()
+          .single()
+
+        if (error) throw error
+        result = data
+      } else {
+        // Create new founder
+        const { data, error } = await supabase
+          .from('founders')
+          .insert({
+            user_id: user.id,
+            ...founderData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .select()
+          .single()
+
+        if (error) throw error
+        result = data
+      }
+
+      // Refresh founders list
+      await fetchFounders()
+      return { data: result }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save founder'
+      return { error: errorMessage }
+    }
+  }
+
+  // Delete founder
+  const deleteFounder = async (founderId: string) => {
+    if (!user) return { error: 'User not authenticated' }
+
+    try {
+      const { error } = await supabase
+        .from('founders')
+        .delete()
+        .eq('id', founderId)
+        .eq('user_id', user.id)
+
+      if (error) throw error
+
+      // Refresh founders list
+      await fetchFounders()
+      return { success: true }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete founder'
+      return { error: errorMessage }
     }
   }
 
@@ -291,18 +443,24 @@ export function useProfile() {
   useEffect(() => {
     if (user) {
       fetchProfile()
+      fetchFounders()
     } else {
       setProfile(null)
+      setFounders([])
       setLoading(false)
     }
   }, [user])
 
   return {
     profile,
+    founders,
     loading,
     error,
     saveProfile,
+    saveFounder,
+    deleteFounder,
     uploadFile,
     refetch: fetchProfile,
+    refetchFounders: fetchFounders,
   }
 } 
