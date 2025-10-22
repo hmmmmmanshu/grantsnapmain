@@ -62,6 +62,7 @@ export function usePersistedState<T>(
         };
         
         localStorage.setItem(key, JSON.stringify(persistedState));
+        localStorage.setItem(`${key}.timestamp`, String(Date.now()));
         lastSaveRef.current = Date.now();
         console.log(`💾 Persisted state for ${key}`);
       } catch (error) {
@@ -97,6 +98,7 @@ export function usePersistedState<T>(
       };
       
       localStorage.setItem(key, JSON.stringify(persistedState));
+      localStorage.setItem(`${key}.timestamp`, String(Date.now()));
       lastSaveRef.current = Date.now();
       console.log(`💾 Force saved state for ${key}`);
     } catch (error) {
@@ -123,6 +125,7 @@ export function usePersistedState<T>(
   // Clear persisted state
   const clearState = useCallback(() => {
     localStorage.removeItem(key);
+    localStorage.removeItem(`${key}.timestamp`);
     console.log(`🗑️ Cleared persisted state for ${key}`);
   }, [key]);
 

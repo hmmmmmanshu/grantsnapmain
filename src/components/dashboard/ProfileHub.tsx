@@ -45,7 +45,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   const { isVisible } = useTabVisibility();
   
   // Enterprise state management
-  const { 
+  const {
     state: persistedFormData, 
     updateState: updateFormData, 
     forceSave: forceSaveFormData,
@@ -63,10 +63,148 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     elevator_pitch: '',
     standard_abstract: '',
     detailed_summary: '',
+    impact: '',
+    industry: '',
+    competitors: '',
+    traction: '',
+    team_size: '',
+    funding_stage: '',
+    revenue_range: '',
+    funding_goal: '',
+    previous_funding: '',
+    use_of_funds: '',
+    demo_video: '',
+    linkedin: '',
+    press_kit: '',
+    
+    // Social Media & Online Presence
+    website_url: '',
+    twitter_handle: '',
+    facebook_url: '',
+    instagram_handle: '',
+    youtube_channel: '',
+    tiktok_handle: '',
+    github_url: '',
+    medium_url: '',
+    substack_url: '',
+    personal_website: '',
+    
+    // Company Details & Legal
+    company_website: '',
+    business_registration_number: '',
+    year_founded: 0,
+    number_of_employees: 0,
+    headquarters_location: '',
+    legal_structure: '',
+    incorporation_country: '',
+    incorporation_date: '',
+    tax_id: '',
+    business_license: '',
+    
+    // Financial Information
+    annual_revenue: '',
+    monthly_revenue: '',
+    burn_rate: '',
+    runway_months: 0,
+    total_funding_raised: '',
+    last_valuation: '',
+    revenue_model: '',
+    pricing_strategy: '',
+    financial_projections: '',
+    key_metrics: '',
+    
+    // Founder Background & Experience
+    founder_full_name: '',
+    founder_title: '',
+    founder_email: '',
+    founder_phone: '',
+    founder_linkedin: '',
+    founder_twitter: '',
+    founder_background: '',
+    previous_startups: '',
+    work_experience: '',
+    education_background: '',
+    certifications: '',
+    awards_recognition: '',
+    cv_url: '',
+    founder_bio: '',
+    personal_interests: '',
+    languages_spoken: '',
+    time_commitment: '',
+    co_founders: '',
+    
+    // Product & Technology
+    product_name: '',
+    product_description: '',
+    technology_stack: '',
+    development_stage: '',
+    mvp_status: '',
+    beta_testers: 0,
+    user_feedback: '',
+    product_roadmap: '',
+    intellectual_property: '',
+    patents: '',
+    trademarks: '',
+    copyrights: '',
+    trade_secrets: '',
+    technical_challenges: '',
+    scalability_plan: '',
+    
+    // Market & Competition
+    market_size: '',
+    target_customers: '',
+    customer_personas: '',
+    customer_validation: '',
+    market_research: '',
+    competitive_analysis: '',
+    market_entry_strategy: '',
+    go_to_market_plan: '',
+    sales_strategy: '',
+    marketing_strategy: '',
+    customer_acquisition_cost: '',
+    lifetime_value: '',
+    market_trends: '',
+    regulatory_environment: '',
+    
+    // Team & Advisors
+    key_team_members: '',
+    advisors: '',
+    mentors: '',
+    board_members: '',
+    investors: '',
+    strategic_partners: '',
+    hiring_plan: '',
+    team_culture: '',
+    remote_work_policy: '',
+    equity_distribution: '',
+    
+    // Documents & Resources
+    pitch_deck_url: '',
+    business_plan_url: '',
+    financial_model_url: '',
+    market_research_url: '',
+    legal_documents_url: '',
+    press_kit_url: '',
+    case_studies_url: '',
+    testimonials_url: '',
+    product_demo_url: '',
+    investor_deck_url: '',
+    
+    // Additional Context Fields
+    accelerator_programs_applied: '',
+    accelerator_programs_accepted: '',
+    grant_history: '',
+    awards_won: '',
+    press_mentions: '',
+    media_coverage: '',
+    speaking_engagements: '',
+    publications: '',
+    blog_posts: '',
+    podcast_appearances: '',
   }, {
     key: 'profileHub.formData',
     debounceMs: 300,
-    version: 2
+    version: 3
   });
 
   const { 
@@ -103,25 +241,169 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
   // Sync profile data with persisted form data
   useEffect(() => {
     if (profile && isVisible) {
-      // Only update if we don't have newer local data
+      // Always load profile data if it's newer than local data
       const localTimestamp = localStorage.getItem('profileHub.formData.timestamp');
       const profileTimestamp = profile.updated_at ? new Date(profile.updated_at).getTime() : 0;
       
+      // Load profile data if:
+      // 1. No local data exists, OR
+      // 2. Profile data is newer than local data (profile was updated elsewhere)
       if (!localTimestamp || parseInt(localTimestamp) < profileTimestamp) {
+        console.log('🔄 ProfileHub: Loading fresh profile data from server');
         updateFormData({
-          startup_name: profile.startup_name || '',
-          one_line_pitch: profile.one_line_pitch || '',
-          problem_statement: profile.problem_statement || '',
-          solution_description: profile.solution_description || '',
-          target_market: profile.target_market || '',
-          team_description: profile.team_description || '',
-          company_description: profile.company_description || '',
-          unique_value_proposition: profile.unique_value_proposition || '',
-          mission_vision: profile.mission_vision || '',
-          elevator_pitch: profile.elevator_pitch || '',
-          standard_abstract: profile.standard_abstract || '',
-          detailed_summary: profile.detailed_summary || '',
+        startup_name: profile.startup_name || '',
+        one_line_pitch: profile.one_line_pitch || '',
+        problem_statement: profile.problem_statement || '',
+        solution_description: profile.solution_description || '',
+        target_market: profile.target_market || '',
+        team_description: profile.team_description || '',
+        company_description: profile.company_description || '',
+        unique_value_proposition: profile.unique_value_proposition || '',
+        mission_vision: profile.mission_vision || '',
+        elevator_pitch: profile.elevator_pitch || '',
+        standard_abstract: profile.standard_abstract || '',
+        detailed_summary: profile.detailed_summary || '',
+          impact: profile.impact || '',
+          industry: profile.industry || '',
+          competitors: profile.competitors || '',
+          traction: profile.traction || '',
+          team_size: profile.team_size || '',
+          funding_stage: profile.funding_stage || '',
+          revenue_range: profile.revenue_range || '',
+          funding_goal: profile.funding_goal || '',
+          previous_funding: profile.previous_funding || '',
+          use_of_funds: profile.use_of_funds || '',
+          demo_video: profile.demo_video || '',
+          linkedin: profile.linkedin || '',
+          press_kit: profile.press_kit || '',
+          
+          // Social Media & Online Presence
+          website_url: profile.website_url || '',
+          twitter_handle: profile.twitter_handle || '',
+          facebook_url: profile.facebook_url || '',
+          instagram_handle: profile.instagram_handle || '',
+          youtube_channel: profile.youtube_channel || '',
+          tiktok_handle: profile.tiktok_handle || '',
+          github_url: profile.github_url || '',
+          medium_url: profile.medium_url || '',
+          substack_url: profile.substack_url || '',
+          personal_website: profile.personal_website || '',
+          
+          // Company Details & Legal
+          company_website: profile.company_website || '',
+          business_registration_number: profile.business_registration_number || '',
+          year_founded: profile.year_founded || 0,
+          number_of_employees: profile.number_of_employees || 0,
+          headquarters_location: profile.headquarters_location || '',
+          legal_structure: profile.legal_structure || '',
+          incorporation_country: profile.incorporation_country || '',
+          incorporation_date: profile.incorporation_date || '',
+          tax_id: profile.tax_id || '',
+          business_license: profile.business_license || '',
+          
+          // Financial Information
+          annual_revenue: profile.annual_revenue || '',
+          monthly_revenue: profile.monthly_revenue || '',
+          burn_rate: profile.burn_rate || '',
+          runway_months: profile.runway_months || 0,
+          total_funding_raised: profile.total_funding_raised || '',
+          last_valuation: profile.last_valuation || '',
+          revenue_model: profile.revenue_model || '',
+          pricing_strategy: profile.pricing_strategy || '',
+          financial_projections: profile.financial_projections || '',
+          key_metrics: profile.key_metrics || '',
+          
+          // Founder Background & Experience
+          founder_full_name: profile.founder_full_name || '',
+          founder_title: profile.founder_title || '',
+          founder_email: profile.founder_email || '',
+          founder_phone: profile.founder_phone || '',
+          founder_linkedin: profile.founder_linkedin || '',
+          founder_twitter: profile.founder_twitter || '',
+          founder_background: profile.founder_background || '',
+          previous_startups: profile.previous_startups || '',
+          work_experience: profile.work_experience || '',
+          education_background: profile.education_background || '',
+          certifications: profile.certifications || '',
+          awards_recognition: profile.awards_recognition || '',
+          cv_url: profile.cv_url || '',
+          founder_bio: profile.founder_bio || '',
+          personal_interests: profile.personal_interests || '',
+          languages_spoken: profile.languages_spoken || '',
+          time_commitment: profile.time_commitment || '',
+          co_founders: profile.co_founders || '',
+          
+          // Product & Technology
+          product_name: profile.product_name || '',
+          product_description: profile.product_description || '',
+          technology_stack: profile.technology_stack || '',
+          development_stage: profile.development_stage || '',
+          mvp_status: profile.mvp_status || '',
+          beta_testers: profile.beta_testers || 0,
+          user_feedback: profile.user_feedback || '',
+          product_roadmap: profile.product_roadmap || '',
+          intellectual_property: profile.intellectual_property || '',
+          patents: profile.patents || '',
+          trademarks: profile.trademarks || '',
+          copyrights: profile.copyrights || '',
+          trade_secrets: profile.trade_secrets || '',
+          technical_challenges: profile.technical_challenges || '',
+          scalability_plan: profile.scalability_plan || '',
+          
+          // Market & Competition
+          market_size: profile.market_size || '',
+          target_customers: profile.target_customers || '',
+          customer_personas: profile.customer_personas || '',
+          customer_validation: profile.customer_validation || '',
+          market_research: profile.market_research || '',
+          competitive_analysis: profile.competitive_analysis || '',
+          market_entry_strategy: profile.market_entry_strategy || '',
+          go_to_market_plan: profile.go_to_market_plan || '',
+          sales_strategy: profile.sales_strategy || '',
+          marketing_strategy: profile.marketing_strategy || '',
+          customer_acquisition_cost: profile.customer_acquisition_cost || '',
+          lifetime_value: profile.lifetime_value || '',
+          market_trends: profile.market_trends || '',
+          regulatory_environment: profile.regulatory_environment || '',
+          
+          // Team & Advisors
+          key_team_members: profile.key_team_members || '',
+          advisors: profile.advisors || '',
+          mentors: profile.mentors || '',
+          board_members: profile.board_members || '',
+          investors: profile.investors || '',
+          strategic_partners: profile.strategic_partners || '',
+          hiring_plan: profile.hiring_plan || '',
+          team_culture: profile.team_culture || '',
+          remote_work_policy: profile.remote_work_policy || '',
+          equity_distribution: profile.equity_distribution || '',
+          
+          // Documents & Resources
+          pitch_deck_url: profile.pitch_deck_url || '',
+          business_plan_url: profile.business_plan_url || '',
+          financial_model_url: profile.financial_model_url || '',
+          market_research_url: profile.market_research_url || '',
+          legal_documents_url: profile.legal_documents_url || '',
+          press_kit_url: profile.press_kit_url || '',
+          case_studies_url: profile.case_studies_url || '',
+          testimonials_url: profile.testimonials_url || '',
+          product_demo_url: profile.product_demo_url || '',
+          investor_deck_url: profile.investor_deck_url || '',
+          
+          // Additional Context Fields
+          accelerator_programs_applied: profile.accelerator_programs_applied || '',
+          accelerator_programs_accepted: profile.accelerator_programs_accepted || '',
+          grant_history: profile.grant_history || '',
+          awards_won: profile.awards_won || '',
+          press_mentions: profile.press_mentions || '',
+          media_coverage: profile.media_coverage || '',
+          speaking_engagements: profile.speaking_engagements || '',
+          publications: profile.publications || '',
+          blog_posts: profile.blog_posts || '',
+          podcast_appearances: profile.podcast_appearances || '',
         });
+      } else {
+        console.log('✅ ProfileHub: Using existing local data (newer than server)');
       }
     }
   }, [profile, isVisible, updateFormData]);
@@ -364,20 +646,20 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           <Tabs value={persistedUIState.activeTab} onValueChange={(tab) => updateUIState(prev => ({ ...prev, activeTab: tab }))} className="w-full">
                       <TabsList className="grid w-full grid-cols-7">
             <TabsTrigger value="onboarding" className="flex items-center gap-1">
+              <FileText className="w-3 h-3" />
+              <span className="hidden sm:inline">Content</span>
+            </TabsTrigger>
+            <TabsTrigger value="founder" className="flex items-center gap-1">
               <User className="w-3 h-3" />
-              <span className="hidden sm:inline">Onboarding</span>
+              <span className="hidden sm:inline">Founder</span>
             </TabsTrigger>
-            <TabsTrigger value="organization" className="flex items-center gap-1">
+            <TabsTrigger value="company" className="flex items-center gap-1">
               <Building className="w-3 h-3" />
-              <span className="hidden sm:inline">Organization</span>
+              <span className="hidden sm:inline">Company</span>
             </TabsTrigger>
-            <TabsTrigger value="pitch" className="flex items-center gap-1">
-              <FileText className="w-3 h-3" />
-              <span className="hidden sm:inline">Pitch</span>
-            </TabsTrigger>
-            <TabsTrigger value="pitch-deck" className="flex items-center gap-1">
-              <FileText className="w-3 h-3" />
-              <span className="hidden sm:inline">Pitch Deck</span>
+            <TabsTrigger value="product" className="flex items-center gap-1">
+              <Bot className="w-3 h-3" />
+              <span className="hidden sm:inline">Product</span>
             </TabsTrigger>
             <TabsTrigger value="market" className="flex items-center gap-1">
               <Target className="w-3 h-3" />
@@ -387,13 +669,13 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
               <Users className="w-3 h-3" />
               <span className="hidden sm:inline">Team</span>
             </TabsTrigger>
-            <TabsTrigger value="documents" className="flex items-center gap-1">
+            <TabsTrigger value="docs" className="flex items-center gap-1">
               <FileText className="w-3 h-3" />
-              <span className="hidden sm:inline">Docs</span>
+              <span className="hidden sm:inline">Resources</span>
             </TabsTrigger>
           </TabsList>
 
-            {/* Onboarding Tab */}
+            {/* Content Tab */}
             <TabsContent value="onboarding" className="space-y-6">
               <Card>
                 <CardHeader>
@@ -912,6 +1194,1188 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                     <div className="space-y-2">
                       <Label htmlFor="press-kit">Press/Media Kit URL</Label>
                       <Input id="press-kit" placeholder="Link to press resources" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Founder Tab */}
+            <TabsContent value="founder" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5" />
+                    Founder Information
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Complete your personal and professional background</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="founder-full-name">Full Name</Label>
+                      <Input
+                        id="founder-full-name"
+                        placeholder="Your full name"
+                        value={persistedFormData.founder_full_name}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_full_name: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="founder-title">Title/Position</Label>
+                      <Input
+                        id="founder-title"
+                        placeholder="CEO, Founder, etc."
+                        value={persistedFormData.founder_title}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_title: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="founder-email">Email</Label>
+                      <Input
+                        id="founder-email"
+                        type="email"
+                        placeholder="your@email.com"
+                        value={persistedFormData.founder_email}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_email: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="founder-phone">Phone Number</Label>
+                      <Input
+                        id="founder-phone"
+                        placeholder="+1 (555) 123-4567"
+                        value={persistedFormData.founder_phone}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, founder_phone: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Social Media */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Social Media & Online Presence</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="founder-linkedin">LinkedIn Profile</Label>
+                        <Input
+                          id="founder-linkedin"
+                          placeholder="https://linkedin.com/in/yourname"
+                          value={persistedFormData.founder_linkedin}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_linkedin: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="founder-twitter">Twitter Handle</Label>
+                        <Input
+                          id="founder-twitter"
+                          placeholder="@yourhandle"
+                          value={persistedFormData.founder_twitter}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_twitter: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="personal-website">Personal Website</Label>
+                        <Input
+                          id="personal-website"
+                          placeholder="https://yourname.com"
+                          value={persistedFormData.personal_website}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, personal_website: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="github-url">GitHub Profile</Label>
+                        <Input
+                          id="github-url"
+                          placeholder="https://github.com/yourname"
+                          value={persistedFormData.github_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, github_url: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Background & Experience */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Background & Experience</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="founder-background">Professional Background</Label>
+                        <Textarea
+                          id="founder-background"
+                          placeholder="Describe your professional background, key achievements, and relevant experience"
+                          rows={4}
+                          value={persistedFormData.founder_background}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_background: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="work-experience">Work Experience</Label>
+                        <Textarea
+                          id="work-experience"
+                          placeholder="Previous companies, roles, and key responsibilities"
+                          rows={3}
+                          value={persistedFormData.work_experience}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, work_experience: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="previous-startups">Previous Startups</Label>
+                        <Textarea
+                          id="previous-startups"
+                          placeholder="List any previous startups you've founded or co-founded"
+                          rows={3}
+                          value={persistedFormData.previous_startups}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, previous_startups: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Education & Skills */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Education & Skills</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="education-background">Education Background</Label>
+                        <Textarea
+                          id="education-background"
+                          placeholder="Universities, degrees, certifications"
+                          rows={3}
+                          value={persistedFormData.education_background}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, education_background: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="certifications">Certifications</Label>
+                        <Textarea
+                          id="certifications"
+                          placeholder="Professional certifications, licenses"
+                          rows={3}
+                          value={persistedFormData.certifications}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, certifications: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="languages-spoken">Languages Spoken</Label>
+                      <Input
+                        id="languages-spoken"
+                        placeholder="English, Spanish, French, etc."
+                        value={persistedFormData.languages_spoken}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, languages_spoken: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Personal Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Personal Information</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="founder-bio">Personal Bio</Label>
+                        <Textarea
+                          id="founder-bio"
+                          placeholder="Tell us about yourself, your passions, and what drives you"
+                          rows={4}
+                          value={persistedFormData.founder_bio}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, founder_bio: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="personal-interests">Personal Interests</Label>
+                        <Textarea
+                          id="personal-interests"
+                          placeholder="Hobbies, interests, activities outside of work"
+                          rows={3}
+                          value={persistedFormData.personal_interests}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, personal_interests: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="time-commitment">Time Commitment</Label>
+                        <Select value={persistedFormData.time_commitment} onValueChange={(value) => updateFormData(prev => ({ ...prev, time_commitment: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select time commitment" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="full-time">Full-time (40+ hours/week)</SelectItem>
+                            <SelectItem value="part-time">Part-time (20-40 hours/week)</SelectItem>
+                            <SelectItem value="weekend">Weekend warrior</SelectItem>
+                            <SelectItem value="evening">Evening hours</SelectItem>
+                            <SelectItem value="flexible">Flexible schedule</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Awards & Recognition */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Awards & Recognition</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="awards-recognition">Awards & Recognition</Label>
+                      <Textarea
+                        id="awards-recognition"
+                        placeholder="Industry awards, recognition, honors, publications"
+                        rows={3}
+                        value={persistedFormData.awards_recognition}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, awards_recognition: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* CV Upload */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Resume/CV</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="cv-url">CV/Resume URL</Label>
+                      <Input
+                        id="cv-url"
+                        placeholder="https://yourname.com/resume.pdf"
+                        value={persistedFormData.cv_url}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, cv_url: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Company Tab */}
+            <TabsContent value="company" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building className="w-5 h-5" />
+                    Company Information
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Legal, financial, and business details</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Basic Company Info */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Basic Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="company-website">Company Website</Label>
+                        <Input
+                          id="company-website"
+                          placeholder="https://yourcompany.com"
+                          value={persistedFormData.company_website}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, company_website: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="year-founded">Year Founded</Label>
+                        <Input
+                          id="year-founded"
+                          type="number"
+                          placeholder="2024"
+                          value={persistedFormData.year_founded || ''}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, year_founded: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="number-of-employees">Number of Employees</Label>
+                        <Input
+                          id="number-of-employees"
+                          type="number"
+                          placeholder="5"
+                          value={persistedFormData.number_of_employees || ''}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, number_of_employees: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="headquarters-location">Headquarters Location</Label>
+                        <Input
+                          id="headquarters-location"
+                          placeholder="San Francisco, CA"
+                          value={persistedFormData.headquarters_location}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, headquarters_location: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legal Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Legal Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="legal-structure">Legal Structure</Label>
+                        <Select value={persistedFormData.legal_structure} onValueChange={(value) => updateFormData(prev => ({ ...prev, legal_structure: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select legal structure" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="llc">LLC</SelectItem>
+                            <SelectItem value="corporation">Corporation</SelectItem>
+                            <SelectItem value="c-corp">C-Corp</SelectItem>
+                            <SelectItem value="s-corp">S-Corp</SelectItem>
+                            <SelectItem value="partnership">Partnership</SelectItem>
+                            <SelectItem value="sole-proprietorship">Sole Proprietorship</SelectItem>
+                            <SelectItem value="nonprofit">Nonprofit</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="incorporation-country">Incorporation Country</Label>
+                        <Input
+                          id="incorporation-country"
+                          placeholder="United States"
+                          value={persistedFormData.incorporation_country}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, incorporation_country: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business-registration-number">Business Registration Number</Label>
+                        <Input
+                          id="business-registration-number"
+                          placeholder="Registration number"
+                          value={persistedFormData.business_registration_number}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, business_registration_number: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tax-id">Tax ID</Label>
+                        <Input
+                          id="tax-id"
+                          placeholder="EIN or Tax ID"
+                          value={persistedFormData.tax_id}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, tax_id: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Financial Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Financial Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="annual-revenue">Annual Revenue</Label>
+                        <Input
+                          id="annual-revenue"
+                          placeholder="$100,000"
+                          value={persistedFormData.annual_revenue}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, annual_revenue: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="monthly-revenue">Monthly Revenue</Label>
+                        <Input
+                          id="monthly-revenue"
+                          placeholder="$8,333"
+                          value={persistedFormData.monthly_revenue}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, monthly_revenue: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="burn-rate">Monthly Burn Rate</Label>
+                        <Input
+                          id="burn-rate"
+                          placeholder="$5,000"
+                          value={persistedFormData.burn_rate}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, burn_rate: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="runway-months">Runway (Months)</Label>
+                        <Input
+                          id="runway-months"
+                          type="number"
+                          placeholder="18"
+                          value={persistedFormData.runway_months || ''}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, runway_months: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="total-funding-raised">Total Funding Raised</Label>
+                        <Input
+                          id="total-funding-raised"
+                          placeholder="$500,000"
+                          value={persistedFormData.total_funding_raised}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, total_funding_raised: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last-valuation">Last Valuation</Label>
+                        <Input
+                          id="last-valuation"
+                          placeholder="$2,000,000"
+                          value={persistedFormData.last_valuation}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, last_valuation: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="revenue-model">Revenue Model</Label>
+                      <Textarea
+                        id="revenue-model"
+                        placeholder="Describe how your company generates revenue"
+                        rows={3}
+                        value={persistedFormData.revenue_model}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, revenue_model: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="pricing-strategy">Pricing Strategy</Label>
+                      <Textarea
+                        id="pricing-strategy"
+                        placeholder="Describe your pricing strategy and model"
+                        rows={3}
+                        value={persistedFormData.pricing_strategy}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, pricing_strategy: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Product Tab */}
+            <TabsContent value="product" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bot className="w-5 h-5" />
+                    Product & Technology
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Product details, technology stack, and development information</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Product Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Product Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="product-name">Product Name</Label>
+                        <Input
+                          id="product-name"
+                          placeholder="Your product name"
+                          value={persistedFormData.product_name}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, product_name: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="development-stage">Development Stage</Label>
+                        <Select value={persistedFormData.development_stage} onValueChange={(value) => updateFormData(prev => ({ ...prev, development_stage: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select development stage" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="idea">Idea Stage</SelectItem>
+                            <SelectItem value="mvp">MVP Development</SelectItem>
+                            <SelectItem value="beta">Beta Testing</SelectItem>
+                            <SelectItem value="launched">Launched</SelectItem>
+                            <SelectItem value="scaling">Scaling</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="mvp-status">MVP Status</Label>
+                        <Select value={persistedFormData.mvp_status} onValueChange={(value) => updateFormData(prev => ({ ...prev, mvp_status: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select MVP status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="not-started">Not Started</SelectItem>
+                            <SelectItem value="in-development">In Development</SelectItem>
+                            <SelectItem value="completed">Completed</SelectItem>
+                            <SelectItem value="launched">Launched</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="beta-testers">Number of Beta Testers</Label>
+                        <Input
+                          id="beta-testers"
+                          type="number"
+                          placeholder="50"
+                          value={persistedFormData.beta_testers || ''}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, beta_testers: parseInt(e.target.value) || 0 }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="product-description">Product Description</Label>
+                      <Textarea
+                        id="product-description"
+                        placeholder="Describe your product, its features, and how it works"
+                        rows={4}
+                        value={persistedFormData.product_description}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, product_description: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Technology Stack */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Technology Stack</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="technology-stack">Technology Stack</Label>
+                      <Textarea
+                        id="technology-stack"
+                        placeholder="Frontend: React, Backend: Node.js, Database: PostgreSQL, etc."
+                        rows={3}
+                        value={persistedFormData.technology_stack}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, technology_stack: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="technical-challenges">Technical Challenges</Label>
+                      <Textarea
+                        id="technical-challenges"
+                        placeholder="Describe any technical challenges you're facing or have overcome"
+                        rows={3}
+                        value={persistedFormData.technical_challenges}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, technical_challenges: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="scalability-plan">Scalability Plan</Label>
+                      <Textarea
+                        id="scalability-plan"
+                        placeholder="How do you plan to scale your product and technology?"
+                        rows={3}
+                        value={persistedFormData.scalability_plan}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, scalability_plan: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Intellectual Property */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Intellectual Property</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="intellectual-property">Intellectual Property Overview</Label>
+                        <Textarea
+                          id="intellectual-property"
+                          placeholder="Describe your IP assets, proprietary technology, or unique algorithms"
+                          rows={3}
+                          value={persistedFormData.intellectual_property}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, intellectual_property: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="patents">Patents</Label>
+                          <Textarea
+                            id="patents"
+                            placeholder="Patent numbers, applications, or pending patents"
+                            rows={3}
+                            value={persistedFormData.patents}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, patents: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="trademarks">Trademarks</Label>
+                          <Textarea
+                            id="trademarks"
+                            placeholder="Registered trademarks or pending applications"
+                            rows={3}
+                            value={persistedFormData.trademarks}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, trademarks: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="copyrights">Copyrights</Label>
+                          <Textarea
+                            id="copyrights"
+                            placeholder="Copyrighted materials, software, or content"
+                            rows={3}
+                            value={persistedFormData.copyrights}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, copyrights: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="trade-secrets">Trade Secrets</Label>
+                          <Textarea
+                            id="trade-secrets"
+                            placeholder="Proprietary processes, algorithms, or confidential information"
+                            rows={3}
+                            value={persistedFormData.trade_secrets}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, trade_secrets: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Feedback & Roadmap */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">User Feedback & Roadmap</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="user-feedback">User Feedback</Label>
+                      <Textarea
+                        id="user-feedback"
+                        placeholder="Key feedback from users, testimonials, or user research insights"
+                        rows={3}
+                        value={persistedFormData.user_feedback}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, user_feedback: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="product-roadmap">Product Roadmap</Label>
+                      <Textarea
+                        id="product-roadmap"
+                        placeholder="Upcoming features, milestones, and development timeline"
+                        rows={4}
+                        value={persistedFormData.product_roadmap}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, product_roadmap: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Market Tab */}
+            <TabsContent value="market" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="w-5 h-5" />
+                    Market & Competition
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Market analysis, competition, and go-to-market strategy</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Market Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Market Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="market-size">Market Size</Label>
+                        <Input
+                          id="market-size"
+                          placeholder="$50B TAM, $5B SAM"
+                          value={persistedFormData.market_size}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, market_size: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customer-acquisition-cost">Customer Acquisition Cost</Label>
+                        <Input
+                          id="customer-acquisition-cost"
+                          placeholder="$25"
+                          value={persistedFormData.customer_acquisition_cost}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, customer_acquisition_cost: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="lifetime-value">Customer Lifetime Value</Label>
+                        <Input
+                          id="lifetime-value"
+                          placeholder="$500"
+                          value={persistedFormData.lifetime_value}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, lifetime_value: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="regulatory-environment">Regulatory Environment</Label>
+                        <Input
+                          id="regulatory-environment"
+                          placeholder="FDA, SEC, GDPR, etc."
+                          value={persistedFormData.regulatory_environment}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, regulatory_environment: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Target Customers */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Target Customers</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="target-customers">Target Customers</Label>
+                      <Textarea
+                        id="target-customers"
+                        placeholder="Describe your ideal customer profile and target market segments"
+                        rows={3}
+                        value={persistedFormData.target_customers}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, target_customers: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="customer-personas">Customer Personas</Label>
+                      <Textarea
+                        id="customer-personas"
+                        placeholder="Detailed customer personas, demographics, and psychographics"
+                        rows={3}
+                        value={persistedFormData.customer_personas}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, customer_personas: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="customer-validation">Customer Validation</Label>
+                      <Textarea
+                        id="customer-validation"
+                        placeholder="How have you validated customer demand and product-market fit?"
+                        rows={3}
+                        value={persistedFormData.customer_validation}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, customer_validation: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Competition */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Competition</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="competitive-analysis">Competitive Analysis</Label>
+                      <Textarea
+                        id="competitive-analysis"
+                        placeholder="Key competitors, their strengths/weaknesses, and your competitive advantages"
+                        rows={4}
+                        value={persistedFormData.competitive_analysis}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, competitive_analysis: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="market-trends">Market Trends</Label>
+                      <Textarea
+                        id="market-trends"
+                        placeholder="Current market trends, opportunities, and threats"
+                        rows={3}
+                        value={persistedFormData.market_trends}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, market_trends: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Go-to-Market Strategy */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Go-to-Market Strategy</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="market-entry-strategy">Market Entry Strategy</Label>
+                        <Textarea
+                          id="market-entry-strategy"
+                          placeholder="How do you plan to enter and capture market share?"
+                          rows={3}
+                          value={persistedFormData.market_entry_strategy}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, market_entry_strategy: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="go-to-market-plan">Go-to-Market Plan</Label>
+                        <Textarea
+                          id="go-to-market-plan"
+                          placeholder="Detailed go-to-market strategy, channels, and tactics"
+                          rows={3}
+                          value={persistedFormData.go_to_market_plan}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, go_to_market_plan: e.target.value }))}
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="sales-strategy">Sales Strategy</Label>
+                          <Textarea
+                            id="sales-strategy"
+                            placeholder="Sales approach, channels, and processes"
+                            rows={3}
+                            value={persistedFormData.sales_strategy}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, sales_strategy: e.target.value }))}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="marketing-strategy">Marketing Strategy</Label>
+                          <Textarea
+                            id="marketing-strategy"
+                            placeholder="Marketing channels, campaigns, and brand strategy"
+                            rows={3}
+                            value={persistedFormData.marketing_strategy}
+                            onChange={(e) => updateFormData(prev => ({ ...prev, marketing_strategy: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Market Research */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Market Research</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="market-research">Market Research</Label>
+                      <Textarea
+                        id="market-research"
+                        placeholder="Market research conducted, data sources, and key findings"
+                        rows={3}
+                        value={persistedFormData.market_research}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, market_research: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Team Tab */}
+            <TabsContent value="team" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    Team & Advisors
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Team composition, advisors, and organizational structure</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Team Information */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Team Information</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="team-size">Team Size</Label>
+                        <Select value={persistedFormData.team_size} onValueChange={(value) => updateFormData(prev => ({ ...prev, team_size: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select team size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1">1 person</SelectItem>
+                            <SelectItem value="2-5">2-5 people</SelectItem>
+                            <SelectItem value="6-10">6-10 people</SelectItem>
+                            <SelectItem value="11-25">11-25 people</SelectItem>
+                            <SelectItem value="26-50">26-50 people</SelectItem>
+                            <SelectItem value="50+">50+ people</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="remote-work-policy">Remote Work Policy</Label>
+                        <Select value={persistedFormData.remote_work_policy} onValueChange={(value) => updateFormData(prev => ({ ...prev, remote_work_policy: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select remote work policy" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="fully-remote">Fully Remote</SelectItem>
+                            <SelectItem value="hybrid">Hybrid</SelectItem>
+                            <SelectItem value="office-based">Office-based</SelectItem>
+                            <SelectItem value="flexible">Flexible</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="key-team-members">Key Team Members</Label>
+                      <Textarea
+                        id="key-team-members"
+                        placeholder="List key team members, their roles, backgrounds, and contributions"
+                        rows={4}
+                        value={persistedFormData.key_team_members}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, key_team_members: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="co-founders">Co-founders</Label>
+                      <Textarea
+                        id="co-founders"
+                        placeholder="Co-founder information, backgrounds, and equity distribution"
+                        rows={3}
+                        value={persistedFormData.co_founders}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, co_founders: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Advisors & Mentors */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Advisors & Mentors</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="advisors">Advisors</Label>
+                        <Textarea
+                          id="advisors"
+                          placeholder="List advisors, their expertise, and how they help"
+                          rows={3}
+                          value={persistedFormData.advisors}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, advisors: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="mentors">Mentors</Label>
+                        <Textarea
+                          id="mentors"
+                          placeholder="Mentors, their backgrounds, and guidance provided"
+                          rows={3}
+                          value={persistedFormData.mentors}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, mentors: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="board-members">Board Members</Label>
+                      <Textarea
+                        id="board-members"
+                        placeholder="Board members, their roles, and governance structure"
+                        rows={3}
+                        value={persistedFormData.board_members}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, board_members: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Investors & Partners */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Investors & Partners</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="investors">Investors</Label>
+                        <Textarea
+                          id="investors"
+                          placeholder="Current investors, funding rounds, and investor value-add"
+                          rows={3}
+                          value={persistedFormData.investors}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, investors: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="strategic-partners">Strategic Partners</Label>
+                        <Textarea
+                          id="strategic-partners"
+                          placeholder="Key partnerships, collaborations, and strategic relationships"
+                          rows={3}
+                          value={persistedFormData.strategic_partners}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, strategic_partners: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Team Culture & Growth */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Team Culture & Growth</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="team-culture">Team Culture</Label>
+                      <Textarea
+                        id="team-culture"
+                        placeholder="Describe your team culture, values, and working environment"
+                        rows={3}
+                        value={persistedFormData.team_culture}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, team_culture: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="hiring-plan">Hiring Plan</Label>
+                      <Textarea
+                        id="hiring-plan"
+                        placeholder="Planned hires, roles needed, and timeline for team expansion"
+                        rows={3}
+                        value={persistedFormData.hiring_plan}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, hiring_plan: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="equity-distribution">Equity Distribution</Label>
+                      <Textarea
+                        id="equity-distribution"
+                        placeholder="Equity distribution among founders, employees, and advisors"
+                        rows={3}
+                        value={persistedFormData.equity_distribution}
+                        onChange={(e) => updateFormData(prev => ({ ...prev, equity_distribution: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Resources Tab (Updated Documents Tab) */}
+            <TabsContent value="docs" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="w-5 h-5" />
+                    Documents & Resources
+                  </CardTitle>
+                  <p className="text-sm text-gray-600">Upload documents and manage resource links</p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Document URLs */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Document Links</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="pitch-deck-url">Pitch Deck URL</Label>
+                        <Input
+                          id="pitch-deck-url"
+                          placeholder="https://yourcompany.com/pitch-deck.pdf"
+                          value={persistedFormData.pitch_deck_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, pitch_deck_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="business-plan-url">Business Plan URL</Label>
+                        <Input
+                          id="business-plan-url"
+                          placeholder="https://yourcompany.com/business-plan.pdf"
+                          value={persistedFormData.business_plan_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, business_plan_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="financial-model-url">Financial Model URL</Label>
+                        <Input
+                          id="financial-model-url"
+                          placeholder="https://yourcompany.com/financial-model.xlsx"
+                          value={persistedFormData.financial_model_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, financial_model_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="market-research-url">Market Research URL</Label>
+                        <Input
+                          id="market-research-url"
+                          placeholder="https://yourcompany.com/market-research.pdf"
+                          value={persistedFormData.market_research_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, market_research_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="legal-documents-url">Legal Documents URL</Label>
+                        <Input
+                          id="legal-documents-url"
+                          placeholder="https://yourcompany.com/legal-docs.pdf"
+                          value={persistedFormData.legal_documents_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, legal_documents_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="press-kit-url">Press Kit URL</Label>
+                        <Input
+                          id="press-kit-url"
+                          placeholder="https://yourcompany.com/press-kit.zip"
+                          value={persistedFormData.press_kit_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, press_kit_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="case-studies-url">Case Studies URL</Label>
+                        <Input
+                          id="case-studies-url"
+                          placeholder="https://yourcompany.com/case-studies.pdf"
+                          value={persistedFormData.case_studies_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, case_studies_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="testimonials-url">Testimonials URL</Label>
+                        <Input
+                          id="testimonials-url"
+                          placeholder="https://yourcompany.com/testimonials.pdf"
+                          value={persistedFormData.testimonials_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, testimonials_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="product-demo-url">Product Demo URL</Label>
+                        <Input
+                          id="product-demo-url"
+                          placeholder="https://youtube.com/watch?v=yourdemo"
+                          value={persistedFormData.product_demo_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, product_demo_url: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="investor-deck-url">Investor Deck URL</Label>
+                        <Input
+                          id="investor-deck-url"
+                          placeholder="https://yourcompany.com/investor-deck.pdf"
+                          value={persistedFormData.investor_deck_url}
+                          onChange={(e) => updateFormData(prev => ({ ...prev, investor_deck_url: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* File Upload Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">File Upload</h4>
+                    <div className="space-y-2">
+                      <Label htmlFor="supporting-docs">Upload Document</Label>
+                      <Input
+                        id="supporting-docs"
+                        type="file"
+                        onChange={e => setSelectedFile(e.target.files?.[0] || null)}
+                        disabled={uploading}
+                      />
+                      <Button onClick={handleDocUpload} disabled={!selectedFile || uploading} className="mt-2">
+                        {uploading ? 'Uploading...' : 'Upload'}
+                      </Button>
+                      {uploadError && <div className="text-red-600 text-xs mt-1">{uploadError}</div>}
+                    </div>
+                    
+                    {/* File List Section */}
+                    <div className="mt-6">
+                      <h4 className="font-semibold mb-2">Your Uploaded Documents</h4>
+                      {docsLoading ? (
+                        <div>Loading documents...</div>
+                      ) : docsError ? (
+                        <div className="text-red-600">{docsError}</div>
+                      ) : documents.length === 0 ? (
+                        <div className="text-gray-500">No documents uploaded yet.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {documents.map(doc => (
+                            <div key={doc.id} className="flex items-center justify-between border rounded px-3 py-2 bg-gray-50">
+                              <div>
+                                <div className="font-medium">{doc.document_name}</div>
+                                <div className="text-xs text-gray-500">Uploaded: {safeFormatDate(
+                                  doc.uploaded_at,
+                                  (date) => date.toLocaleDateString(),
+                                  'Unknown date'
+                                )}</div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  title="Download"
+                                  onClick={async () => {
+                                    const url = await getDocumentUrl(doc.storage_path);
+                                    if (url) {
+                                      window.open(url, '_blank');
+                                    } else {
+                                      toast({
+                                        title: "Download Failed",
+                                        description: "Could not generate download URL",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  title="Delete"
+                                  onClick={async () => {
+                                    const { error, success } = await deleteDocument(doc.id, doc.storage_path);
+                                    if (error) {
+                                      toast({
+                                        title: "Delete Failed",
+                                        description: error,
+                                        variant: "destructive",
+                                      });
+                                    } else if (success) {
+                                      toast({
+                                        title: "Document Deleted",
+                                        description: `${doc.document_name} deleted successfully!`,
+                                      });
+                                    }
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-600" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>

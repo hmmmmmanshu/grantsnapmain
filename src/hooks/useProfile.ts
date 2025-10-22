@@ -18,6 +18,145 @@ export interface UserProfile {
   elevator_pitch?: string
   standard_abstract?: string
   detailed_summary?: string
+  impact?: string
+  industry?: string
+  competitors?: string
+  traction?: string
+  team_size?: string
+  funding_stage?: string
+  revenue_range?: string
+  funding_goal?: string
+  previous_funding?: string
+  use_of_funds?: string
+  demo_video?: string
+  linkedin?: string
+  press_kit?: string
+  
+  // Social Media & Online Presence
+  website_url?: string
+  twitter_handle?: string
+  facebook_url?: string
+  instagram_handle?: string
+  youtube_channel?: string
+  tiktok_handle?: string
+  github_url?: string
+  medium_url?: string
+  substack_url?: string
+  personal_website?: string
+  
+  // Company Details & Legal
+  company_website?: string
+  business_registration_number?: string
+  year_founded?: number
+  number_of_employees?: number
+  headquarters_location?: string
+  legal_structure?: string
+  incorporation_country?: string
+  incorporation_date?: string
+  tax_id?: string
+  business_license?: string
+  
+  // Financial Information
+  annual_revenue?: string
+  monthly_revenue?: string
+  burn_rate?: string
+  runway_months?: number
+  total_funding_raised?: string
+  last_valuation?: string
+  revenue_model?: string
+  pricing_strategy?: string
+  financial_projections?: string
+  key_metrics?: string
+  
+  // Founder Background & Experience
+  founder_full_name?: string
+  founder_title?: string
+  founder_email?: string
+  founder_phone?: string
+  founder_linkedin?: string
+  founder_twitter?: string
+  founder_background?: string
+  previous_startups?: string
+  work_experience?: string
+  education_background?: string
+  certifications?: string
+  awards_recognition?: string
+  cv_url?: string
+  founder_bio?: string
+  personal_interests?: string
+  languages_spoken?: string
+  time_commitment?: string
+  co_founders?: string
+  
+  // Product & Technology
+  product_name?: string
+  product_description?: string
+  technology_stack?: string
+  development_stage?: string
+  mvp_status?: string
+  beta_testers?: number
+  user_feedback?: string
+  product_roadmap?: string
+  intellectual_property?: string
+  patents?: string
+  trademarks?: string
+  copyrights?: string
+  trade_secrets?: string
+  technical_challenges?: string
+  scalability_plan?: string
+  
+  // Market & Competition
+  market_size?: string
+  target_customers?: string
+  customer_personas?: string
+  customer_validation?: string
+  market_research?: string
+  competitive_analysis?: string
+  market_entry_strategy?: string
+  go_to_market_plan?: string
+  sales_strategy?: string
+  marketing_strategy?: string
+  customer_acquisition_cost?: string
+  lifetime_value?: string
+  market_trends?: string
+  regulatory_environment?: string
+  
+  // Team & Advisors
+  key_team_members?: string
+  advisors?: string
+  mentors?: string
+  board_members?: string
+  investors?: string
+  strategic_partners?: string
+  hiring_plan?: string
+  team_culture?: string
+  remote_work_policy?: string
+  equity_distribution?: string
+  
+  // Documents & Resources
+  pitch_deck_url?: string
+  business_plan_url?: string
+  financial_model_url?: string
+  market_research_url?: string
+  legal_documents_url?: string
+  press_kit_url?: string
+  case_studies_url?: string
+  testimonials_url?: string
+  product_demo_url?: string
+  investor_deck_url?: string
+  
+  // Additional Context Fields
+  accelerator_programs_applied?: string
+  accelerator_programs_accepted?: string
+  grant_history?: string
+  awards_won?: string
+  press_mentions?: string
+  media_coverage?: string
+  speaking_engagements?: string
+  publications?: string
+  blog_posts?: string
+  podcast_appearances?: string
+  
   completion_percentage?: number
   created_at: string
   updated_at: string
