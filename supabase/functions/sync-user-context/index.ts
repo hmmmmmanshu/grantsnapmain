@@ -250,7 +250,17 @@ Be professional, constructive, and insightful. If information is missing, mentio
     // Parse the AI response
     let parsedSummary
     try {
-      parsedSummary = JSON.parse(aiSummary)
+      const rawParsed = JSON.parse(aiSummary)
+      
+      // Normalize the response to ensure arrays are always arrays
+      parsedSummary = {
+        executive_summary: rawParsed.executive_summary || '',
+        key_strengths: Array.isArray(rawParsed.key_strengths) ? rawParsed.key_strengths : [],
+        funding_readiness: rawParsed.funding_readiness || 'Unable to assess',
+        recommended_actions: Array.isArray(rawParsed.recommended_actions) ? rawParsed.recommended_actions : [],
+        profile_completeness: rawParsed.profile_completeness || 'Unable to assess',
+        ai_insights: rawParsed.ai_insights || 'Analysis in progress'
+      }
     } catch (error) {
       console.error('Failed to parse AI summary:', error)
       parsedSummary = {

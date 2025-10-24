@@ -10,6 +10,7 @@ import ProfileHub from '@/components/dashboard/ProfileHub';
 import VirtualCFO from '@/components/dashboard/VirtualCFO';
 import UsageTracker from '@/components/dashboard/UsageTracker';
 import ProfileCompletionNotification from '@/components/dashboard/ProfileCompletionNotification';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { useSmartAuth } from '@/hooks/useSmartAuth';
 import { useTrackedGrants, TrackedGrant } from '@/hooks/useTrackedGrants';
 import { usePersistentComponent } from '@/hooks/usePersistentComponent';
@@ -295,10 +296,12 @@ const Dashboard = () => {
               <p className="text-gray-600">Manage your funding opportunities and profile</p>
             </div>
             <div className="flex items-center gap-4">
-              <ProfileHub 
-                isOpen={dashboardState.profileHubOpen} 
-                onOpenChange={(open) => setDashboardState(prev => ({ ...prev, profileHubOpen: open }))} 
-              />
+              <ErrorBoundary>
+                <ProfileHub 
+                  isOpen={dashboardState.profileHubOpen} 
+                  onOpenChange={(open) => setDashboardState(prev => ({ ...prev, profileHubOpen: open }))} 
+                />
+              </ErrorBoundary>
               <VirtualCFO />
             </div>
           </div>

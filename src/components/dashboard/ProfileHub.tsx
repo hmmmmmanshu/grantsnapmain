@@ -292,7 +292,18 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
     if (profile?.ai_context_summary) {
       try {
         const parsed = JSON.parse(profile.ai_context_summary);
-        setContextSummary(parsed);
+        
+        // Normalize the data to ensure arrays are always arrays
+        const normalized = {
+          executive_summary: parsed.executive_summary || '',
+          key_strengths: Array.isArray(parsed.key_strengths) ? parsed.key_strengths : [],
+          funding_readiness: parsed.funding_readiness || '',
+          recommended_actions: Array.isArray(parsed.recommended_actions) ? parsed.recommended_actions : [],
+          profile_completeness: parsed.profile_completeness || '',
+          ai_insights: parsed.ai_insights || ''
+        };
+        
+        setContextSummary(normalized);
       } catch (error) {
         console.error('Failed to parse AI context summary:', error);
         setContextSummary(null);
@@ -338,9 +349,17 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
 
       const result = await response.json();
       
-      // Update the context summary immediately
+      // Update the context summary immediately with normalization
       if (result.data?.ai_summary) {
-        setContextSummary(result.data.ai_summary);
+        const normalized = {
+          executive_summary: result.data.ai_summary.executive_summary || '',
+          key_strengths: Array.isArray(result.data.ai_summary.key_strengths) ? result.data.ai_summary.key_strengths : [],
+          funding_readiness: result.data.ai_summary.funding_readiness || '',
+          recommended_actions: Array.isArray(result.data.ai_summary.recommended_actions) ? result.data.ai_summary.recommended_actions : [],
+          profile_completeness: result.data.ai_summary.profile_completeness || '',
+          ai_insights: result.data.ai_summary.ai_insights || ''
+        };
+        setContextSummary(normalized);
       }
 
       // Refetch profile to get the updated context
@@ -1019,19 +1038,21 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       </div>
 
                       {/* Key Strengths */}
-                      <div>
-                        <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                          Key Strengths
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {contextSummary.key_strengths?.map((strength: string, index: number) => (
-                            <div key={index} className="bg-green-50 rounded-lg p-4 border border-green-100">
-                              <p className="text-sm text-gray-700">{strength}</p>
-                            </div>
-                          ))}
+                      {contextSummary.key_strengths && Array.isArray(contextSummary.key_strengths) && contextSummary.key_strengths.length > 0 && (
+                        <div>
+                          <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            Key Strengths
+                          </h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {contextSummary.key_strengths.map((strength: string, index: number) => (
+                              <div key={index} className="bg-green-50 rounded-lg p-4 border border-green-100">
+                                <p className="text-sm text-gray-700">{strength}</p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Funding Readiness */}
                       <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
@@ -1043,22 +1064,24 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       </div>
 
                       {/* Recommended Actions */}
-                      <div>
-                        <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                          <Target className="w-5 h-5 text-blue-600" />
-                          Recommended Actions
-                        </h3>
-                        <div className="space-y-2">
-                          {contextSummary.recommended_actions?.map((action: string, index: number) => (
-                            <div key={index} className="flex items-start gap-3 bg-blue-50 rounded-lg p-3 border border-blue-100">
-                              <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
-                                {index + 1}
+                      {contextSummary.recommended_actions && Array.isArray(contextSummary.recommended_actions) && contextSummary.recommended_actions.length > 0 && (
+                        <div>
+                          <h3 className="text-md font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                            <Target className="w-5 h-5 text-blue-600" />
+                            Recommended Actions
+                          </h3>
+                          <div className="space-y-2">
+                            {contextSummary.recommended_actions.map((action: string, index: number) => (
+                              <div key={index} className="flex items-start gap-3 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                                <div className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">
+                                  {index + 1}
+                                </div>
+                                <p className="text-sm text-gray-700 flex-1">{action}</p>
                               </div>
-                              <p className="text-sm text-gray-700 flex-1">{action}</p>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Profile Completeness */}
                       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
