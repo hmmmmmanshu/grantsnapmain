@@ -820,7 +820,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
       });
 
       // Refetch profile to show updated data
-      await refetch();
+      await refetchProfile();
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Upload failed';
