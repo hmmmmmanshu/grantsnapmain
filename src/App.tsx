@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import OnboardingFlow from "./components/OnboardingFlow";
 import OAuthCallback from "./components/OAuthCallback";
 import { useAuth } from './hooks/useAuth';
+import { initializeLocalStorageCleanup } from './utils/localStorageCleanup';
 
 // Environment variable validation
 const validateEnvironment = () => {
@@ -105,9 +106,10 @@ function AuthRedirector() {
 }
 
 const App: React.FC = () => {
-  // Validate environment variables on app start
+  // Validate environment variables and clean up localStorage on app start
   useEffect(() => {
     validateEnvironment();
+    initializeLocalStorageCleanup();
   }, []);
 
   console.log('App component rendering', { 
