@@ -1067,9 +1067,9 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                           Profile Completeness
                         </h3>
                         <p className="text-sm text-gray-700 mb-3">{contextSummary.profile_completeness}</p>
-                        <Progress value={completionInfo.percentage} className="h-2" />
+                        <Progress value={completion.percentage} className="h-2" />
                         <p className="text-xs text-gray-500 mt-1">
-                          {completionInfo.completed} of {completionInfo.total} sections completed
+                          {completion.completedFields} of {completion.totalFields} sections completed
                         </p>
                       </div>
 
