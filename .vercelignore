@@ -1,0 +1,6 @@
+# Vercel ignore file
+# This file is intentionally minimal to ensure fresh builds
+
+node_modules
+.git
+
