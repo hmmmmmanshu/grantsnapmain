@@ -13,13 +13,25 @@
       },
       "description": "Official Supabase MCP server for startup911 database access"
     },
-    "postgres-direct": {
+    "postgres-grantsnap": {
       "command": "npx",
       "args": [
+        "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:[password]@db.[project-ref].supabase.co:5432/postgres"
+        "postgresql://postgres.uurdubbsamdawncqkaoy:${SUPABASE_DB_PASSWORD}@aws-0-ap-south-1.pooler.supabase.com:6543/postgres"
       ],
-      "description": "Direct PostgreSQL connection to Supabase"
+      "env": {
+        "SUPABASE_DB_PASSWORD": "Yashwanth@143"
+      },
+      "description": "Direct PostgreSQL connection to Grant Snap Supabase database"
+    },
+    "Playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ],
+      "description": "Browser automation for web scraping and testing"
     }
   }
 } 
