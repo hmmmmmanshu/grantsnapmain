@@ -394,7 +394,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
       // 2. Profile data is newer than local data (profile was updated elsewhere)
       if (!localTimestamp || parseInt(localTimestamp) < profileTimestamp) {
         console.log('🔄 ProfileHub: Loading fresh profile data from server');
-        updateFormData({
+        updateFormData(() => ({
         startup_name: profile.startup_name || '',
         one_line_pitch: profile.one_line_pitch || '',
         problem_statement: profile.problem_statement || '',
@@ -581,7 +581,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
           publications: profile.publications || '',
           blog_posts: profile.blog_posts || '',
           podcast_appearances: profile.podcast_appearances || '',
-        });
+        }));
       } else {
         console.log('✅ ProfileHub: Using existing local data (newer than server)');
       }
