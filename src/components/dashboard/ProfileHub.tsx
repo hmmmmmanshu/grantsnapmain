@@ -1107,7 +1107,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
 
                       {/* Last Updated */}
                       <div className="text-center text-xs text-gray-500">
-                        Last updated: {profile?.context_last_updated ? safeFormatDate(profile.context_last_updated) : 'Never'}
+                        Last updated: {profile?.context_last_updated ? safeFormatDate(profile.context_last_updated, (date) => date.toLocaleDateString(), 'Never') : 'Never'}
                       </div>
                     </>
                   ) : (
