@@ -171,9 +171,20 @@ serve(async (req) => {
       industry: profileData?.industry || 'Not provided',
       funding_stage: profileData?.funding_stage || 'Not provided',
       team_size: profileData?.team_size || 'Not provided',
-      pitch_deck_summary: profileData?.pitch_deck_summary ? 'Available' : 'Not provided',
+      pitch_deck_summary: profileData?.pitch_deck_summary || 'Not provided',
+      pitch_deck_analyzed: !!profileData?.pitch_deck_summary,
       founders_count: foundersData?.length || 0,
+      founders_summary: foundersData?.map(f => ({
+        name: f.full_name,
+        title: f.title,
+        background: f.background ? f.background.substring(0, 200) : 'Not provided'
+      })) || [],
       documents_count: documentsData?.length || 0,
+      documents_list: documentsData?.map(d => ({
+        name: d.document_name,
+        type: d.document_type,
+        uploaded: d.uploaded_at
+      })) || [],
       grants_tracked: grantsData?.length || 0,
       completion_percentage: profileData?.completion_percentage || 0
     }
@@ -185,26 +196,33 @@ Analyze the following user data and generate a concise, professional summary tha
 **USER DATA:**
 ${JSON.stringify(summarizedContext, null, 2)}
 
+**IMPORTANT:** Pay special attention to the following:
+1. **pitch_deck_summary**: If it contains detailed information about the startup, use it as a PRIMARY source for understanding the business model, value proposition, market opportunity, and competitive advantages.
+2. **founders_summary**: Review founder backgrounds and expertise to assess team strength.
+3. **documents_list**: Note the types of documents uploaded (business plans, financial models, etc.) as indicators of preparedness and professionalism.
+
 **INSTRUCTIONS:**
 Generate a structured summary in the following format (output as JSON):
 
 {
-  "executive_summary": "2-3 paragraph overview of the startup, its mission, and current stage",
-  "key_strengths": ["List of 3-5 key strengths or unique selling points"],
-  "funding_readiness": "Assessment of how ready they are for funding (1-2 sentences)",
-  "recommended_actions": ["List of 3-5 recommended next steps"],
-  "profile_completeness": "Brief assessment of profile completeness and missing information",
-  "ai_insights": "AI-generated insights about their startup potential and market fit (2-3 sentences)"
+  "executive_summary": "2-3 paragraph overview of the startup, its mission, and current stage. If pitch deck is available, incorporate key insights from it.",
+  "key_strengths": ["List of 3-5 key strengths or unique selling points. Prioritize insights from pitch deck if available."],
+  "funding_readiness": "Assessment of how ready they are for funding (1-2 sentences). Consider pitch deck quality if analyzed.",
+  "recommended_actions": ["List of 3-5 recommended next steps. Reference pitch deck findings if relevant."],
+  "profile_completeness": "Brief assessment of profile completeness and missing information. Note if pitch deck provides additional context.",
+  "ai_insights": "AI-generated insights about their startup potential and market fit (2-3 sentences). Integrate pitch deck analysis if available."
 }
 
 Focus on:
-1. Extracting key information from their profile
-2. Understanding their problem-solution fit
-3. Assessing their market opportunity
-4. Identifying gaps in their information
-5. Providing actionable recommendations
+1. **PRIORITY**: Incorporate pitch deck summary insights throughout the analysis if available
+2. Extracting key information from their profile
+3. Understanding their problem-solution fit
+4. Assessing their market opportunity
+5. Identifying gaps in their information
+6. Providing actionable recommendations
+7. Cross-referencing pitch deck data with profile data for consistency
 
-Be professional, constructive, and insightful. If information is missing, mention what would strengthen their profile.`
+Be professional, constructive, and insightful. If information is missing, mention what would strengthen their profile. If pitch deck is analyzed, highlight how it strengthens their overall profile.`
 
     console.log('Calling Gemini API for context analysis...')
     // Use Gemini 2.0 Flash Experimental (Free tier) for simple context generation
