@@ -961,7 +961,7 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         
         <div className="mt-6">
           <Tabs value={persistedUIState.activeTab} onValueChange={(tab) => updateUIState(prev => ({ ...prev, activeTab: tab }))} className="w-full">
-                      <TabsList className="grid w-full grid-cols-7">
+                      <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="onboarding" className="flex items-center gap-1">
               <FileText className="w-3 h-3" />
               <span className="hidden sm:inline">Content</span>
@@ -1273,129 +1273,6 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                   <div className="space-y-2">
                     <Label htmlFor="impact">Potential Impact</Label>
                     <Textarea id="impact" placeholder="The 'so what?' of your project" rows={3} />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Pitch Deck Tab */}
-            <TabsContent value="pitch-deck" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5" />
-                    Pitch Deck Analysis
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Upload your pitch deck (PDF, PPTX) for AI-powered analysis and summary generation
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Current Pitch Deck Status */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">Current Status</h4>
-                    {profile?.pitch_deck_summary ? (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-green-800">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span className="font-medium">Pitch Deck Analyzed</span>
-                        </div>
-                        <p className="text-sm text-green-700 mt-2">
-                          Your pitch deck has been analyzed and is ready to enhance your grant applications.
-                        </p>
-                        <div className="mt-3 p-3 bg-white rounded border">
-                          <h5 className="font-medium text-sm mb-2">AI Summary Preview:</h5>
-                          <p className="text-xs text-gray-600 line-clamp-3">
-                            {profile.pitch_deck_summary.substring(0, 200)}...
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                          <span className="font-medium">No Pitch Deck Analyzed</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">
-                          Upload your pitch deck to get AI-powered analysis and enhance your grant applications.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload Section */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">Upload New Pitch Deck</h4>
-                    <div className="space-y-3">
-                      <div className="space-y-2">
-                        <Label htmlFor="pitch-deck-file">Select File</Label>
-                        <Input
-                          id="pitch-deck-file"
-                          type="file"
-                          accept=".pdf,.pptx,.ppt"
-                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                          disabled={uploading}
-                        />
-                        <p className="text-xs text-gray-500">
-                          Supported formats: PDF, PowerPoint (PPTX, PPT). Max size: 50MB
-                        </p>
-                      </div>
-                      
-                      <Button 
-                        onClick={handlePitchDeckUpload} 
-                        disabled={!selectedFile || uploading} 
-                        className="w-full"
-                      >
-                        {uploading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Analyzing Pitch Deck...
-                          </>
-                        ) : (
-                          <>
-                            <FileText className="w-4 h-4 mr-2" />
-                            Upload & Analyze
-                          </>
-                        )}
-                      </Button>
-                      
-                      {uploadError && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="text-red-800 text-sm">{uploadError}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Benefits Section */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold">How This Helps Your Grant Applications</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                        <h5 className="font-medium text-blue-800 text-sm">Enhanced AI Responses</h5>
-                        <p className="text-xs text-blue-700 mt-1">
-                          Our AI will understand your business context and provide more accurate grant writing assistance.
-                        </p>
-                      </div>
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                        <h5 className="font-medium text-green-800 text-sm">Consistent Messaging</h5>
-                        <p className="text-xs text-green-700 mt-1">
-                          Ensure all your grant applications align with your core pitch deck messaging.
-                        </p>
-                      </div>
-                      <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
-                        <h5 className="font-medium text-purple-800 text-sm">Time Savings</h5>
-                        <p className="text-xs text-purple-700 mt-1">
-                          No need to re-explain your business in every grant application.
-                        </p>
-                      </div>
-                      <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                        <h5 className="font-medium text-orange-800 text-sm">Better Success Rate</h5>
-                        <p className="text-xs text-orange-700 mt-1">
-                          More accurate and compelling grant applications increase your chances of success.
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -3173,28 +3050,205 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
 
             {/* Resources Tab (Updated Documents Tab) */}
             <TabsContent value="docs" className="space-y-6">
+              {/* SECTION 1: PITCH DECK ANALYSIS - FEATURED */}
+              <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-900">
+                    <FileText className="w-6 h-6" />
+                    📄 Pitch Deck Analysis
+                  </CardTitle>
+                  <p className="text-sm text-blue-700">
+                    Upload your pitch deck (PDF, PPTX, PPT) for AI-powered analysis and summary generation
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Current Pitch Deck Status */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Current Status</h4>
+                    {profile?.pitch_deck_summary ? (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-green-800">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="font-medium">Pitch Deck Analyzed ✅</span>
+                        </div>
+                        <p className="text-sm text-green-700 mt-2">
+                          Your pitch deck has been analyzed and is ready to enhance your grant applications.
+                        </p>
+                        <div className="mt-3 p-3 bg-white rounded border">
+                          <h5 className="font-medium text-sm mb-2">AI Summary Preview:</h5>
+                          <p className="text-xs text-gray-600 line-clamp-3">
+                            {profile.pitch_deck_summary.substring(0, 200)}...
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                          <span className="font-medium">No Pitch Deck Analyzed</span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">
+                          Upload your pitch deck to get AI-powered analysis and enhance your grant applications.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Upload New Pitch Deck</h4>
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="pitch-deck-file">Select File</Label>
+                        <Input
+                          id="pitch-deck-file"
+                          type="file"
+                          accept=".pdf,.pptx,.ppt"
+                          onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                          disabled={uploading}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Supported formats: PDF, PowerPoint (PPTX, PPT). Max size: 50MB
+                        </p>
+                      </div>
+                      
+                      <Button 
+                        onClick={handlePitchDeckUpload} 
+                        disabled={!selectedFile || uploading} 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      >
+                        {uploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Analyzing Pitch Deck...
+                          </>
+                        ) : (
+                          <>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Upload & Analyze
+                          </>
+                        )}
+                      </Button>
+                      
+                      {uploadError && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="text-red-800 text-sm">{uploadError}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Benefits Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">How This Helps Your Grant Applications</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <h5 className="font-medium text-blue-800 text-sm">Enhanced AI Responses</h5>
+                        <p className="text-xs text-blue-700 mt-1">
+                          Our AI will understand your business context and provide more accurate grant writing assistance.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <h5 className="font-medium text-green-800 text-sm">Consistent Messaging</h5>
+                        <p className="text-xs text-green-700 mt-1">
+                          Ensure all your grant applications align with your core pitch deck messaging.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                        <h5 className="font-medium text-purple-800 text-sm">Time Savings</h5>
+                        <p className="text-xs text-purple-700 mt-1">
+                          No need to re-explain your business in every grant application.
+                        </p>
+                      </div>
+                      <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <h5 className="font-medium text-orange-800 text-sm">Better Success Rate</h5>
+                        <p className="text-xs text-orange-700 mt-1">
+                          More accurate and compelling grant applications increase your chances of success.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* SECTION 2: SUPPORTING DOCUMENTS */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="w-5 h-5" />
-                    Documents & Resources
+                    📁 Supporting Documents
                   </CardTitle>
-                  <p className="text-sm text-gray-600">Upload documents and manage resource links</p>
+                  <p className="text-sm text-gray-600">Upload other documents and manage resource links</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {/* File Upload Section */}
+                  <div className="space-y-4">
+                    <h4 className="font-semibold text-gray-900">Upload Document</h4>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="document-file">Select File</Label>
+                        <Input
+                          id="document-file"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
+                          onChange={e => setSelectedResourceFile(e.target.files?.[0] || null)}
+                          disabled={resourcesUploading}
+                        />
+                        <p className="text-xs text-gray-500">
+                          Supported formats: PDF, Word, Excel, PowerPoint, Images, Text files. Max size: 50MB
+                        </p>
+                      </div>
+                      
+                      {selectedResourceFile && (
+                        <div className="space-y-2">
+                          <Label htmlFor="document-type">Document Type</Label>
+                          <Select onValueChange={setSelectedDocumentType}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select document type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="business-plan">Business Plan</SelectItem>
+                              <SelectItem value="financial-model">Financial Model</SelectItem>
+                              <SelectItem value="market-research">Market Research</SelectItem>
+                              <SelectItem value="legal-documents">Legal Documents</SelectItem>
+                              <SelectItem value="press-kit">Press Kit</SelectItem>
+                              <SelectItem value="case-studies">Case Studies</SelectItem>
+                              <SelectItem value="testimonials">Testimonials</SelectItem>
+                              <SelectItem value="product-demo">Product Demo</SelectItem>
+                              <SelectItem value="investor-deck">Investor Deck</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
+                      <Button 
+                        onClick={handleResourcesDocUpload} 
+                        disabled={!selectedResourceFile || !selectedDocumentType || resourcesUploading} 
+                        className="w-full"
+                      >
+                        {resourcesUploading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Uploading...
+                          </>
+                        ) : (
+                          'Upload Document'
+                        )}
+                      </Button>
+                      
+                      {resourcesUploadError && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                          <div className="text-red-800 text-sm">{resourcesUploadError}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   {/* Document URLs */}
                   <div className="space-y-4">
                     <h4 className="font-semibold text-gray-900">Document Links</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="pitch-deck-url">Pitch Deck URL</Label>
-                        <Input
-                          id="pitch-deck-url"
-                          placeholder="https://yourcompany.com/pitch-deck.pdf"
-                          value={persistedFormData.pitch_deck_url}
-                          onChange={(e) => updateFormData(prev => ({ ...prev, pitch_deck_url: e.target.value }))}
-                        />
-                      </div>
                       <div className="space-y-2">
                         <Label htmlFor="business-plan-url">Business Plan URL</Label>
                         <Input
@@ -3278,75 +3332,10 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
                       </div>
                     </div>
                   </div>
-
-                  {/* File Upload Section */}
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Upload Document</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="document-file">Select File</Label>
-                        <Input
-                          id="document-file"
-                          type="file"
-                          accept=".pdf,.doc,.docx,.xlsx,.xls,.ppt,.pptx,.txt,.jpg,.jpeg,.png"
-                          onChange={e => setSelectedResourceFile(e.target.files?.[0] || null)}
-                          disabled={resourcesUploading}
-                        />
-                        <p className="text-xs text-gray-500">
-                          Supported formats: PDF, Word, Excel, PowerPoint, Images, Text files. Max size: 50MB
-                        </p>
-                      </div>
-                      
-                      {selectedResourceFile && (
-                        <div className="space-y-2">
-                          <Label htmlFor="document-type">Document Type</Label>
-                          <Select onValueChange={setSelectedDocumentType}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select document type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pitch-deck">Pitch Deck</SelectItem>
-                              <SelectItem value="business-plan">Business Plan</SelectItem>
-                              <SelectItem value="financial-model">Financial Model</SelectItem>
-                              <SelectItem value="market-research">Market Research</SelectItem>
-                              <SelectItem value="legal-documents">Legal Documents</SelectItem>
-                              <SelectItem value="press-kit">Press Kit</SelectItem>
-                              <SelectItem value="case-studies">Case Studies</SelectItem>
-                              <SelectItem value="testimonials">Testimonials</SelectItem>
-                              <SelectItem value="product-demo">Product Demo</SelectItem>
-                              <SelectItem value="investor-deck">Investor Deck</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                      
-                      <Button 
-                        onClick={handleResourcesDocUpload} 
-                        disabled={!selectedResourceFile || !selectedDocumentType || resourcesUploading} 
-                        className="w-full"
-                      >
-                        {resourcesUploading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                            Uploading...
-                          </>
-                        ) : (
-                          'Upload Document'
-                        )}
-                      </Button>
-                      
-                      {resourcesUploadError && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                          <div className="text-red-800 text-sm">{resourcesUploadError}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                     
                     {/* File List Section */}
                     <div className="mt-6">
-                      <h4 className="font-semibold mb-2">Your Documents</h4>
+                      <h4 className="font-semibold mb-2">Your Uploaded Documents</h4>
                       {docsLoading ? (
                         <div className="text-center py-4">Loading documents...</div>
                       ) : docsError ? (
