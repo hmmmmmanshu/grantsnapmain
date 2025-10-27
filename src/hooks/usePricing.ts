@@ -28,20 +28,21 @@ interface PricingData {
   error: string | null;
 }
 
-// Base pricing in USD
+// Base pricing in USD (Updated with new AI features)
 const BASE_PRICING = {
   basic: {
-    name: "Base",
+    name: "Free",
     price: 0,
     period: "forever",
-    description: "Perfect for getting organized and experiencing the core magic of GrantSnap",
+    description: "Perfect for getting started with grant discovery and tracking",
     features: [
-      "Unlimited Grant Capture & Tracking",
+      "Unlimited Grant Discovery & Saving",
+      "Heuristic Analysis (Unlimited)",
       "Central Dashboard Access",
-      "10 Concierge AI Autofills / month",
-      "Standard Page Analysis",
       "Deadline Notifications",
-      "Standard Email Support"
+      "Standard Email Support",
+      "Deep Scans: 0 (upgrade required)",
+      "AI Autofills: 0 (upgrade required)"
     ],
     buttonText: "Start for Free",
     popular: false,
@@ -51,18 +52,19 @@ const BASE_PRICING = {
     icon: "Gift"
   },
   pro: {
-    name: "Proof",
-    price: 39,
+    name: "Starter",
+    price: 59,
     period: "monthly",
-    description: "The essential AI toolkit for the serious solo founder ready to save time and write better applications",
+    description: "Unlock AI-powered deep scans and grant auto-filling for serious founders",
     features: [
-      "Everything in Base, plus:",
-      "150 Concierge AI Autofills / month",
-      "Unlimited AI Answer Refinement Engine",
+      "Everything in Free, plus:",
+      "50 Deep Scans / month (Gemini 2.5)",
+      "30 AI Autofills / month (RAG-powered)",
+      "RAG-Powered Personalization",
       "One-Click Pitch Deck Analysis",
       "Priority Email Support"
     ],
-    buttonText: "Get Proof",
+    buttonText: "Get Starter",
     popular: true,
     highlight: "Most Popular",
     borderColor: "border-black",
@@ -71,19 +73,20 @@ const BASE_PRICING = {
     razorpayPlanId: "plan_pro_monthly"
   },
   enterprise: {
-    name: "Growth",
-    price: 59,
+    name: "Pro",
+    price: 99,
     period: "monthly",
-    description: "The ultimate strategic advantage for scaling startups who need to win competitive funding",
+    description: "Maximum AI power for scaling startups applying to dozens of grants monthly",
     features: [
-      "Everything in Proof, plus:",
-      "400 Concierge AI Autofills / month",
-      "25 Deep Scans / month (with HyperBrowser)",
-      "Analytics Dashboard",
+      "Everything in Starter, plus:",
+      "150 Deep Scans / month (Gemini 2.5)",
+      "100 AI Autofills / month (RAG-powered)",
+      "Advanced Analytics Dashboard",
+      "Custom Templates",
       "Data Export Capabilities",
       "Priority Email & Phone Support"
     ],
-    buttonText: "Scale with Growth",
+    buttonText: "Get Pro",
     popular: false,
     highlight: "Best Value",
     borderColor: "border-gray-300",
