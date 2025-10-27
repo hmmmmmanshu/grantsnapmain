@@ -160,6 +160,185 @@ const DetailPanel = ({ opportunity, onClose }: DetailPanelProps) => {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            {/* DEEP SCAN RESULTS (if available) */}
+            {opportunity.computer_use_scan && (
+              <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl p-6 border-2 border-purple-200 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-purple-900 flex items-center gap-2">
+                    <span className="text-2xl">🤖</span>
+                    AI Deep Scan Analysis
+                  </h3>
+                  <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    opportunity.computer_use_scan.confidence_score >= 90 ? 'bg-green-500 text-white' :
+                    opportunity.computer_use_scan.confidence_score >= 70 ? 'bg-blue-500 text-white' :
+                    opportunity.computer_use_scan.confidence_score >= 50 ? 'bg-yellow-500 text-white' :
+                    'bg-red-500 text-white'
+                  }`}>
+                    {opportunity.computer_use_scan.confidence_score}% Confidence
+                  </div>
+                </div>
+                
+                <p className="text-xs text-purple-700 mb-4">
+                  Analyzed with Gemini 2.5 Computer Use • {safeFormatDate(
+                    opportunity.computer_use_scan.scanned_at,
+                    (date) => format(date, 'MMM d, yyyy h:mm a'),
+                    'Recently'
+                  )}
+                </p>
+
+                <div className="space-y-4">
+                  {/* Funder Mission */}
+                  <div className="bg-white rounded-lg p-4 border border-purple-200">
+                    <h4 className="text-sm font-semibold text-purple-900 mb-2">🎯 Funder Mission</h4>
+                    <p className="text-sm text-gray-700">{opportunity.computer_use_scan.funder_mission}</p>
+                  </div>
+
+                  {/* Eligibility Criteria */}
+                  {opportunity.computer_use_scan.eligibility_criteria.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <h4 className="text-sm font-semibold text-purple-900 mb-2">✅ Eligibility Requirements</h4>
+                      <ul className="space-y-1">
+                        {opportunity.computer_use_scan.eligibility_criteria.map((criterion, idx) => (
+                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-green-600 mt-0.5">•</span>
+                            <span>{criterion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Evaluation Criteria */}
+                  {opportunity.computer_use_scan.evaluation_criteria.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <h4 className="text-sm font-semibold text-purple-900 mb-2">⭐ Evaluation Criteria</h4>
+                      <ul className="space-y-1">
+                        {opportunity.computer_use_scan.evaluation_criteria.map((criterion, idx) => (
+                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-blue-600 mt-0.5">•</span>
+                            <span>{criterion}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Key Themes */}
+                  {opportunity.computer_use_scan.key_themes.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <h4 className="text-sm font-semibold text-purple-900 mb-2">🏷️ Key Themes</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {opportunity.computer_use_scan.key_themes.map((theme, idx) => (
+                          <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                            {theme}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Past Winners */}
+                  {opportunity.computer_use_scan.past_winners && opportunity.computer_use_scan.past_winners.length > 0 && (
+                    <div className="bg-white rounded-lg p-4 border border-purple-200">
+                      <h4 className="text-sm font-semibold text-purple-900 mb-2">🏆 Past Winners</h4>
+                      <ul className="space-y-1">
+                        {opportunity.computer_use_scan.past_winners.map((winner, idx) => (
+                          <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                            <span className="text-yellow-600 mt-0.5">•</span>
+                            <span>{winner}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Agent Screenshots */}
+                {opportunity.agent_screenshots && opportunity.agent_screenshots.length > 0 && (
+                  <div className="mt-4 bg-white rounded-lg p-4 border border-purple-200">
+                    <h4 className="text-sm font-semibold text-purple-900 mb-3">📸 AI Agent Screenshots</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      {opportunity.agent_screenshots.slice(0, 4).map((screenshot, idx) => (
+                        <img 
+                          key={idx} 
+                          src={screenshot} 
+                          alt={`Agent screenshot ${idx + 1}`}
+                          className="w-full h-32 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(screenshot, '_blank')}
+                        />
+                      ))}
+                    </div>
+                    {opportunity.agent_screenshots.length > 4 && (
+                      <p className="text-xs text-gray-500 mt-2">
+                        +{opportunity.agent_screenshots.length - 4} more screenshots
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* AUTOFILL SESSION (if available) */}
+            {opportunity.autofill_session && (
+              <div className="bg-gradient-to-br from-green-50 to-teal-50 rounded-xl p-6 border-2 border-green-200">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-bold text-green-900 flex items-center gap-2">
+                    <span className="text-2xl">✨</span>
+                    AI Autofill Session
+                  </h3>
+                  <div className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                    opportunity.autofill_session.status === 'completed' ? 'bg-green-500 text-white' :
+                    opportunity.autofill_session.status === 'in_progress' ? 'bg-blue-500 text-white' :
+                    opportunity.autofill_session.status === 'partial' ? 'bg-yellow-500 text-white' :
+                    'bg-red-500 text-white'
+                  }`}>
+                    {opportunity.autofill_session.status.replace('_', ' ').toUpperCase()}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-xs font-medium text-green-800 mb-1">FIELDS FILLED</div>
+                    <div className="text-2xl font-bold text-gray-900">{opportunity.autofill_session.fields_filled}</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-xs font-medium text-green-800 mb-1">PAGES NAVIGATED</div>
+                    <div className="text-2xl font-bold text-gray-900">{opportunity.autofill_session.pages_navigated}</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-3 border border-green-200">
+                    <div className="text-xs font-medium text-green-800 mb-1">DURATION</div>
+                    <div className="text-sm font-bold text-gray-900">
+                      {opportunity.autofill_session.completed_at ? 
+                        `${Math.round((new Date(opportunity.autofill_session.completed_at).getTime() - new Date(opportunity.autofill_session.started_at).getTime()) / 60000)} min` :
+                        'In Progress'
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                {opportunity.autofill_session.error_message && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                    <p className="text-sm text-red-800">
+                      <strong>Error:</strong> {opportunity.autofill_session.error_message}
+                    </p>
+                  </div>
+                )}
+
+                <p className="text-xs text-green-700">
+                  Started: {safeFormatDate(
+                    opportunity.autofill_session.started_at,
+                    (date) => format(date, 'MMM d, yyyy h:mm a'),
+                    'Unknown'
+                  )}
+                  {opportunity.autofill_session.completed_at && ` • Completed: ${safeFormatDate(
+                    opportunity.autofill_session.completed_at,
+                    (date) => format(date, 'MMM d, yyyy h:mm a'),
+                    'Unknown'
+                  )}`}
+                </p>
+              </div>
+            )}
+
             {/* 1. GRANT ANALYTICS & SOURCE ANALYSIS (Combined Header Section) */}
             <div className="mb-8">
               <div className="mb-6">

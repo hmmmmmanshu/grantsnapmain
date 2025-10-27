@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ProBadge } from '@/components/ui/ProBadge';
 import { Button } from '@/components/ui/button';
-import { Zap, Brain, Search, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Zap, Brain, Search, AlertTriangle, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { getPlanQuotas, calculateUsagePercentage, isNearLimit, hasExceededLimit, getPlanDisplayName } from '@/lib/planUtils';
@@ -14,6 +14,7 @@ interface UsageStats {
   month_start_date: string;
   ai_generations_used: number;
   deep_scans_used: number;
+  monthly_autofills: number;
   updated_at: string;
 }
 
@@ -27,10 +28,12 @@ interface UsageData {
   quotas: {
     ai_generations: number;
     deep_scans: number;
+    autofills: number;
   };
   progress: {
     ai_generations: number;
     deep_scans: number;
+    autofills: number;
   };
 }
 
@@ -87,8 +90,9 @@ export function UsageTracker() {
         usage_stats: {
           user_id: user?.id || '',
           month_start_date: new Date().toISOString().split('T')[0],
-          ai_generations_used: 3, // Some realistic usage
+          ai_generations_used: 3, // Some realistic usage (deprecated)
           deep_scans_used: 1,
+          monthly_autofills: 5,
           updated_at: new Date().toISOString()
         },
         subscription: {
@@ -98,7 +102,8 @@ export function UsageTracker() {
         quotas: planQuotas,
         progress: {
           ai_generations: calculateUsagePercentage(3, planQuotas.ai_generations),
-          deep_scans: calculateUsagePercentage(1, planQuotas.deep_scans)
+          deep_scans: calculateUsagePercentage(1, planQuotas.deep_scans),
+          autofills: calculateUsagePercentage(5, planQuotas.autofills)
         }
       };
       
@@ -357,6 +362,83 @@ export function UsageTracker() {
               <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 text-center">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Deep Scans available in {userTier === 'basic' ? 'Proof' : 'Growth'} plan
+                </p>
+                <button 
+                  onClick={() => window.open('/pricing', '_blank')}
+                  className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                >
+                  Upgrade Now →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* AI Autofills Usage */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-green-600" />
+              <span className="font-medium">AI Autofills</span>
+              {usageData.quotas.autofills === 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Starter+ Feature
+                </Badge>
+              )}
+              {usageData.quotas.autofills > 0 && hasExceededLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills) && (
+                <AlertTriangle className="w-4 h-4 text-red-500" />
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {usageData.usage_stats.monthly_autofills} / {usageData.quotas.autofills || 'N/A'}
+              </span>
+              {usageData.quotas.autofills > 0 && (
+                <Badge 
+                  variant={
+                    hasExceededLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills) 
+                      ? "destructive" 
+                      : isNearLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills)
+                      ? "secondary" 
+                      : "outline"
+                  } 
+                  className="text-xs"
+                >
+                  {usageData.progress.autofills}%
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            {usageData.quotas.autofills > 0 ? (
+              <>
+                <Progress 
+                  value={usageData.progress.autofills} 
+                  className={`h-2 ${
+                    hasExceededLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills)
+                      ? 'progress-danger'
+                      : isNearLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills)
+                      ? 'progress-warning'
+                      : ''
+                  }`}
+                />
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>Used: {usageData.usage_stats.monthly_autofills}</span>
+                  <span>Limit: {usageData.quotas.autofills}</span>
+                </div>
+                {hasExceededLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills) && (
+                  <p className="text-xs text-red-600">⚠️ You've reached your monthly limit. Upgrade for more!</p>
+                )}
+                {isNearLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills) && 
+                 !hasExceededLimit(usageData.usage_stats.monthly_autofills, usageData.quotas.autofills) && (
+                  <p className="text-xs text-amber-600">🔔 You're close to your monthly limit</p>
+                )}
+              </>
+            ) : (
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-md p-3 text-center">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  AI Autofills available in Starter plan
                 </p>
                 <button 
                   onClick={() => window.open('/pricing', '_blank')}

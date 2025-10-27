@@ -68,4 +68,42 @@ export interface Opportunity {
   enhanced_analysis?: boolean;
   analysis_version?: string;
   data_quality_score?: number;
+  
+  // Gemini Computer Use Deep Scan Results
+  computer_use_scan?: {
+    confidence_score: number;
+    funder_mission: string;
+    funder_values?: string;
+    eligibility_criteria: string[];
+    evaluation_criteria: string[];
+    key_themes: string[];
+    past_winners?: string[];
+    application_tips?: string[];
+    success_factors?: string[];
+    scanned_at: string;
+  };
+  
+  // AI Autofill Session Data
+  autofill_session?: {
+    session_id: string;
+    fields_filled: number;
+    pages_navigated: number;
+    status: 'in_progress' | 'completed' | 'failed' | 'partial';
+    started_at: string;
+    completed_at?: string;
+    error_message?: string;
+    fields_data?: {
+      field_label: string;
+      field_value: string;
+      confidence: number;
+      rag_chunks_used: string[];
+    }[];
+  };
+  
+  // Agent Screenshots from Computer Use
+  agent_screenshots?: string[];
+  
+  // Deep Scan Usage Tracking
+  deep_scan_used?: boolean;
+  deep_scan_timestamp?: string;
 }

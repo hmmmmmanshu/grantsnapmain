@@ -3,6 +3,7 @@
 export interface PlanQuotas {
   ai_generations: number;
   deep_scans: number;
+  autofills: number;
 }
 
 export interface PlanInfo {
@@ -16,10 +17,11 @@ export interface PlanInfo {
 export const PLAN_CONFIGS: Record<string, PlanInfo> = {
   basic: {
     name: 'basic',
-    displayName: 'Base',
+    displayName: 'Free',
     quotas: {
-      ai_generations: 10, // "10 Concierge AI Autofills / month"
-      deep_scans: 0, // No deep scans in Base plan
+      ai_generations: 10, // Legacy field (deprecated)
+      deep_scans: 0, // No deep scans in Free plan
+      autofills: 0, // No autofills in Free plan
     },
     features: [
       "Unlimited Grant Capture & Tracking",
@@ -32,10 +34,11 @@ export const PLAN_CONFIGS: Record<string, PlanInfo> = {
   },
   pro: {
     name: 'pro',
-    displayName: 'Proof',
+    displayName: 'Starter',
     quotas: {
-      ai_generations: 150, // "150 Concierge AI Autofills / month"
-      deep_scans: 5, // Reasonable default for Proof plan
+      ai_generations: 150, // Legacy field (deprecated)
+      deep_scans: 50, // Starter tier
+      autofills: 30, // Starter tier
     },
     features: [
       "Everything in Base, plus:",
@@ -47,10 +50,11 @@ export const PLAN_CONFIGS: Record<string, PlanInfo> = {
   },
   enterprise: {
     name: 'enterprise',
-    displayName: 'Growth',
+    displayName: 'Pro',
     quotas: {
-      ai_generations: 400, // "400 Concierge AI Autofills / month"
-      deep_scans: 25, // "25 Deep Scans / month (with HyperBrowser)"
+      ai_generations: 400, // Legacy field (deprecated)
+      deep_scans: 150, // Pro tier
+      autofills: 100, // Pro tier
     },
     features: [
       "Everything in Proof, plus:",
