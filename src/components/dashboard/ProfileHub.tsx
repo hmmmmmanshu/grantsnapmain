@@ -291,6 +291,24 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         description: "Your profile has been updated successfully.",
       });
 
+      // Trigger vectorization for RAG (async, don't wait)
+      supabase.functions
+        .invoke('vectorize-profile', {
+          body: { user_id: user.id },
+        })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Vectorization failed:', error);
+          } else {
+            console.log('Profile vectorized for RAG:', data);
+            toast({
+              title: "AI Ready!",
+              description: "Your profile is now optimized for grant auto-fill.",
+            });
+          }
+        })
+        .catch((err) => console.error('Vectorization error:', err));
+
       loadProfileData();
     } catch (error: any) {
       console.error('Error saving profile:', error);

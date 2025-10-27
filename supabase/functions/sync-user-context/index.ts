@@ -161,68 +161,166 @@ serve(async (req) => {
       throw new Error('GEMINI_API_KEY environment variable is not set')
     }
 
-    // Create a summarized version of the context for the AI (to avoid token limits)
+    // Create a comprehensive context with ALL 30 fields for RAG-powered grant autofill
     const summarizedContext = {
+      // Basic Info (2 fields)
       startup_name: profileData?.startup_name || 'Not provided',
       one_line_pitch: profileData?.one_line_pitch || 'Not provided',
+      
+      // Business & Market (18 fields)
       problem_statement: profileData?.problem_statement || 'Not provided',
-      solution_description: profileData?.solution_description || 'Not provided',
-      target_market: profileData?.target_market || 'Not provided',
+      golden_retriever_explanation: profileData?.golden_retriever_explanation || 'Not provided',
+      dream_customer: profileData?.target_market || 'Not provided',
+      market_size: profileData?.market_size || 'Not provided',
       industry: profileData?.industry || 'Not provided',
+      unfair_advantage: profileData?.unfair_advantage || 'Not provided',
+      top_competitors: profileData?.top_competitors || 'Not provided',
+      traction_story: profileData?.traction_story || 'Not provided',
+      current_stage: profileData?.current_stage || 'Not provided',
       funding_stage: profileData?.funding_stage || 'Not provided',
-      team_size: profileData?.team_size || 'Not provided',
+      funding_amount: profileData?.funding_amount || 'Not provided',
+      funding_unlock: profileData?.funding_unlock || 'Not provided',
+      twelve_month_goal: profileData?.twelve_month_goal || 'Not provided',
+      why_now: profileData?.why_now || 'Not provided',
+      biggest_risk: profileData?.biggest_risk || 'Not provided',
+      customer_acquisition: profileData?.customer_acquisition || 'Not provided',
+      
+      // Pitch Deck
       pitch_deck_summary: profileData?.pitch_deck_summary || 'Not provided',
       pitch_deck_analyzed: !!profileData?.pitch_deck_summary,
+      
+      // Founders (7 fields per founder)
       founders_count: foundersData?.length || 0,
-      founders_summary: foundersData?.map(f => ({
-        name: f.full_name,
-        title: f.title,
-        background: f.background ? f.background.substring(0, 200) : 'Not provided'
+      founders_detailed: foundersData?.map(f => ({
+        name: f.full_name || 'Not provided',
+        title: f.title || 'Not provided',
+        linkedin: f.linkedin_url || 'Not provided',
+        background: f.background || 'Not provided',
+        coolest_thing_built: f.coolest_thing_built || 'Not provided',
+        biggest_accomplishment: f.biggest_accomplishment || 'Not provided',
+        time_commitment: f.time_commitment || 'Not provided'
       })) || [],
+      
+      // Documents & Metadata
       documents_count: documentsData?.length || 0,
       documents_list: documentsData?.map(d => ({
         name: d.document_name,
         type: d.document_type,
         uploaded: d.uploaded_at
       })) || [],
-      grants_tracked: grantsData?.length || 0,
-      completion_percentage: profileData?.completion_percentage || 0
+      grants_tracked: grantsData?.length || 0
     }
 
-    // Create a comprehensive prompt for Gemini
-    const prompt = `You are an AI assistant helping to create a comprehensive context summary for a startup user. 
-Analyze the following user data and generate a concise, professional summary that captures the essence of their startup, goals, and current status.
+    // Create a comprehensive prompt for Gemini using ALL 30 fields
+    const prompt = `You are an expert startup analyst with 15+ years of experience evaluating startups for grants, accelerators, and investors.
 
-**USER DATA:**
-${JSON.stringify(summarizedContext, null, 2)}
+Analyze this comprehensive startup profile (30 detailed fields) and generate strategic insights for grant applications.
 
-**IMPORTANT:** Pay special attention to the following:
-1. **pitch_deck_summary**: If it contains detailed information about the startup, use it as a PRIMARY source for understanding the business model, value proposition, market opportunity, and competitive advantages.
-2. **founders_summary**: Review founder backgrounds and expertise to assess team strength.
-3. **documents_list**: Note the types of documents uploaded (business plans, financial models, etc.) as indicators of preparedness and professionalism.
+**STARTUP PROFILE:**
 
-**INSTRUCTIONS:**
-Generate a structured summary in the following format (output as JSON):
+**Basic Information:**
+- Name: ${summarizedContext.startup_name}
+- One-liner: ${summarizedContext.one_line_pitch}
+- Industry: ${summarizedContext.industry}
+- Stage: ${summarizedContext.current_stage}
+- Funding Stage: ${summarizedContext.funding_stage}
+
+**Problem & Solution:**
+- Problem Statement: ${summarizedContext.problem_statement}
+- Simple Explanation: ${summarizedContext.golden_retriever_explanation}
+
+**Market Opportunity:**
+- Dream Customer: ${summarizedContext.dream_customer}
+- Market Size: ${summarizedContext.market_size}
+- Why Now: ${summarizedContext.why_now}
+
+**Competitive Position:**
+- Unfair Advantage: ${summarizedContext.unfair_advantage}
+- Top Competitors: ${summarizedContext.top_competitors}
+
+**Traction & Growth:**
+- Traction Story: ${summarizedContext.traction_story}
+- Customer Acquisition: ${summarizedContext.customer_acquisition}
+
+**Funding & Vision:**
+- Raising: ${summarizedContext.funding_amount}
+- Will Unlock: ${summarizedContext.funding_unlock}
+- 12-Month Goal: ${summarizedContext.twelve_month_goal}
+- Biggest Risk: ${summarizedContext.biggest_risk}
+
+**Team (${summarizedContext.founders_count} Founder${summarizedContext.founders_count !== 1 ? 's' : ''}):**
+${summarizedContext.founders_detailed.map((f, i) => `
+Founder ${i + 1}: ${f.name} (${f.title})
+- Background: ${f.background}
+- Coolest Thing Built: ${f.coolest_thing_built}
+- Biggest Accomplishment: ${f.biggest_accomplishment}
+- Commitment: ${f.time_commitment}
+- LinkedIn: ${f.linkedin}
+`).join('\n')}
+
+**Pitch Deck:** ${summarizedContext.pitch_deck_analyzed ? 'Analyzed ✓' : 'Not uploaded'}
+${summarizedContext.pitch_deck_analyzed ? `Summary: ${summarizedContext.pitch_deck_summary}` : ''}
+
+**Documents:** ${summarizedContext.documents_count} uploaded
+**Grants Tracked:** ${summarizedContext.grants_tracked}
+
+**YOUR TASK:**
+Generate a comprehensive AI insights summary optimized for grant applications. Output as JSON:
 
 {
-  "executive_summary": "2-3 paragraph overview of the startup, its mission, and current stage. If pitch deck is available, incorporate key insights from it.",
-  "key_strengths": ["List of 3-5 key strengths or unique selling points. Prioritize insights from pitch deck if available."],
-  "funding_readiness": "Assessment of how ready they are for funding (1-2 sentences). Consider pitch deck quality if analyzed.",
-  "recommended_actions": ["List of 3-5 recommended next steps. Reference pitch deck findings if relevant."],
-  "profile_completeness": "Brief assessment of profile completeness and missing information. Note if pitch deck provides additional context.",
-  "ai_insights": "AI-generated insights about their startup potential and market fit (2-3 sentences). Integrate pitch deck analysis if available."
+  "executive_summary": "3-4 paragraph deep analysis covering:
+    - What problem they're solving and why it matters NOW (reference why_now)
+    - Their unique approach and unfair advantage (be specific!)
+    - Team credibility (reference coolest things built & accomplishments by name)
+    - Current traction and market validation (use specific metrics from traction_story)
+    - Funding readiness and what the funding will unlock
+    Include concrete data points, not generic statements.",
+    
+  "key_strengths": [
+    "5 specific, evidence-based strengths that would impress grant reviewers",
+    "Reference ACTUAL achievements from profile (founder names, metrics, advantages)",
+    "Focus on what makes them uniquely positioned to succeed",
+    "Mention specific competitive advantages that can't be easily replicated",
+    "Highlight team expertise relevant to the problem they're solving"
+  ],
+  
+  "funding_readiness": "2-3 sentence assessment based on:
+    - Traction metrics (be specific if provided)
+    - Team experience (what have they built before that's relevant?)
+    - Market timing (why now? is this compelling?)
+    - Risk mitigation (do they acknowledge and address their biggest risk?)
+    Be honest - if readiness is low, say so constructively.",
+    
+  "recommended_actions": [
+    "5 specific, prioritized next steps to strengthen grant applications",
+    "Be tactical: 'Get 3 letters of support from target customers' not 'improve traction'",
+    "Reference specific gaps: 'Quantify market size with TAM/SAM/SOM data'",
+    "Suggest proof points: 'Document customer validation interviews'",
+    "Prioritize high-impact actions that can be done in 30-60 days"
+  ],
+  
+  "profile_completeness": "Honest assessment:
+    - Strong areas (e.g., 'Excellent founder track record with specific prior wins')
+    - Missing critical info (e.g., 'Need concrete traction metrics')
+    - Impact on grant success (be direct about weaknesses)
+    - What would make the biggest difference if added",
+    
+  "ai_insights": "3-4 sentences on:
+    - Market fit potential (is the golden_retriever_explanation clear and compelling?)
+    - Scalability prospects (does customer_acquisition strategy make sense?)
+    - Grant readiness score (1-10 with reasoning)
+    - Unique positioning (what makes them stand out?)
+    Reference specific profile fields to back up claims."
 }
 
-Focus on:
-1. **PRIORITY**: Incorporate pitch deck summary insights throughout the analysis if available
-2. Extracting key information from their profile
-3. Understanding their problem-solution fit
-4. Assessing their market opportunity
-5. Identifying gaps in their information
-6. Providing actionable recommendations
-7. Cross-referencing pitch deck data with profile data for consistency
+**CRITICAL ANALYSIS GUIDELINES:**
+1. BE SPECIFIC - use names, numbers, and concrete examples from the profile
+2. BE HONEST - call out weaknesses constructively (grants need credibility)
+3. BE INSIGHTFUL - provide value beyond obvious observations
+4. PRIORITIZE GRANT SUCCESS - what makes them fundable vs just interesting?
+5. USE THE DATA - don't ignore rich fields like coolest_thing_built or why_now
 
-Be professional, constructive, and insightful. If information is missing, mention what would strengthen their profile. If pitch deck is analyzed, highlight how it strengthens their overall profile.`
+Generate the JSON analysis now:`
 
     console.log('Calling Gemini API for context analysis...')
     // Use Gemini 2.0 Flash Experimental (Free tier) for simple context generation
