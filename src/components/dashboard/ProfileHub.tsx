@@ -356,6 +356,52 @@ const ProfileHub = ({ isOpen: externalIsOpen, onOpenChange }: ProfileHubProps = 
         description: `${selectedFile.name} has been uploaded successfully.`,
       });
 
+      // If pitch deck was uploaded, trigger analysis and vectorization
+      if (selectedDocType === 'pitch-deck') {
+        // Call analyze-pitch-deck Edge Function
+        supabase.functions
+          .invoke('analyze-pitch-deck', {
+            body: {
+              file_path: filePath,
+              file_name: selectedFile.name,
+              file_size: selectedFile.size,
+            },
+          })
+          .then(({ data, error }) => {
+            if (error) {
+              console.error('Pitch deck analysis failed:', error);
+              toast({
+                title: "Analysis Failed",
+                description: "Failed to analyze pitch deck, but file was uploaded.",
+                variant: "destructive",
+              });
+            } else {
+              console.log('Pitch deck analyzed:', data);
+              toast({
+                title: "Pitch Deck Analyzed! 🎉",
+                description: "Your pitch deck has been analyzed and added to your AI context.",
+              });
+
+              // Trigger vectorization for RAG
+              return supabase.functions.invoke('vectorize-pitch-deck', {
+                body: { user_id: user.id },
+              });
+            }
+          })
+          .then((response) => {
+            if (response?.error) {
+              console.error('Pitch deck vectorization failed:', response.error);
+            } else if (response?.data) {
+              console.log('Pitch deck vectorized for RAG:', response.data);
+              toast({
+                title: "RAG Ready! 🚀",
+                description: "Your pitch deck is now optimized for AI-powered grant autofill.",
+              });
+            }
+          })
+          .catch((err) => console.error('Pitch deck processing error:', err));
+      }
+
       setSelectedFile(null);
       setSelectedDocType('');
       loadProfileData();

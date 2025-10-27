@@ -159,6 +159,24 @@ const VirtualCFO = () => {
       setSelectedFile(null);
       setPitchDeckAnalyzed(true);
       
+      // Trigger vectorization for RAG (async, don't block UI)
+      supabase.functions
+        .invoke('vectorize-pitch-deck', {
+          body: { user_id: user.id },
+        })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error('Pitch deck vectorization failed:', error);
+          } else {
+            console.log('Pitch deck vectorized for RAG:', data);
+            toast({
+              title: "RAG Ready! 🚀",
+              description: "Your pitch deck is now optimized for AI-powered grant autofill.",
+            });
+          }
+        })
+        .catch((err) => console.error('Vectorization error:', err));
+      
       // Refresh AI context
       await handleUpdateContext();
     } catch (error: any) {
