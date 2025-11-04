@@ -36,7 +36,7 @@ const Dashboard = () => {
     selectedView: 'all' as 'all' | 'grants' | 'investors',
     searchTerm: '',
     statusFilter: '',
-    sortBy: 'deadline' as 'deadline' | 'saved',
+    sortBy: 'saved' as 'deadline' | 'saved', // Default: latest grants at top
     selectedOpportunity: null as Opportunity | null,
     extensionAvailable: null as boolean | null,
     extensionStatus: 'checking' as 'checking' | 'connected' | 'disconnected' | 'error',
@@ -146,6 +146,94 @@ const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
+  // Helper function to parse Deep Scan data from raw Gemini API response
+  const parseDeepScanData = (rawData: any): Opportunity['computer_use_scan'] | null => {
+    if (!rawData || typeof rawData !== 'object') return null;
+
+    try {
+      // Extract JSON from Gemini response structure
+      let parsedData: any = null;
+
+      // Helper to convert string to array (handles multiline strings with bullet points)
+      const stringToArray = (value: any): string[] => {
+        if (Array.isArray(value)) return value;
+        if (typeof value !== 'string') return [];
+        
+        // Split by newlines and filter out empty lines
+        return value
+          .split('\n')
+          .map(line => line.trim())
+          .filter(line => line.length > 0 && !line.match(/^[-*•]\s*$/)) // Remove empty bullet points
+          .map(line => line.replace(/^[-*•]\s*/, '')) // Remove bullet point markers
+          .filter(line => line.length > 0);
+      };
+
+      // Check if it's already in the expected format (parsed structure)
+      if (rawData.confidence_score !== undefined && rawData.funder_mission !== undefined) {
+        // Already parsed, normalize arrays
+        return {
+          confidence_score: rawData.confidence_score,
+          funder_mission: rawData.funder_mission,
+          funder_values: rawData.funder_values,
+          eligibility_criteria: stringToArray(rawData.eligibility_criteria),
+          evaluation_criteria: stringToArray(rawData.evaluation_criteria),
+          key_themes: Array.isArray(rawData.key_themes) 
+            ? rawData.key_themes.map((theme: string) => 
+                typeof theme === 'string' ? theme.replace(/^\*\*.*?\*\*:\s*/, '').trim() : theme
+              )
+            : stringToArray(rawData.key_themes),
+          past_winners: stringToArray(rawData.past_winners),
+          application_tips: stringToArray(rawData.application_tips),
+          success_factors: stringToArray(rawData.success_factors),
+          scanned_at: rawData.scanned_at || new Date().toISOString(),
+        };
+      }
+
+      // Try to extract from Gemini API response structure
+      if (rawData.candidates && Array.isArray(rawData.candidates) && rawData.candidates.length > 0) {
+        const candidate = rawData.candidates[0];
+        if (candidate.content?.parts && Array.isArray(candidate.content.parts)) {
+          const textPart = candidate.content.parts.find((p: any) => p.text);
+          if (textPart?.text) {
+            // Extract JSON from markdown code block if present
+            const jsonMatch = textPart.text.match(/```json\s*([\s\S]*?)\s*```/);
+            const jsonText = jsonMatch ? jsonMatch[1] : textPart.text;
+            parsedData = JSON.parse(jsonText);
+          }
+        }
+      }
+
+      if (!parsedData) return null;
+
+      // Map to expected structure (using stringToArray helper defined above)
+      return {
+        confidence_score: parsedData.confidence_score || 0,
+        funder_mission: parsedData.funder_mission || 'Not available',
+        funder_values: parsedData.funder_values,
+        eligibility_criteria: stringToArray(parsedData.eligibility_criteria),
+        evaluation_criteria: stringToArray(parsedData.evaluation_criteria),
+        key_themes: Array.isArray(parsedData.key_themes) 
+          ? parsedData.key_themes.map((theme: string) => 
+              typeof theme === 'string' ? theme.replace(/^\*\*.*?\*\*:\s*/, '').trim() : theme
+            )
+          : stringToArray(parsedData.key_themes),
+        past_winners: Array.isArray(parsedData.past_winners) 
+          ? parsedData.past_winners 
+          : stringToArray(parsedData.past_winners),
+        application_tips: Array.isArray(parsedData.application_tips)
+          ? parsedData.application_tips
+          : stringToArray(parsedData.application_tips),
+        success_factors: Array.isArray(parsedData.success_factors)
+          ? parsedData.success_factors
+          : stringToArray(parsedData.success_factors),
+        scanned_at: parsedData.scanned_at || new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('Error parsing Deep Scan data:', error, rawData);
+      return null;
+    }
+  };
+
   // Transform tracked grants to match Opportunity interface for existing components
   console.log('🔍 Dashboard Debug - Raw grants from useTrackedGrants:', grants.length);
   if (grants.length > 0) {
@@ -161,6 +249,9 @@ const Dashboard = () => {
       // Extract page title from application_data if available
       const pageTitle = grant.application_data?.page_title || grant.grant_name || 'Untitled Grant';
       
+      // Parse Deep Scan data if available
+      const parsedDeepScan = grant.computer_use_scan ? parseDeepScanData(grant.computer_use_scan) : null;
+
       // Create base opportunity with rich extension data
       const opportunity: Opportunity = {
         id: grant.id,
@@ -182,6 +273,13 @@ const Dashboard = () => {
         enhanced_analysis: grant.enhanced_analysis || false,
         analysis_version: grant.analysis_version || '1.0',
         data_quality_score: grant.data_quality_score || 0,
+        
+        // Deep Scan & Autofill data (from Gemini Computer Use)
+        computer_use_scan: parsedDeepScan || undefined,
+        autofill_session: grant.autofill_session || undefined,
+        agent_screenshots: grant.agent_screenshots || undefined,
+        deep_scan_used: !!grant.computer_use_scan,
+        deep_scan_timestamp: parsedDeepScan?.scanned_at || (grant.computer_use_scan ? grant.updated_at || undefined : undefined),
       };
       
       // Add captured extension data as free features in page_context if no enhanced analysis

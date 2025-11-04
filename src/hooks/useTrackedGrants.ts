@@ -29,6 +29,11 @@ export interface TrackedGrant {
   enhanced_analysis: boolean | null;
   analysis_version: string | null;
   data_quality_score: number | null;
+  
+  // Gemini Computer Use Deep Scan & Autofill fields
+  computer_use_scan: any | null;
+  autofill_session: any | null;
+  agent_screenshots: string[] | null;
 }
 
 export function useTrackedGrants() {
